@@ -1,0 +1,61 @@
+services:
+  postgres-legacy:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: poc
+      POSTGRES_PASSWORD: poc
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poc -d orders"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  postgres-new:
+    image: postgres:17
+    environment:
+      POSTGRES_DB: orders
+      POSTGRES_USER: poc
+      POSTGRES_PASSWORD: poc
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U poc -d orders"]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+
+  # legacy와 new는 같은 이미지(order-app:phase0)를 사용한다. 빌드는 legacy에서 한 번만 한다.
+  legacy:
+    build: ./app
+    image: order-app:phase0
+    environment:
+      DB_URL: jdbc:postgresql://postgres-legacy:5432/orders
+      DB_USER: poc
+      DB_PASSWORD: poc
+    ports:
+      - "8081:8080"
+    depends_on:
+      postgres-legacy:
+        condition: service_healthy
+
+  new:
+    image: order-app:phase0
+    pull_policy: never
+    environment:
+      DB_URL: jdbc:postgresql://postgres-new:5432/orders
+      DB_USER: poc
+      DB_PASSWORD: poc
+    ports:
+      - "8082:8080"
+    depends_on:
+      postgres-new:
+        condition: service_healthy
+
+  nginx:
+    image: nginx:1.30
+    volumes:
+      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
+    ports:
+      - "8080:80"
+    depends_on:
+      - legacy
+      - new
