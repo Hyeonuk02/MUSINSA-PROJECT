@@ -61,6 +61,31 @@ def journal():
             for x in reversed(reqs)]
 
 
+def settle(timeout=30):
+    """비동기 처리(Kafka consumer)가 끝날 때까지 기다린다.
+
+    order-service consumer group의 lag이 0이면 받은 이벤트를 모두 처리하고 offset까지 커밋한 것이다.
+    Kafka가 없는 구성(Step 4 이전)에서는 아무것도 하지 않는다.
+    """
+    if subprocess.run(["docker", "compose", "ps", "-q", "kafka-legacy"], cwd=HERE,
+                      capture_output=True, text=True).stdout.strip() == "":
+        return
+    import time
+    deadline = time.time() + timeout
+    while time.time() < deadline:
+        out = subprocess.run(
+            ["docker", "compose", "exec", "-T", "kafka-legacy", "/opt/kafka/bin/kafka-consumer-groups.sh",
+             "--bootstrap-server", "localhost:9092", "--describe", "--group", "order-service"],
+            cwd=HERE, capture_output=True, text=True).stdout
+        rows = [l.split() for l in out.splitlines() if l.startswith("order-service")]
+        # GROUP TOPIC PARTITION CURRENT-OFFSET LOG-END-OFFSET LAG ...
+        # LAG "-"는 커밋된 offset이 없다는 뜻이다. 토픽이 비어 있으면(LOG-END 0) 처리할 것도 없다.
+        if rows and all(r[5] == "0" or (r[5] == "-" and r[4] == "0") for r in rows):
+            return
+        time.sleep(0.3)
+    raise RuntimeError("consumer lag did not reach 0 within timeout")
+
+
 def check(rid, desc, ok, observed):
     results.append((rid, desc, bool(ok), observed))
 
@@ -77,7 +102,9 @@ def get_order(oid, user):
 
 
 def verify(txn, pid):
-    return http("POST", f"{PAYMENT}/payments/verify?orderId={txn}&paymentId={pid}")
+    r = http("POST", f"{PAYMENT}/payments/verify?orderId={txn}&paymentId={pid}")
+    settle()
+    return r
 
 
 def cancel(oid, user):
@@ -108,7 +135,9 @@ def main():
     pay = sql("payment", f"SELECT status,created_at,amount FROM payments WHERE order_id={oid}")
     check("S1-d", "결제 행 CREATED, createdAt 고정 시각",
           pay and pay[0][0] == "CREATED" and pay[0][1].startswith("2026-09-01 00:00:00"), pay)
+    n0 = len(journal())
     s, r = verify(txn, "pay_S1")
+    verify_calls = journal()[n0:]
     check("S1-e", "/payments/verify 200", s == 200, f"{s} {r}")
     s, g = get_order(oid, 101)
     check("S1-f", "결제 확정 후 CONFIRMED/PAID", (g["orderStatus"], g["paymentStatus"]) == ("CONFIRMED", "PAID"),
@@ -208,10 +237,14 @@ def main():
     print("\n외부 호출(WireMock journal):")
     for k, v in sorted(by.items()):
         print(f"  {v:>3}  {k}")
+    print("\nS1 verify 한 건이 만든 외부 호출(도착 순서):")
+    for x in verify_calls:
+        action = json.loads(x["body"]).get("action") if x["url"] == "/audit/log" else ""
+        print(f"  {x['method']} {x['url']} {action}")
     print(f"\n{len(results) - fails}/{len(results)} PASS")
 
     if args.dump:
-        dump = {"requests": trace, "wiremock": j,
+        dump = {"requests": trace, "wiremock": j, "s1_verify_calls": verify_calls,
                 "db": {svc: {t: sql(svc, f"SELECT * FROM {t} ORDER BY 1") for t in tables}
                        for svc, tables in {"order": ["orders", "order_items", "order_status_history"],
                                            "coupon": ["coupons", "coupon_usage"],

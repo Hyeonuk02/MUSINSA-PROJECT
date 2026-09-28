@@ -124,3 +124,34 @@ Docker 메모리 8GB에서 베이스라인 단계에 MySQL 6 + JVM 6 + Kafka + W
 WireMock journal 127건(본문 포함)·DB 7테이블이 **정규화 없이 동일**했다(결제 성공·확정 경로 포함).
 관찰된 표기 차이(정규화 후보): 주문 생성 응답 `totalAmount`는 쿠폰이 없으면 `100000`, 쿠폰이 있으면 `95000.00`(할인액의 scale을 따라감),
 재조회는 항상 `100000.00`(DB `decimal(38,2)`). 이 차이는 같은 스택 안에서도 요청 종류에 따라 생기므로 A/A에서는 양쪽이 같다.
+
+### L7. Kafka: 스택별 브로커, 후속 처리 전부 Order consumer, 재시도 없음
+
+**결정**
+- 브로커는 **스택마다 하나**(KRaft 단일 노드, `apache/kafka:4.3.1` digest 고정). 스택 네트워크의 `kafka`로 찾는다.
+  토픽 `payment-events`(파티션 1)와 consumer group `order-service`는 두 스택에서 이름이 같다.
+- 데이터는 tmpfs. 초기화 = 브로커 재생성(토픽·offset·group이 모두 빈다). 토픽은 `deploy/compose/kafka/init-topics.sh`가
+  만들고 healthy = "토픽까지 준비됨". 자동 토픽 생성은 끈다. `reset.sh`는 Order consumer가 새 브로커에서 파티션을 받을 때까지 기다린다.
+- 결제 확정 후속 처리 셋(주문 상태 변경, PAYMENT_COMPLETED_SUCCESS 감사 로그, 알림)을 **모두 Order consumer**로 옮긴다.
+  감사 로그 본문은 Payment가 직렬화해 이벤트에 싣는다. consumer는 재시도하지 않는다.
+
+**근거**
+- 스택별 브로커: new 격리 규칙(hyeonuk-dev `deploy/k8s/new/networkpolicy.yaml`, `istio/sidecar-new.yaml`)에 Kafka 자리가 없다.
+  공유 브로커면 합칠 때 Kafka를 verify ns에 두거나 팀원 파일을 고쳐야 한다. 스택별이면 k8s에서도 각 ns 안에 두면 되고,
+  토픽·group 이름이 같아 legacy/new env가 완전히 같아진다(L2). 대가는 브로커 1개분 메모리(약 300~400MB).
+- 후속 처리 전부 consumer: 원본 동기 흐름의 외부 호출 순서가 그대로 보존된다(한 스레드에서 순서대로).
+  감사 로그만 Payment에 남기면 Payment와 consumer가 동시에 외부 호출을 해 journal 순서가 매번 달라질 수 있다.
+  없는 주문에서 감사 로그가 나가지 않는 점도 원본과 같다.
+- 재시도 없음: 상태 변경 뒤 실패해 재전달되면 이력·감사 로그·배송 요청이 중복된다.
+
+**실측에서 나온 것**
+- Boot 4(Jackson 3)는 기본 JSON 직렬화가 **속성 알파벳순**이다. payment에서 order로 복사한 `NotificationRequest`가 그대로면
+  알림 본문 키 순서가 바뀌었다. 전체 필드 생성자가 있는 DTO(`AuditLogRequest`)는 생성자 파라미터 순서를 따라 영향이 없었다.
+  `@JsonPropertyOrder`로 원본 순서를 고정해 전환 전후 journal이 바이트 단위로 같아졌다.
+  → New의 "정상 변경" 실험(Payment를 Boot 4로 올리기)에서 **JSON 키 순서 차이**가 생긴다는 뜻이다. Normalization에 키 순서 정규화가 필요하다(v10.1 §5.3).
+- 앱을 재시작하지 않아도 브로커 재생성 후 consumer가 약 2초 만에 다시 붙는다(`auto-offset-reset: earliest`로 리셋 직후 이벤트를 놓치지 않음).
+
+**대안**
+- 공유 브로커 + 스택별 토픽(프롬프트 원안) — 위 격리 규칙 문제로 배제.
+- 감사 로그는 Payment에 남기기 — 호출 순서 비결정성으로 배제.
+- 이벤트 value를 Spring JsonSerializer로 — Boot 3(Jackson 2)와 Boot 4(Jackson 3)의 타입 헤더·직렬화 차이를 피하려고 문자열로 보낸다.
