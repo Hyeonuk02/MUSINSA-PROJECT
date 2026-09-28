@@ -8,7 +8,7 @@
 |---|---|---|
 | kind | `v0.33.0` (go1.27.1 darwin/arm64) | 계획의 `>= v0.25.0` 조건 충족. 기본 kindnetd가 NetworkPolicy를 지원 |
 | kindest/node | `kindest/node:v1.35.8@sha256:07b2536e30b803ed61d1677a79df6115f798ce64c80f9e22f6ed45afd09323c0` | Istio 1.31 공식 지원 범위(k8s 1.32~1.36) 안. 로컬 `kubectl v1.34.1`과 1 minor 차이로 스큐 정책 허용 범위 |
-| Istio | `1.31.1` (1.2에서 설치) | 최신 안정 릴리스 계열. [Announcing Istio 1.31](https://istio.io/latest/news/releases/1.31.x/announcing-1.31/) — "officially supported on Kubernetes versions 1.32 to 1.36" |
+| Istio | `1.31.1` | 최신 안정 릴리스 계열. [Announcing Istio 1.31](https://istio.io/latest/news/releases/1.31.x/announcing-1.31/) — "officially supported on Kubernetes versions 1.32 to 1.36" |
 | 클러스터 이름 | `musinsa-phase1` (kubectl context `kind-musinsa-phase1`) | |
 | Ingress 진입점 | host `80` → node `30080`, host `443` → node `30443` (extraPortMappings) | kind에는 LoadBalancer 구현이 없다. Phase 2의 k6가 클러스터 밖에서 Ingress로 반복 요청하므로 port-forward 프로세스에 의존하지 않는 호스트 포트를 쓴다 |
 
@@ -105,7 +105,67 @@ spec:
 
 ---
 
-## 1.2 Istio 설치와 sidecar 주입 — 미착수
+## 1.2 Istio 설치와 sidecar 주입 — 완료
+
+정의 파일: `deploy/k8s/istio/istio-install.yaml`, 설치 기록: `deploy/k8s/istio/README.md`
+
+### 설치
+
+```bash
+brew install istioctl                                          # 1.31.1
+istioctl install -f deploy/k8s/istio/istio-install.yaml -y      # profile=default
+```
+
+```
+$ istioctl version
+client version: 1.31.1
+control plane version: 1.31.1
+data plane version: 1.31.1 (1 proxies)
+```
+
+프로파일은 `default`(istiod + istio-ingressgateway)이고, 거기에 두 가지만 덧붙였다.
+`istio-ingressgateway` Service를 `type: NodePort`(80→30080, 443→30443)로 고정하고
+`nodeSelector: ingress-ready=true`를 줬다. kind에는 LoadBalancer 구현이 없어
+기본값이면 Service가 Pending으로 남고, 1.1에서 뚫은 호스트 포트와 이어지지 않는다.
+
+```
+$ kubectl get svc -n istio-system istio-ingressgateway
+NAME                   TYPE       CLUSTER-IP     PORT(S)
+istio-ingressgateway   NodePort   10.96.216.76   15021:30513/TCP,80:30080/TCP,443:30443/TCP
+```
+
+`Gateway` / `VirtualService`는 1.6에서 만든다.
+
+### sidecar 주입
+
+`legacy`, `new`에 `istio-injection=enabled`.
+`observability`, `verify`, `default`는 메시에 넣을 이유가 없어 `istio-injection=disabled`로 명시했다
+(라벨이 없으면 `istioctl analyze`가 IST0102 Info를 낸다).
+
+`legacy`에 샘플 curl pod `inject-check`를 띄워 확인했다. 이 pod는 1.3b의 메시 경유 확인에 다시 쓴다.
+
+```
+$ kubectl get pod inject-check -n legacy
+NAME           READY   STATUS    RESTARTS   AGE
+inject-check   2/2     Running   0          5s
+```
+
+**`istio-proxy`는 `.spec.containers`가 아니라 `.spec.initContainers`에 있다.**
+Istio 1.31은 Kubernetes native sidecar(`restartPolicy: Always` initContainer)를 기본으로 쓴다.
+계획서의 "컨테이너 2개(app, istio-proxy)" 기준은 `READY 2/2`로 충족된다.
+
+```
+$ kubectl get pod inject-check -n legacy -o jsonpath='{range .spec.initContainers[*]}{.name}{"\n"}{end}'
+istio-init
+istio-proxy
+```
+
+### 검증
+
+```
+$ istioctl analyze --all-namespaces
+✔ No validation issues found when analyzing all namespaces.
+```
 
 ## 1.3a 앱 배포 (기능) — 미착수
 

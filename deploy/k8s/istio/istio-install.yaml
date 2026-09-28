@@ -1,0 +1,44 @@
+# Phase 1.2 - Istio 설치 정의
+#
+# Istio의 역할은 셋뿐이다 (docs/phase1-plan.md).
+#   1) 미러링 배달        1.6
+#   2) REGISTRY_ONLY guardrail  1.5 (격리 경계 자체는 Kubernetes NetworkPolicy)
+#   3) proxy 스팬         1.4
+# 그 밖의 기능(canary, retry, circuit breaker, mTLS 튜닝, Egress Gateway 등)은 쓰지 않는다.
+#
+# 이 파일은 이후 단계에서 meshConfig가 추가되며 같은 명령으로 다시 적용한다.
+#   1.4  meshConfig.extensionProviders (OTel Collector)
+#   1.5  meshConfig.outboundTrafficPolicy.mode: REGISTRY_ONLY
+#
+# 적용:  istioctl install -f deploy/k8s/istio/istio-install.yaml -y
+apiVersion: install.istio.io/v1alpha1
+kind: IstioOperator
+metadata:
+  name: musinsa-phase1
+spec:
+  profile: default
+  components:
+    ingressGateways:
+      - name: istio-ingressgateway
+        enabled: true
+        k8s:
+          # kind에는 LoadBalancer 구현이 없어 기본 type(LoadBalancer)이면
+          # Service가 Pending으로 남는다. 1.1에서 노드 30080/30443을
+          # 호스트 80/443에 매핑해 두었으므로 NodePort로 고정한다.
+          service:
+            type: NodePort
+            ports:
+              - name: status-port
+                port: 15021
+                targetPort: 15021
+              - name: http2
+                port: 80
+                targetPort: 8080
+                nodePort: 30080
+              - name: https
+                port: 443
+                targetPort: 8443
+                nodePort: 30443
+          # 포트 매핑이 걸린 노드에 게이트웨이를 고정한다 (kind ingress 표준 패턴).
+          nodeSelector:
+            ingress-ready: "true"
