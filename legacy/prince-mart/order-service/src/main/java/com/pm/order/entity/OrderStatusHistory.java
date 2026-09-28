@@ -1,7 +1,8 @@
 package com.pm.order.entity;
 
+import com.pm.order.config.AppClock;
+
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import java.time.LocalDateTime;
 
 @Entity
@@ -18,9 +19,14 @@ public class OrderStatusHistory {
 
     private String status;
     
-    @CreationTimestamp
     @Column(name="changed_at")
     private LocalDateTime changedAt;
+
+    // [LEGACY_CHANGES L-I1] @CreationTimestamp 대체. insert 때마다 채우는 동작은 같고 시각 출처만 Clock이다.
+    @PrePersist
+    protected void onCreateTimestamp() {
+        this.changedAt = AppClock.now();
+    }
     
     @Column(name="changed_by")
     private String changedBy; // Who did it? "SYSTEM" or "ADMIN_123"

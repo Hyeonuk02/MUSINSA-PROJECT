@@ -1,7 +1,8 @@
 package com.pm.payment.entity;
 
+import com.pm.payment.config.AppClock;
+
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
@@ -21,8 +22,13 @@ public class Refund {
     private String reason;
     private String status; // PENDING, PROCESSED, FAILED
 
-    @CreationTimestamp
     private LocalDateTime createdAt;
+
+    // [LEGACY_CHANGES L-I1] @CreationTimestamp 대체. insert 때마다 채우는 동작은 같고 시각 출처만 Clock이다.
+    @PrePersist
+    protected void onCreateTimestamp() {
+        this.createdAt = AppClock.now();
+    }
 
 	public Long getRefundId() {
 		return refundId;

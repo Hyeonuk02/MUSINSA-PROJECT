@@ -1,7 +1,8 @@
 package com.pm.payment.entity;
 
+import com.pm.payment.config.AppClock;
+
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 import java.util.List;
@@ -24,9 +25,14 @@ public class Payment {
     private String currency;
     private String status;        // PENDING, COMPLETED, FAILED, REFUNDED
 
-    @CreationTimestamp
     @Column(updatable = false)
     private LocalDateTime createdAt;
+
+    // [LEGACY_CHANGES L-I1] @CreationTimestamp 대체. insert 때마다 채우는 동작은 같고 시각 출처만 Clock이다.
+    @PrePersist
+    protected void onCreateTimestamp() {
+        this.createdAt = AppClock.now();
+    }
 
     @OneToMany(mappedBy = "payment", cascade = CascadeType.ALL)
     private List<Refund> refunds;

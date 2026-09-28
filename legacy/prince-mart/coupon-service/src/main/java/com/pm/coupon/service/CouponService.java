@@ -16,6 +16,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.Clock;
 import java.time.LocalDateTime;
 import java.util.List;
 
@@ -27,17 +28,20 @@ public class CouponService {
     private final OrderClient orderClient;
     private final AuditClient auditClient;
     private final ObjectMapper objectMapper;
+    private final Clock clock; // [LEGACY_CHANGES L-I1]
 
     public CouponService(CouponRepository couponRepository, 
                          CouponUsageRepository usageRepository, 
                          OrderClient orderClient,
                          AuditClient auditClient,
-                         ObjectMapper objectMapper) {
+                         ObjectMapper objectMapper,
+                         Clock clock) {
         this.couponRepository = couponRepository;
         this.usageRepository = usageRepository;
         this.orderClient = orderClient;
         this.auditClient = auditClient;
         this.objectMapper = objectMapper;
+        this.clock = clock;
     }
 
     @Transactional
@@ -63,7 +67,7 @@ public class CouponService {
             return new CouponResponse(request.getCode(), false, BigDecimal.ZERO, "You have already used this coupon.");
         }
 
-        if (coupon.getExpiryDate() != null && coupon.getExpiryDate().isBefore(LocalDateTime.now())) {
+        if (coupon.getExpiryDate() != null && coupon.getExpiryDate().isBefore(LocalDateTime.now(clock))) {
             return new CouponResponse(request.getCode(), false, BigDecimal.ZERO, "Coupon has expired.");
         }
 

@@ -1,5 +1,7 @@
 package com.pm.coupon.entity;
 
+import com.pm.coupon.config.AppClock;
+
 import jakarta.persistence.*;
 import java.time.LocalDateTime;
 
@@ -27,7 +29,8 @@ public class CouponUsage {
 
     @PrePersist
     protected void onCreate() {
-        this.usedAt = LocalDateTime.now();
+        // [LEGACY_CHANGES L-I1] LocalDateTime.now() -> Clock 기반
+        this.usedAt = AppClock.now();
     }
 
     public CouponUsage() {}

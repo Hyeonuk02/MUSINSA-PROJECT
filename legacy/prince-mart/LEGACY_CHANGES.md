@@ -64,3 +64,33 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
 - 런타임 옵션은 upstream 값(`-Xmx384M -Xms256M -XX:+UseSerialGC`)을 유지하고 `-Duser.timezone=UTC`만 추가했다.
 - 파일명: macOS 파일시스템은 대소문자를 구분하지 않아 `Dockerfile`을 따로 둘 수 없으므로 upstream `DockerFile`의 내용을 교체했다.
 - OTel Java agent는 이미지에 넣지 않는다(hyeonuk-dev decision-log D5와 같은 방식으로 실행 시 주입).
+
+---
+
+## I — 통제·계측
+
+### L-I1. 시각 고정 (`APP_FIXED_CLOCK` → `java.time.Clock`)
+
+- 신규: `{order,coupon,payment}-service/.../config/ClockConfig.java`, `config/AppClock.java`
+  - `app.fixed-clock`(`application-local.yml`, env `APP_FIXED_CLOCK`)이 있으면 `Clock.fixed(값, UTC)`, 없으면 `Clock.systemUTC()`.
+    hyeonuk-dev `services/order`의 `ClockConfig`와 같은 방식이다.
+  - JPA 엔티티는 Spring 빈을 주입받을 수 없으므로 `ClockConfig`가 같은 Clock을 정적 holder `AppClock`에도 담는다.
+- 교체한 곳 (12곳)
+
+| 파일 | 전 | 후 |
+|---|---|---|
+| order `entity/Order.java` `createdAt` | `@CreationTimestamp` | `@PrePersist` → `AppClock.now()` |
+| order `entity/OrderStatusHistory.java` `changedAt` | `@CreationTimestamp` | `@PrePersist` → `AppClock.now()` |
+| payment `entity/Payment.java` `createdAt` | `@CreationTimestamp` | `@PrePersist` → `AppClock.now()` |
+| payment `entity/Refund.java` `createdAt` | `@CreationTimestamp` | `@PrePersist` → `AppClock.now()` |
+| coupon `entity/CouponUsage.java` `usedAt` | `@PrePersist` `LocalDateTime.now()` | `@PrePersist` `AppClock.now()` |
+| coupon `service/CouponService.java` `validateCoupon` 만료 판정 | `LocalDateTime.now()` | `LocalDateTime.now(clock)` (생성자 주입) |
+| `{order,coupon,payment}` `exception/GlobalExceptionHandler.java` `ErrorDetails.timestamp` ×2씩 | `LocalDateTime.now()` | `LocalDateTime.now(clock)` (생성자 주입) |
+
+- 동작: insert마다 무조건 값을 채우는 `@CreationTimestamp`의 동작은 유지하고 시각 출처만 Clock으로 바꿨다.
+  `APP_FIXED_CLOCK`이 없으면 시스템 시각(UTC, JVM도 `-Duser.timezone=UTC`)이라 upstream과 같다.
+- **알려진 부수효과 — 시각 동점 정렬**: 고정 시각에서는 모든 `created_at`이 같다. `GET /orders/history`
+  (`findByUserIdOrderByCreatedAtDesc`)가 동점이 되어 MySQL 8.4에서 **PK 오름차순**으로 나온다(실측 `[1,2,3]`, 3회 동일).
+  실제 시각이면 최신순(`[3,2,1]`)이다. `OrderStatusHistoryRepository.findByOrderOrderIdOrderByChangedAtDesc`도 같은 성질이지만
+  코드에서 호출되지 않는다. 비즈니스 로직은 건드리지 않고 이 성질을 문서화한다(docs/legacy-decision-log.md L5).
+- `Refund`는 upstream 코드에 생성 경로가 없다(엔티티와 리포지토리만 있음). 교체만 하고 실행 확인 대상에서 뺀다.

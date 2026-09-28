@@ -29,3 +29,7 @@ spring:
 eureka:
   client:
     enabled: false
+
+# [LEGACY_CHANGES L-I1] 시각 고정. 비어 있으면 시스템 시각(UTC). config/ClockConfig 참조.
+app:
+  fixed-clock: ${APP_FIXED_CLOCK:}
