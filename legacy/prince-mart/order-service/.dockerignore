@@ -1,0 +1,7 @@
+target/*.jar
+!target/*.jar
+src/
+pom.xml
+.mvn/
+mvnw
+mvnw.cmd
