@@ -1,0 +1,63 @@
+# Phase 1.3a - Order 앱 (services/order)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  labels:
+    app: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      initContainers:
+        # MySQL이 TCP를 열기 전(= init SQL 실행 중)에는 앱을 띄우지 않는다.
+        # 앱은 기동 시 커넥션을 잡으므로 먼저 뜨면 CrashLoopBackOff가 된다.
+        - name: wait-for-mysql
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - until nc -z mysql 3306; do echo "waiting for mysql:3306"; sleep 2; done
+      containers:
+        - name: order
+          image: order-app:phase1
+          # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http
+              containerPort: 8080
+          env:
+            - name: DB_URL
+              value: jdbc:mysql://mysql:3306/orders?serverTimezone=UTC
+            - name: DB_USER
+              value: poc
+            - name: DB_PASSWORD
+              value: poc
+            - name: APP_FIXED_CLOCK
+              # legacy/new 모두 같은 값. 시각 차이가 Evidence 비교에 섞이지 않게 한다.
+              value: "2026-09-01T00:00:00Z"
+          readinessProbe:
+            # Tomcat은 기동 마지막에 포트를 연다. actuator를 넣지 않기 위해 TCP로 본다.
+            tcpSocket:
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 40
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order
+spec:
+  selector:
+    app: order
+  ports:
+    - name: http
+      port: 8080
+      targetPort: 8080

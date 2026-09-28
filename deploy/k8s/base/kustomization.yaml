@@ -1,0 +1,15 @@
+# Phase 1.3a - Order + MySQL 공통 base
+#
+# base에는 네임스페이스를 두지 않는다. legacy / new overlay가 namespace만 다르게 지정해
+# 같은 매니페스트를 두 번 배포한다 (두 스택은 구성이 동일해야 비교가 성립한다).
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  - mysql.yaml
+  - order.yaml
+
+configMapGenerator:
+  - name: mysql-initdb
+    files:
+      - mysql-initdb/schema.sql

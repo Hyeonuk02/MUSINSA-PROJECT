@@ -167,7 +167,95 @@ $ istioctl analyze --all-namespaces
 ✔ No validation issues found when analyzing all namespaces.
 ```
 
-## 1.3a 앱 배포 (기능) — 미착수
+## 1.3a 앱 배포 (기능) — 완료
+
+정의 파일: `services/order/`, `deploy/k8s/base/`, `deploy/k8s/legacy/`, `deploy/k8s/new/`
+
+### 앱 전환 (Phase 0 → services/order)
+
+`poc/nginx-mirroring/app`을 `services/order`로 복사한 뒤 아래만 바꿨다. Phase 0 코드는 그대로 둔다.
+
+| 대상 | 변경 |
+|---|---|
+| `pom.xml` | `org.postgresql:postgresql` → `com.mysql:mysql-connector-j` |
+| `application.yml` | `jdbc:mysql://mysql:3306/orders?serverTimezone=UTC`, `hibernate.dialect: org.hibernate.dialect.MySQLDialect`, `spring.sql.init.mode: never` |
+| `schema.sql` | 앱에서 제거하고 `deploy/k8s/base/mysql-initdb/schema.sql`로 이동 (MySQL 문법) |
+| `ClockConfig.java` (신규) | `APP_FIXED_CLOCK` → `Clock.fixed(..., UTC)`, 비어 있으면 `Clock.systemUTC()` |
+| `Order.java` / `OrderController.java` | `Instant.now()` → 주입된 `Clock` 사용 |
+| `Dockerfile` | `ENTRYPOINT`에 `-Duser.timezone=UTC` |
+
+`RequestLogFilter`는 건드리지 않았다. `arrivedAt`/`completedAt`은 실측 타이밍이라 고정 시각과 무관하다.
+
+**스키마 소유자는 MySQL init SQL 하나다.** 앱은 DDL을 만들지 않는다(`sql.init.mode: never`).
+DDL 사본이 둘이면 "emptyDir + init SQL 재실행 = S0 리셋"이라는 성질이 흐려지고 Phase 2에서 어긋난다.
+
+`TIMESTAMPTZ` → `DATETIME(6)`. MySQL에는 timezone-aware 타입이 없어, 세션 타임존
+(`serverTimezone=UTC`)과 JVM 타임존을 UTC로 고정하고 UTC 값을 그대로 저장한다.
+`TIMESTAMP`는 2038년 상한이 있어 쓰지 않았다.
+
+### 배포
+
+`deploy/k8s/base/`(네임스페이스 없음) + `legacy`/`new` overlay. 두 overlay의 차이는 `namespace`뿐이다.
+
+```bash
+docker build -t order-app:phase1 ./services/order
+kind load docker-image order-app:phase1 --name musinsa-phase1
+kubectl apply -k deploy/k8s/legacy
+kubectl apply -k deploy/k8s/new
+```
+
+- MySQL `mysql:8.4` — `strategy: Recreate`, emptyDir, init SQL은 `configMapGenerator`로 만든
+  ConfigMap을 `/docker-entrypoint-initdb.d`에 마운트
+- readiness probe는 `mysqladmin ping -h 127.0.0.1`. `-h`로 TCP를 강제하는 것이 핵심이다.
+  MySQL 이미지는 초기화 중 `--skip-networking`으로 임시 서버를 띄우므로,
+  init SQL이 끝나기 전에는 이 ping이 실패한다. 즉 readiness = "스키마까지 준비됨"
+- Order는 initContainer `wait-for-mysql`(`until nc -z mysql 3306`)로 MySQL readiness 이후 기동
+- `imagePullPolicy: IfNotPresent` — 이미지는 `kind load`로 노드 안에만 있다
+
+```
+$ kubectl get pods -n legacy
+mysql-67b5b8558d-wvkt7   2/2     Running
+order-c75df6655-pxcgh    2/2     Running
+$ kubectl get pods -n new
+mysql-67b5b8558d-k5d47   2/2     Running
+order-c75df6655-p9dv7    2/2     Running
+```
+
+### 기능 확인 (port-forward)
+
+legacy / new 양쪽 동일한 결과.
+
+```
+POST /api/orders   -> HTTP 201
+  {"id":1,"productId":"P-1","quantity":2,"unitPrice":15000,"totalAmount":30000,
+   "status":"CREATED","createdAt":"2026-09-01T00:00:00Z"}
+GET  /api/orders/1    -> HTTP 200 (같은 본문)
+GET  /api/orders/9999 -> HTTP 404
+```
+
+`createdAt`이 `APP_FIXED_CLOCK` 값(`2026-09-01T00:00:00Z`)으로 고정된다. DB 저장값도 UTC 그대로다.
+
+```
+$ mysql -e "SELECT id, product_id, created_at FROM orders"
+1  P-1  2026-09-01 00:00:00.000000
+```
+
+### S0 리셋 확인
+
+```
+$ kubectl rollout restart deployment/mysql -n new     # 리셋 전: 주문 1건, next_id=2
+$ kubectl rollout status  deployment/mysql -n new
+deployment "mysql" successfully rolled out
+
+$ mysql -e "SELECT COUNT(*) FROM orders"   -> 0
+$ AUTO_INCREMENT                           -> 1
+```
+
+readiness를 통과한 뒤 앱 쪽에서도 확인했다.
+
+- `GET /api/orders/1` → 404 (데이터가 사라짐)
+- `POST /api/orders` → 201, **`id` = 1** (앱이 커넥션을 복구하고 auto-increment도 초기화됨)
+- 같은 시각 `legacy`의 `GET /api/orders/1`은 200 그대로 — 두 스택의 DB가 독립적이다
 
 ## 1.3b 앱 배포 (메시 경유) — 미착수
 

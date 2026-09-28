@@ -1,0 +1,33 @@
+spring:
+  application:
+    name: order-app
+  datasource:
+    # Phase 1.3a: MySQL 8. serverTimezone=UTC로 드라이버가 세션 타임존을 UTC로 고정한다
+    # (JVM도 -Duser.timezone=UTC. Dockerfile 참조).
+    url: ${DB_URL:jdbc:mysql://localhost:3306/orders?serverTimezone=UTC}
+    username: ${DB_USER:poc}
+    password: ${DB_PASSWORD:poc}
+  sql:
+    init:
+      # 스키마 소유자는 MySQL의 /docker-entrypoint-initdb.d 하나뿐이다
+      # (deploy/k8s/base/mysql-initdb/schema.sql). 앱은 DDL을 만들지 않는다.
+      # emptyDir + init SQL 재실행이 곧 S0 리셋이라는 성질을 앱이 흐리지 않게 하기 위함.
+      mode: never
+  jpa:
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+
+server:
+  port: 8080
+
+app:
+  # 비어 있으면 시스템 시각(개발 편의). k8s에서는 APP_FIXED_CLOCK env로 주입한다.
+  fixed-clock: ${APP_FIXED_CLOCK:}
+
+# 비교 대상 application header 목록 (확정 목록은 추가 결정 필요 #2). 현재 값은 문서 예시.
+request-log:
+  headers: Content-Type,Idempotency-Key

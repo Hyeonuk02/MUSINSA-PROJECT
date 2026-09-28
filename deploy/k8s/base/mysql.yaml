@@ -1,0 +1,77 @@
+# Phase 1.3a - MySQL 8
+#
+# 데이터는 emptyDir에만 있다. pod가 새로 뜨면 데이터 디렉터리가 비고 MySQL 이미지가
+# /docker-entrypoint-initdb.d를 다시 실행하므로, `kubectl rollout restart deployment/mysql`
+# 한 번이 곧 S0(시드 상태) 리셋이다.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  strategy:
+    # RollingUpdate면 rollout restart 때 새 pod가 먼저 뜨면서 Service 뒤에 MySQL이
+    # 잠깐 둘 공존한다. 그러면 "리셋 = 깨끗한 인스턴스 하나"가 깨진다.
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql:8.4
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: orders
+            - name: MYSQL_USER
+              value: poc
+            - name: MYSQL_PASSWORD
+              value: poc
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              # -h 127.0.0.1로 TCP를 강제한다. MySQL 이미지는 초기화 중에
+              # --skip-networking으로 임시 서버를 띄우므로, init SQL이 끝나기 전에는
+              # 이 ping이 실패한다. 즉 readiness = "스키마까지 준비됨".
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" --silent
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 3
+            failureThreshold: 40
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: initdb
+          configMap:
+            name: mysql-initdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
