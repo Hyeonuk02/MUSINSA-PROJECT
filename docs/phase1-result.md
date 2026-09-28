@@ -331,7 +331,105 @@ order.new.svc.cluster.local      8080   outbound   EDS
 
 legacy·new 모두 port-forward 응답과 메시 경유 응답의 본문이 **문자열까지 동일**하다.
 
-## 1.4 관측: OTel Collector + Jaeger — 미착수
+## 1.4 관측: OTel Collector + Jaeger — 진행 중
+
+**현재 상태: Collector Service에 `appProtocol: grpc` + 포트명 `grpc-otlp` / `http-otlp` 수정을
+매니페스트에 반영했고, 다음은 Envoy span 도착 재확인이다.**
+(매니페스트 수정까지 완료. 클러스터 재적용과 확인은 다음 작업.)
+
+정의 파일: `deploy/k8s/observability/otel-collector.yaml`, `deploy/k8s/observability/jaeger.yaml`,
+`deploy/k8s/istio/istio-install.yaml`(meshConfig), `deploy/k8s/istio/telemetry.yaml`
+
+### 고정한 아티팩트 (런타임 다운로드 없음)
+
+| 용도 | 이미지 | digest |
+|---|---|---|
+| OTel Java agent | `autoinstrumentation-java:2.31.1` | `sha256:342ad4c72909bb92b7cd6fa09d5fdd50f41879b5657329e729baeacb46d9a02e` |
+| Collector | `otel/opentelemetry-collector:0.161.0` | `sha256:b6d2b9a85b1029d05b5ad913150c1f014eed4ae99be81a1813ca5ade4a191913` |
+| Jaeger all-in-one (v2) | `jaegertracing/jaeger:2.21.0` | `sha256:3d0ac795ff98aa04d1be04311d2dac6c25b4bfc8322dc02e53bc5b170c5018c3` |
+
+agent는 initContainer가 digest 고정 이미지에서 공유 `emptyDir`로 복사한다.
+기동 중 인터넷에서 jar를 받지 않는다 — 1.5에서 `new`에 default-deny egress와
+REGISTRY_ONLY가 걸리면 다운로드 방식은 그 순간 깨지고, 매번 받아오면 legacy/new가
+같은 agent라는 보장도 사라진다.
+
+`kind load docker-image`는 멀티아치 이미지에서 `content digest ... not found`로 실패했다.
+`docker save --platform linux/arm64` → `kind load image-archive`로 넣고,
+매니페스트가 참조하는 index digest는 노드에서 `crictl pull <image>@sha256:...`로 확보했다.
+
+### 완료된 것
+
+- `observability`에 Collector(OTLP 수신 4317/4318 → OTLP exporter → Jaeger)와
+  Jaeger all-in-one 기동. 둘 다 `Running`
+- Istio 트레이싱 두 단계 모두 적용
+  - `meshConfig.extensionProviders`에 `otel-tracing`(opentelemetry, Collector FQDN:4317)
+  - `Telemetry`(`istio-system`, 메시 전역) `randomSamplingPercentage: 100`
+  - Envoy 리스너에 provider가 실제로 내려온 것을 확인:
+    `envoy.tracers.opentelemetry`, `serviceName: order.legacy`,
+    cluster `outbound|4317||otel-collector.observability.svc.cluster.local`
+- Order에 OTel Java agent 부착. legacy/new 모두 **동일 imageID**
+  (`sha256:4b5bcab8506cb59d0804179e8bab7046f137acbdcc219bca415b355338a7c0c0`)
+- 앱 기동 로그에 agent 부착 확인 (완료 기준)
+
+  ```
+  Picked up JAVA_TOOL_OPTIONS: -javaagent:/otel/javaagent.jar
+  [otel.javaagent ...] io.opentelemetry.javaagent.tooling.VersionLogger - opentelemetry-javaagent - version: 2.31.1
+  ```
+
+- 식별자: `OTEL_SERVICE_NAME` = `order-legacy` / `order-new`,
+  `OTEL_RESOURCE_ATTRIBUTES` = `service.namespace=legacy|new` (overlay patch)
+- **앱 span은 Jaeger에 도착한다.** Jaeger v2의 조회 API는 `/api/v3/*`다(`/api/services`는 404).
+  `/api/v3/services` → `["order-new","order-legacy","jaeger"]`.
+  한 trace 안에 Tomcat·Spring Data·Hibernate·JDBC span이 함께 있다
+
+  ```
+  service=order-legacy  span=GET /api/orders/{id}         parent=8e4e0898a5c9a882   <- 앱 밖(Envoy)
+  service=order-legacy  span=OrderRepository.findById
+  service=order-legacy  span=Session.find poc.order.Order
+  service=order-legacy  span=SELECT orders.orders
+  service=order-legacy  span=Transaction.commit
+  ```
+
+### 막힌 지점과 원인
+
+앱 span의 루트에 **앱이 만들지 않은 parent span id**가 있으므로 Envoy는 span을 만들고
+컨텍스트를 전파하고 있다. 그런데 Jaeger에 Envoy 서비스(`order.legacy`)가 나타나지 않고,
+Collector의 debug exporter에도 `service.name=order-legacy`(앱)만 들어온다.
+
+istio-proxy의 tracing 로그 레벨을 올려 원인을 확인했다.
+
+```
+$ kubectl exec -n legacy mesh-check -c istio-proxy -- pilot-agent request POST "logging?tracing=debug"
+
+debug envoy tracing .../trace_exporter.h:42      Number of exported spans: 1
+debug envoy tracing .../grpc_trace_exporter.cc:39
+  OTLP trace export failed with status: Unavailable,
+  message: upstream connect error or disconnect/reset before headers.
+  reset reason: protocol error{upstream_reset_before_response_started{protocol_error}}
+```
+
+Envoy는 span을 내보내려 했고 Collector로 가는 커넥션도 healthy였지만
+(`outbound|4317||otel-collector... rq_total::1`, `cx_connect_fail::0`),
+**프로토콜이 어긋났다.**
+
+Istio는 Service 포트의 **이름 접두사**로 프로토콜을 판별한다(`grpc-`, `http-`, `http2-`, `tcp-` …).
+포트 이름을 `otlp-grpc`로 지어서 어떤 접두사에도 해당하지 않았고, 그 결과 HTTP/1.1로 취급되어
+HTTP/2만 받는 OTLP gRPC 수신부와 맞지 않았다.
+앱(OTel Java agent)의 export는 sidecar를 거치는 경로가 달라 영향을 받지 않아,
+"앱 span만 도착하고 Envoy span은 사라지는" 모양이 됐다.
+
+### 수정 내용 (매니페스트 반영 완료)
+
+`otel-collector.yaml`, `jaeger.yaml`의 포트 이름을 `otlp-grpc` → `grpc-otlp`,
+`otlp-http` → `http-otlp`로 바꾸고 4317에 `appProtocol: grpc`를 명시했다.
+
+### 다음 작업
+
+1. `kubectl apply -f deploy/k8s/observability/` 재적용
+2. 요청 1건 후 **Envoy span과 앱 span이 한 trace**로 보이는지 확인 (완료 기준)
+3. 요청 10건 → trace 10건 (샘플링 100% 확인, 완료 기준)
+4. 진단용으로 Collector 파이프라인에 넣은 `debug` exporter 제거
+   (현재 `otel-collector.yaml`에 남아 있고 클러스터에도 적용된 상태)
 
 ## 1.5 격리 (Fail-closed) — 미착수
 

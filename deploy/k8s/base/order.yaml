@@ -16,6 +16,22 @@ spec:
         app: order
     spec:
       initContainers:
+        # OTel Java agent를 공유 emptyDir로 복사한다.
+        #
+        # 기동 중 인터넷에서 jar를 받아오지 않는다. 1.5에서 new에 default-deny egress
+        # NetworkPolicy와 REGISTRY_ONLY가 걸리면 다운로드 방식은 그 순간 깨진다.
+        # 또 매번 받아오면 legacy와 new가 같은 agent라는 보장이 없어져,
+        # 관측 결과 차이가 코드 차이인지 도구 차이인지 구분되지 않는다.
+        # 이 이미지는 digest로 고정하고 legacy/new가 동일한 것을 쓴다.
+        - name: otel-agent
+          # ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java:2.31.1
+          # java가 없는 복사 전용 이미지다. /javaagent.jar 하나만 들어 있다.
+          image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java@sha256:342ad4c72909bb92b7cd6fa09d5fdd50f41879b5657329e729baeacb46d9a02e
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "/javaagent.jar", "/otel/javaagent.jar"]
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /otel
         # MySQL이 TCP를 열기 전(= init SQL 실행 중)에는 앱을 띄우지 않는다.
         # 앱은 기동 시 커넥션을 잡으므로 먼저 뜨면 CrashLoopBackOff가 된다.
         - name: wait-for-mysql
@@ -44,9 +60,33 @@ spec:
               # x-request-id는 Envoy가 붙인다. 메시를 실제로 거쳤는지 앱 쪽에서 확인하는 근거이고,
               # 1.6에서 legacy/new 미러 쌍을 맞춰 보는 데도 쓴다.
               value: Content-Type,Idempotency-Key,x-request-id
+            - name: JAVA_TOOL_OPTIONS
+              # JVM이 시작할 때 "Picked up JAVA_TOOL_OPTIONS: ..."를 stderr에 찍는다.
+              # agent가 실제로 붙었는지 앱 로그로 확인하는 근거다.
+              value: -javaagent:/otel/javaagent.jar
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability.svc.cluster.local:4317
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: grpc
+            - name: OTEL_TRACES_SAMPLER
+              # 샘플링 100%. Istio 쪽은 Telemetry의 randomSamplingPercentage로 맞춘다.
+              value: always_on
+            - name: OTEL_METRICS_EXPORTER
+              value: none
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+            - name: OTEL_PROPAGATORS
+              # Envoy가 어느 포맷으로 컨텍스트를 넘기든 앱이 이어받도록 넓게 받는다.
+              # 이게 맞아야 Envoy span과 앱 span이 한 trace가 된다.
+              value: tracecontext,baggage,b3,b3multi
+            # OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES는 legacy/new overlay에서 지정한다.
             - name: APP_FIXED_CLOCK
               # legacy/new 모두 같은 값. 시각 차이가 Evidence 비교에 섞이지 않게 한다.
               value: "2026-09-01T00:00:00Z"
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /otel
+              readOnly: true
           readinessProbe:
             # Tomcat은 기동 마지막에 포트를 연다. actuator를 넣지 않기 위해 TCP로 본다.
             tcpSocket:
@@ -54,6 +94,9 @@ spec:
             initialDelaySeconds: 5
             periodSeconds: 3
             failureThreshold: 40
+      volumes:
+        - name: otel-agent
+          emptyDir: {}
 ---
 apiVersion: v1
 kind: Service

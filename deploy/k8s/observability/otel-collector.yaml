@@ -1,0 +1,107 @@
+# Phase 1.4 - OTel Collector
+#
+# 받는 것: Envoy(Istio extensionProvider)와 Order 앱(OTel Java agent)의 OTLP
+# 보내는 것: Jaeger로 OTLP
+# 둘을 한 Collector로 모아야 Envoy span과 앱 span이 같은 trace로 붙는다.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: otel-collector-config
+  namespace: observability
+data:
+  config.yaml: |
+    receivers:
+      otlp:
+        protocols:
+          grpc:
+            endpoint: 0.0.0.0:4317
+          http:
+            endpoint: 0.0.0.0:4318
+
+    processors:
+      batch: {}
+
+    exporters:
+      debug:
+        verbosity: normal
+      otlp:
+        endpoint: jaeger.observability.svc.cluster.local:4317
+        tls:
+          insecure: true
+
+    service:
+      pipelines:
+        traces:
+          receivers: [otlp]
+          processors: [batch]
+          exporters: [otlp, debug]
+      telemetry:
+        logs:
+          level: info
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: otel-collector
+  namespace: observability
+  labels:
+    app: otel-collector
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: otel-collector
+  template:
+    metadata:
+      labels:
+        app: otel-collector
+      annotations:
+        # config가 바뀌면 pod가 다시 뜨도록 kustomize가 ConfigMap 이름에 해시를 붙인다.
+        # (여기서는 별도 annotation 없이 configMap 이름 변경으로 처리)
+        checksum/config: "phase1.4"
+    spec:
+      containers:
+        - name: otel-collector
+          # otel/opentelemetry-collector:0.161.0 (core - otlp receiver/exporter면 충분)
+          image: otel/opentelemetry-collector@sha256:b6d2b9a85b1029d05b5ad913150c1f014eed4ae99be81a1813ca5ade4a191913
+          imagePullPolicy: IfNotPresent
+          args: ["--config=/conf/config.yaml"]
+          ports:
+            - name: grpc-otlp
+              containerPort: 4317
+            - name: http-otlp
+              containerPort: 4318
+          volumeMounts:
+            - name: config
+              mountPath: /conf
+              readOnly: true
+          readinessProbe:
+            tcpSocket:
+              port: 4317
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 40
+      volumes:
+        - name: config
+          configMap:
+            name: otel-collector-config
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: otel-collector
+  namespace: observability
+spec:
+  selector:
+    app: otel-collector
+  ports:
+    - name: grpc-otlp
+      # 이름 접두사 grpc- 가 있어야 Istio가 HTTP/2로 라우팅한다.
+      # otlp-grpc처럼 접두사가 아니면 HTTP/1.1로 취급되어
+      # Envoy의 span export가 "Unavailable ... protocol error"로 실패한다.
+      appProtocol: grpc
+      port: 4317
+      targetPort: 4317
+    - name: http-otlp
+      port: 4318
+      targetPort: 4318

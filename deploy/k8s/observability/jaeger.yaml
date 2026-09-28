@@ -1,0 +1,63 @@
+# Phase 1.4 - Jaeger all-in-one (v2)
+#
+# Jaeger v2는 OTLP 수신(4317/4318)이 기본이고 저장소는 메모리다.
+# Phase 1에서는 trace가 한 곳에 모여 보이기만 하면 되므로 영속화하지 않는다.
+# 예전 native `jaeger` exporter는 Collector에서 제거됐으므로 쓰지 않는다 -- Collector는 OTLP로 보낸다.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: jaeger
+  namespace: observability
+  labels:
+    app: jaeger
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: jaeger
+  template:
+    metadata:
+      labels:
+        app: jaeger
+    spec:
+      containers:
+        - name: jaeger
+          # jaegertracing/jaeger:2.21.0
+          image: jaegertracing/jaeger@sha256:3d0ac795ff98aa04d1be04311d2dac6c25b4bfc8322dc02e53bc5b170c5018c3
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: grpc-otlp
+              containerPort: 4317
+            - name: http-otlp
+              containerPort: 4318
+            - name: ui
+              containerPort: 16686
+          readinessProbe:
+            tcpSocket:
+              port: 16686
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 40
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: jaeger
+  namespace: observability
+spec:
+  selector:
+    app: jaeger
+  ports:
+    - name: grpc-otlp
+      # 이름 접두사 grpc- 가 있어야 Istio가 HTTP/2로 라우팅한다.
+      # otlp-grpc처럼 접두사가 아니면 HTTP/1.1로 취급되어
+      # Envoy의 span export가 "Unavailable ... protocol error"로 실패한다.
+      appProtocol: grpc
+      port: 4317
+      targetPort: 4317
+    - name: http-otlp
+      port: 4318
+      targetPort: 4318
+    - name: ui
+      port: 16686
+      targetPort: 16686

@@ -17,6 +17,16 @@ metadata:
   name: musinsa-phase1
 spec:
   profile: default
+  meshConfig:
+    enableTracing: true
+    # Istio 트레이싱은 두 단계다. 여기서 provider를 "정의"만 하고,
+    # 실제로 켜는 것은 Telemetry 리소스(telemetry.yaml)에서 이 이름을 선택하는 것이다.
+    # Telemetry만 만들면 provider를 찾지 못한다.
+    extensionProviders:
+      - name: otel-tracing
+        opentelemetry:
+          service: otel-collector.observability.svc.cluster.local
+          port: 4317
   components:
     ingressGateways:
       - name: istio-ingressgateway

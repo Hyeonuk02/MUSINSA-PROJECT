@@ -1,0 +1,16 @@
+# Phase 1.4 - legacy 스택의 OTel 식별자.
+# agent artifact는 legacy/new가 동일하고(digest 고정), 구분은 이 두 값으로만 한다.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+spec:
+  template:
+    spec:
+      containers:
+        - name: order
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: order-legacy
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=legacy

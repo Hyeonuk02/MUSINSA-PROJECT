@@ -1,0 +1,15 @@
+# Phase 1.4 - 메시 전역 트레이싱
+#
+# istio-system에 두고 selector를 비우면 메시 전체에 적용된다.
+# providers의 이름은 istio-install.yaml의 meshConfig.extensionProviders에서 정의한 것이다.
+apiVersion: telemetry.istio.io/v1
+kind: Telemetry
+metadata:
+  name: mesh-default
+  namespace: istio-system
+spec:
+  tracing:
+    - providers:
+        - name: otel-tracing
+      # 기본값은 1%다. 검증 시스템은 모든 요청의 trace가 필요하다.
+      randomSamplingPercentage: 100.00

@@ -5,3 +5,6 @@ namespace: new
 
 resources:
   - ../base
+
+patches:
+  - path: order-otel.yaml

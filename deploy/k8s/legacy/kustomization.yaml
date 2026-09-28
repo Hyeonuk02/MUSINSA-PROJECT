@@ -5,3 +5,6 @@ namespace: legacy
 
 resources:
   - ../base
+
+patches:
+  - path: order-otel.yaml
