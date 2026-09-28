@@ -6,6 +6,9 @@ Legacy → New 시스템 교체 시 동일한 트래픽을 Istio 미러링으로
 
 - [docs/architecture.md](docs/architecture.md) — 전체 아키텍처 설계
 - [docs/phase1-plan.md](docs/phase1-plan.md) — Phase 1 (Kubernetes + Istio 기반) 상세 계획
+- [docs/phase1-result.md](docs/phase1-result.md) — Phase 1 실행 결과 (버전 고정, 단계별 확인)
+- [docs/isolation-proof.md](docs/isolation-proof.md) — `new` 네임스페이스 격리 증명
+- [docs/decision-log.md](docs/decision-log.md) — 구현 중 내린 결정 (결정 / 근거 / 대안)
 
 ## 디렉터리
 

@@ -1,6 +1,7 @@
 # Phase 1 실행 결과
 
 `docs/phase1-plan.md`의 각 단계에 대한 확정 버전과 확인 결과를 기록한다.
+결정의 근거와 검토한 대안은 [decision-log.md](decision-log.md)에 따로 있다.
 
 ## 고정 버전
 

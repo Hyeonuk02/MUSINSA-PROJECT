@@ -60,8 +60,8 @@ Istio Ingress Gateway → VirtualService ── route  → legacy ns (order·cou
 ### 1.1 클러스터
 
 ```
-Kubernetes (kind ≥ v0.25)
-├─ istio-system      Istiod, Ingress Gateway
+Kubernetes  kind v0.33.0 / kindest/node v1.35.8 (digest 고정) / Istio 1.31.1   ← Phase 1에서 확정
+├─ istio-system      Istiod, Ingress Gateway (NodePort 30080/30443 → 호스트 80/443)
 ├─ observability     OTel Collector, Jaeger (샘플링 100%)
 ├─ legacy            order / coupon / payment (+sidecar), 각 MySQL 8(emptyDir + init SQL, strategy Recreate), wiremock
 ├─ new               동일. NetworkPolicy default-deny egress(허용: DNS, 메시 내부, wiremock, verify)
@@ -72,11 +72,13 @@ Kubernetes (kind ≥ v0.25)
 
 | 역할 | 구현 |
 |---|---|
-| 미러링 배달 | VirtualService `route→legacy`, `mirror→new`, `mirrorPercentage 100`. fire-and-forget, 미러 요청 Host에 `-shadow` |
+| 미러링 배달 | VirtualService `route→legacy`, `mirror→new`, `mirrorPercentage 100`. fire-and-forget(New 응답은 버려짐). **미러 요청의 Host는 원본과 동일하다** — Istio 1.31은 mirror 정책에 `disableShadowHostSuffixAppend: true`를 기본으로 넣어 `-shadow` 접미사를 붙이지 않는다(1.28의 `DISABLE_SHADOW_HOST_SUFFIX` 도입으로 기본 동작 변경). Phase 1.6에서 실측하고 기본값을 유지하기로 정했다 |
 | 격리 보조 (guardrail) | `outboundTrafficPolicy: REGISTRY_ONLY` + `Sidecar` 리소스 — 미등록 외부 의존성을 sidecar 로그로 드러냄. **보안 경계 아님**(Istio 보안 모범사례). 경계는 NetworkPolicy |
 | proxy 스팬 | sidecar span → OTel Collector → Jaeger. Telemetry API로 샘플링 100% |
 
-Istio가 해주지 않는 것(우리 몫): 헤더 전파(replayRequestId·traceparent — OTel Java agent Baggage), replayRequestId 부여(k6), 완료 대기(k6 폴링), Evidence 값, 판정, `-shadow` Host 정규화.
+Istio가 해주지 않는 것(우리 몫): 헤더 전파(replayRequestId·traceparent — OTel Java agent Baggage), replayRequestId 부여(k6), 완료 대기(k6 폴링), Evidence 값, 판정.
+
+Host 정규화는 **필요 없다.** Legacy와 New가 받는 요청의 Host가 같으므로 인프라가 요청에 차이를 주입하지 않는다. 대신 어느 쪽이 미러인지는 Host로 알 수 없으므로, 구분이 필요하면 클라이언트가 넣는 헤더(replayRequestId)를 쓴다. 예전 동작이 필요해지면 istiod에 `DISABLE_SHADOW_HOST_SUFFIX=false`.
 
 ---
 
@@ -166,7 +168,9 @@ Response / DB Read·Write(횟수, 필요 시 값) / External API Call / Event / 
 | 전달 품질 | replayRequestId 기준 Legacy/New 도착 계수 | **Undelivered** |
 
 ### 5.3 Normalization
-timestamp·UUID·auto-increment id·key 순서 정규화. **미러 요청의 Host `-shadow`는 비교 제외**(앱은 Host에 의존하지 않음). 정규화 대상은 도메인 모델에서 필드별 선언.
+timestamp·UUID·auto-increment id·key 순서 정규화. 정규화 대상은 도메인 모델에서 필드별 선언.
+
+**Host는 정규화 대상이 아니다.** Istio 1.31은 미러 요청에 `-shadow` 접미사를 붙이지 않으므로(1.2 참조) Legacy와 New가 받는 Host가 동일하다. Phase 1.6에서 양쪽 요청의 `bodyHash`와 `Host`가 일치하는 것을 확인했다. 인프라가 주입하는 차이가 없으므로 이 항목의 정규화 규칙은 두지 않는다.
 
 ---
 
@@ -226,13 +230,13 @@ timestamp·UUID·auto-increment id·key 순서 정규화. **미러 요청의 Hos
 
 | # | 할 것 | 끝난 기준 |
 |---|---|---|
-| 1.1 | kind(≥ v0.25) 클러스터, node 이미지·Istio 버전 고정, 네임스페이스 4개, 로컬 이미지 로드, NetworkPolicy 스모크 | Ready, 노드 안에 이미지 존재(`crictl images`), 스모크 통과 |
+| 1.1 | kind v0.33.0 클러스터(node v1.35.8 digest 고정, Istio 1.31.1에 맞춤), 네임스페이스 4개, 로컬 이미지 로드, NetworkPolicy 스모크, 호스트 포트 80/443 매핑 | Ready, 노드 안에 이미지 존재(`crictl images`), 스모크 통과 |
 | 1.2 | istioctl default 프로파일, `legacy`/`new` 주입 | sidecar 2컨테이너, `istioctl analyze` 경고 없음 |
 | 1.3a | Phase 0 Order 앱을 `services/order/`로 복사해 **MySQL 8** 전환 + MySQL(emptyDir, init SQL, Recreate, readiness) + `APP_FIXED_CLOCK` | port-forward로 POST/GET, `rollout restart`로 S0 복원 |
 | 1.3b | sidecar 주입된 curl pod에서 호출 | 앱 로그에 `x-request-id`, `istioctl proxy-config` 경로 확인 |
 | 1.4 | OTel Collector(OTLP→OTLP→Jaeger) + `meshConfig.extensionProviders` + Telemetry 샘플링 100% + OTel Java agent | Envoy span + 앱 span 한 trace |
 | 1.5 | NetworkPolicy(경계) + REGISTRY_ONLY(guardrail) + WireMock in `new` | ① sidecar pod: 즉시 502 + `BlackHoleCluster` 로그(NetworkPolicy 전) ② 비주입 pod: TCP 타임아웃(NetworkPolicy 후). 서명이 달라야 통과. `docs/isolation-proof.md` |
-| 1.6 | Ingress Gateway + VirtualService(route→legacy, mirror→new) | 직접 넣은 `X-Phase1-Smoke-Id`가 양쪽 로그에 동일, new 쪽 Host `-shadow` |
+| 1.6 | Ingress Gateway + VirtualService(route→legacy, mirror→new) | 직접 넣은 `X-Phase1-Smoke-Id`가 양쪽 로그에 동일, Host도 양쪽 동일(Istio 1.31은 `-shadow`를 붙이지 않음) |
 
 ### Phase 2 — 단일 파이프라인 end-to-end
 
