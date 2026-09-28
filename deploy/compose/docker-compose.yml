@@ -34,6 +34,8 @@ x-mysql-env: &mysql-env
 # 앱 공통 env. 스택마다 값이 같다(이름 해석이 스택 네트워크 안에서 일어나므로).
 x-app-env: &app-env
   SPRING_PROFILES_ACTIVE: local
+  # 두 스택 모두 같은 고정 시각(ClockConfig). 쿠폰 만료 판정과 모든 생성 시각이 이 값을 기준으로 한다.
+  APP_FIXED_CLOCK: "2026-09-01T00:00:00Z"
   DB_USER: pm
   DB_PASSWORD: pm
   ORDER_DB_URL: jdbc:mysql://mysql-order:3306/order_db?serverTimezone=UTC
