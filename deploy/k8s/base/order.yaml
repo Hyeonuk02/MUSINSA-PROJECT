@@ -39,6 +39,11 @@ spec:
               value: poc
             - name: DB_PASSWORD
               value: poc
+            - name: REQUEST_LOG_HEADERS
+              # RequestLogFilter가 기록할 헤더 목록(application.yml의 request-log.headers를 덮어쓴다).
+              # x-request-id는 Envoy가 붙인다. 메시를 실제로 거쳤는지 앱 쪽에서 확인하는 근거이고,
+              # 1.6에서 legacy/new 미러 쌍을 맞춰 보는 데도 쓴다.
+              value: Content-Type,Idempotency-Key,x-request-id
             - name: APP_FIXED_CLOCK
               # legacy/new 모두 같은 값. 시각 차이가 Evidence 비교에 섞이지 않게 한다.
               value: "2026-09-01T00:00:00Z"

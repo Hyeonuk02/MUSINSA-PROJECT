@@ -1,0 +1,19 @@
+# 검증용 curl pod (1.2 주입 확인 / 1.3b 메시 경유 확인).
+# 애플리케이션 스택의 일부가 아니므로 legacy/new overlay에는 넣지 않고 직접 적용한다.
+#   kubectl apply -f deploy/k8s/tools/curl-mesh-check.yaml
+#
+# legacy 네임스페이스는 istio-injection=enabled라 sidecar가 자동 주입된다.
+# Order 앱 이미지에는 curl이 없고, 앱 컨테이너에 exec하는 것도 피한다.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mesh-check
+  namespace: legacy
+  labels:
+    app: mesh-check
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      # sleep 3600이면 한 시간 뒤 pod가 Succeeded로 끝나 exec이 안 된다.
+      command: ["sleep", "infinity"]

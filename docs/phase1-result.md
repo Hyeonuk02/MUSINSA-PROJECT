@@ -257,7 +257,79 @@ readiness를 통과한 뒤 앱 쪽에서도 확인했다.
 - `POST /api/orders` → 201, **`id` = 1** (앱이 커넥션을 복구하고 auto-increment도 초기화됨)
 - 같은 시각 `legacy`의 `GET /api/orders/1`은 200 그대로 — 두 스택의 DB가 독립적이다
 
-## 1.3b 앱 배포 (메시 경유) — 미착수
+## 1.3b 앱 배포 (메시 경유) — 완료
+
+정의 파일: `deploy/k8s/tools/curl-mesh-check.yaml`
+
+### 로그 헤더 목록 확장
+
+`RequestLogFilter`는 `request-log.headers`에 나열된 헤더만 기록한다.
+Envoy가 붙이는 `x-request-id`를 보려면 목록에 넣어야 한다.
+앱 코드는 두지 않고 `deploy/k8s/base/order.yaml`의 env로 덮어쓴다 (legacy/new 공통).
+
+```yaml
+- name: REQUEST_LOG_HEADERS
+  value: Content-Type,Idempotency-Key,x-request-id
+```
+
+1.6에서 `X-Phase1-Smoke-Id`를 같은 방식으로 추가한다.
+
+### 검증용 curl pod
+
+`legacy`는 `istio-injection=enabled`이므로 sidecar가 자동 주입된다 (`READY 2/2`).
+Order 앱 이미지에는 curl이 없고 앱 컨테이너에 exec하는 것도 피한다.
+
+`command: ["sleep", "infinity"]`를 쓴다. `sleep 3600`이면 한 시간 뒤 pod가
+`Succeeded`로 끝나 `kubectl exec`이 안 된다 (1.2의 `inject-check`이 실제로 그렇게 끝났다).
+
+### 메시 경유 호출
+
+```
+$ kubectl exec -n legacy mesh-check -c curl -- curl -s http://order.legacy.svc.cluster.local:8080/api/orders/1
+{"id":1,"productId":"P-1",...,"createdAt":"2026-09-01T00:00:00Z"}   HTTP 200
+
+$ kubectl exec -n legacy mesh-check -c curl -- curl -s http://order.new.svc.cluster.local:8080/api/orders/1
+{"id":1,"productId":"P-2",...,"createdAt":"2026-09-01T00:00:00Z"}   HTTP 200
+```
+
+### Envoy가 넣은 x-request-id가 앱 로그에 보임
+
+legacy 쪽 `REQUEST_LOG` 한 건 (new도 동일한 형태, 값만 다름):
+
+```json
+{
+  "requestId": null,
+  "seq": 1,
+  "method": "GET",
+  "uri": "/api/orders/1",
+  "headers": {
+    "Content-Type": [],
+    "Idempotency-Key": [],
+    "x-request-id": ["3762d7cb-ae60-47d9-a824-0ff7f1a64cc2"]
+  },
+  "arrivedAt": 1790577710394,
+  "completedAt": 1790577710554
+}
+```
+
+`requestId`(= `X-Replay-Request-Id`)는 아직 아무도 넣지 않으므로 `null`이 맞다.
+클라이언트가 넣은 헤더가 미러까지 전달되는지는 1.6에서 `X-Phase1-Smoke-Id`로 확인한다.
+
+### proxy-config
+
+```
+$ istioctl proxy-config routes mesh-check -n legacy
+8080   order.legacy.svc.cluster.local:8080   order.legacy.svc.cluster.local., order + 2 more...   /*
+8080   order.new.svc.cluster.local:8080      order.new.svc.cluster.local., order.new + 1 more...  /*
+
+$ istioctl proxy-config clusters mesh-check -n legacy
+order.legacy.svc.cluster.local   8080   outbound   EDS
+order.new.svc.cluster.local      8080   outbound   EDS
+```
+
+### port-forward 결과와 대조
+
+legacy·new 모두 port-forward 응답과 메시 경유 응답의 본문이 **문자열까지 동일**하다.
 
 ## 1.4 관측: OTel Collector + Jaeger — 미착수
 
