@@ -1,0 +1,27 @@
+# Phase 1.1 - 네임스페이스
+#
+#   legacy        기존 Order 스택 (Order + MySQL)
+#   new           교체 대상 Order 스택. 1.5에서 NetworkPolicy로 egress 격리
+#   verify        검증 컴포넌트 (Phase 2)
+#   observability OTel Collector + Jaeger (1.4)
+#
+# istio-system은 1.2에서 istioctl install이 직접 만든다.
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: legacy
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: new
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: verify
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: observability
