@@ -486,4 +486,139 @@ REGISTRY_ONLY는 sidecar를 우회하면 그만이므로 격리의 근거로 쓰
 - 격리가 끊지 않은 것: `new` sidecar 4개 모두 istiod와 SYNCED, Order→MySQL 정상(200),
   1.4의 trace가 계속 Jaeger 도착(span 7개, `order.new` Envoy + `order-new` 앱)
 
-## 1.6 Shadow 미러링 스모크 — 미착수
+## 1.6 Shadow 미러링 스모크 — 완료
+
+정의 파일: `deploy/k8s/istio/gateway.yaml`, `deploy/k8s/istio/virtualservice-shadow.yaml`
+
+### 구성
+
+`Gateway`(`istio-system`, `istio: ingressgateway`, port 80) +
+`VirtualService`: `route → order.legacy`, `mirror → order.new`, `mirrorPercentage 100`.
+
+진입은 1.1에서 만든 호스트 포트를 그대로 쓴다 — port-forward 없이 `http://localhost/`.
+
+```
+host 80 -> node 30080 -> istio-ingressgateway :80 -> Gateway/VirtualService
+```
+
+로그 헤더 목록에 `X-Phase1-Smoke-Id`와 `Host`를 추가했다 (`REQUEST_LOG_HEADERS` env).
+
+### 실행
+
+```bash
+curl -i -X POST http://localhost/api/orders \
+  -H 'Content-Type: application/json' \
+  -H 'X-Phase1-Smoke-Id: smoke-001' \
+  -d '{"productId":"P-SHADOW","quantity":3,"unitPrice":1000}'
+```
+
+```
+HTTP/1.1 201 Created
+server: istio-envoy
+x-envoy-upstream-service-time: 548
+
+{"id":2,"productId":"P-SHADOW",...,"createdAt":"2026-09-01T00:00:00Z"}
+```
+
+응답은 **하나뿐이다.** 미러는 fire-and-forget이라 new의 응답은 버려진다.
+
+### 완료 기준 확인
+
+**(1) 양쪽 앱 로그에 같은 `X-Phase1-Smoke-Id`** — 클라이언트가 넣은 헤더가 미러까지 복사된다.
+최종 검증이 의존하는 성질이다.
+
+| | legacy | new |
+|---|---|---|
+| `X-Phase1-Smoke-Id` | `smoke-001` | `smoke-001` |
+| `bodyHash` | `ff01057d…` | `ff01057d…` |
+| `x-request-id` (관찰용) | `f030a528-…` | `f030a528-…` |
+| `Host` | `localhost` | `localhost` |
+
+두 번째 요청(`smoke-002`)에서도 동일하게 재현된다
+(`smoke=smoke-002 host=localhost xrid=1ffa9e76 body=b864fff3` 양쪽 일치).
+
+**(2) `x-request-id`** — 관찰용. 양쪽이 같았으므로 기록한다.
+Envoy가 ingress에서 한 번 붙인 값이 route와 mirror 양쪽에 그대로 간다.
+
+**(3) Host 접미사** — **Istio 1.31은 `-shadow`를 붙이지 않는다.**
+mirror 정책에 `disableShadowHostSuffixAppend: true`가 기본으로 들어간다.
+
+```
+$ istioctl proxy-config route deployment/istio-ingressgateway -n istio-system -o json
+requestMirrorPolicies:
+  - cluster: outbound|8080||order.new.svc.cluster.local
+    runtimeFraction: { numerator: 1000000, denominator: MILLION }
+    disableShadowHostSuffixAppend: true      <- 기본값
+```
+
+Istio 1.28에서 `DISABLE_SHADOW_HOST_SUFFIX`가 추가되며 기본 동작이 바뀐 것이다.
+**기본값을 유지하기로 정했다.** 양쪽이 바이트 단위로 같은 요청을 받아야
+Host가 Evidence 비교에서 거짓 차이로 잡히지 않는다. 미러 여부를 구분해야 하면
+클라이언트가 넣는 헤더(`X-Phase1-Smoke-Id`)를 쓴다.
+예전 동작이 필요하면 istiod에 `DISABLE_SHADOW_HOST_SUFFIX=false`.
+`docs/phase1-plan.md`의 해당 서술도 실측대로 고쳤다.
+
+**(4) 클라이언트는 legacy 응답만 받음** — 위 응답 1건. 미러가 실제로 도달한 것은
+new의 DB로 확인한다.
+
+```
+legacy: 1 P-1        2 P-SHADOW  3 P-SHADOW2
+new   : 1 P-2        2 P-SHADOW  3 P-SHADOW2
+              ^ 1.3a 리셋 때문에 다름     ^ 미러로 양쪽에 생성됨
+```
+
+`id=1`이 다른 것은 1.3a의 리셋 실험 때문이고 미러링과 무관하다.
+미러로 들어온 `P-SHADOW`, `P-SHADOW2`는 양쪽에 같은 id로 생성됐다.
+
+---
+
+## Phase 1 종료
+
+1.1 ~ 1.6 모두 완료. 태그 `phase1-done`.
+
+| 단계 | 결과 |
+|---|---|
+| 1.1 클러스터/네임스페이스 | 완료 — NetworkPolicy 스모크 통과, 호스트 포트 80/443 매핑 |
+| 1.2 Istio 설치/주입 | 완료 — 1.31.1, `analyze` 이슈 없음 |
+| 1.3a 앱 배포(기능) | 완료 — MySQL 8 전환, 고정 시각, S0 리셋 |
+| 1.3b 앱 배포(메시) | 완료 — `x-request-id` 확인 |
+| 1.4 관측 | 완료 — Envoy+앱 한 trace, 샘플링 100% |
+| 1.5 격리 | 완료 — [isolation-proof.md](isolation-proof.md) |
+| 1.6 미러링 | 완료 — 같은 `X-Phase1-Smoke-Id`가 양쪽에 도달 |
+
+### Phase 1에서 겪은 것 중 Phase 2에 영향 있는 것
+
+- **Istio는 Service 포트 이름의 접두사로 프로토콜을 판별한다** (`grpc-`, `http-`, …).
+  `otlp-grpc`처럼 접두사가 아니면 HTTP/1.1로 취급되어 gRPC가 깨진다 (1.4)
+- **`istio-proxy`는 `.spec.initContainers`에 있다** (native sidecar). 주입 확인은 `READY 2/2`로 (1.2)
+- **access log는 기본으로 꺼져 있다.** `meshConfig.accessLogFile` 필요 (1.5)
+- **Jaeger v2의 조회 API는 `/api/v3/*`** (`/api/services`는 404) (1.4)
+- **미러 요청의 Host에 `-shadow`가 붙지 않는다** (Istio 1.31 기본값) (1.6)
+- **pod에 파일을 넣을 때 런타임 다운로드를 쓰지 않는다.** digest 고정 이미지 →
+  initContainer가 공유 `emptyDir`로 복사. `new`는 egress가 막혀 있어 다운로드 방식은 깨진다 (1.4)
+- **`kind load docker-image`는 멀티아치 이미지에서 실패한다.**
+  `docker save --platform` → `kind load image-archive`, digest는 노드에서 `crictl pull` (1.4)
+
+### 재현 절차
+
+```bash
+kind create cluster --config deploy/k8s/kind-config.yaml
+kubectl apply -f deploy/k8s/00-namespaces.yaml
+istioctl install -f deploy/k8s/istio/istio-install.yaml -y
+kubectl label namespace legacy new istio-injection=enabled --overwrite
+kubectl label namespace observability verify default istio-injection=disabled --overwrite
+kubectl apply -f deploy/k8s/istio/telemetry.yaml
+kubectl apply -f deploy/k8s/observability/
+
+docker build -t order-app:phase1 ./services/order
+kind load docker-image order-app:phase1 --name musinsa-phase1
+kubectl apply -k deploy/k8s/legacy
+kubectl apply -k deploy/k8s/new
+
+kubectl apply -f deploy/k8s/new/wiremock.yaml
+kubectl apply -f deploy/k8s/istio/sidecar-new.yaml
+kubectl apply -f deploy/k8s/new/networkpolicy.yaml
+kubectl apply -f deploy/k8s/istio/gateway.yaml -f deploy/k8s/istio/virtualservice-shadow.yaml
+```
+
+검증용 pod는 `deploy/k8s/tools/`에 따로 있다 (애플리케이션 스택이 아니므로 overlay에 넣지 않는다).

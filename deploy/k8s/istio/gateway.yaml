@@ -1,0 +1,21 @@
+# Phase 1.6 - Ingress 진입점
+#
+# istio-ingressgateway는 1.2에서 NodePort(80->30080)로 고정했고,
+# 1.1에서 노드 30080을 호스트 80에 매핑했다. 따라서 클러스터 밖에서
+# http://localhost/ 로 바로 들어온다. Phase 2의 k6도 이 경로를 쓴다.
+apiVersion: networking.istio.io/v1
+kind: Gateway
+metadata:
+  name: order-gateway
+  namespace: istio-system
+spec:
+  selector:
+    istio: ingressgateway
+  servers:
+    - port:
+        number: 80
+        name: http
+        protocol: HTTP
+      # Phase 1에서는 호스트를 구분할 이유가 없다. Host 헤더는 localhost로 들어온다.
+      hosts:
+        - "*"

@@ -59,7 +59,10 @@ spec:
               # RequestLogFilter가 기록할 헤더 목록(application.yml의 request-log.headers를 덮어쓴다).
               # x-request-id는 Envoy가 붙인다. 메시를 실제로 거쳤는지 앱 쪽에서 확인하는 근거이고,
               # 1.6에서 legacy/new 미러 쌍을 맞춰 보는 데도 쓴다.
-              value: Content-Type,Idempotency-Key,x-request-id
+              # 1.6에서 추가: X-Phase1-Smoke-Id는 클라이언트가 넣은 헤더가 미러까지
+              # 복사되는지 보는 값이고(최종 검증이 의존하는 성질), Host는 미러 요청에
+              # -shadow 접미사가 붙는지 보기 위한 것이다.
+              value: Content-Type,Idempotency-Key,x-request-id,X-Phase1-Smoke-Id,Host
             - name: JAVA_TOOL_OPTIONS
               # JVM이 시작할 때 "Picked up JAVA_TOOL_OPTIONS: ..."를 stderr에 찍는다.
               # agent가 실제로 붙었는지 앱 로그로 확인하는 근거다.

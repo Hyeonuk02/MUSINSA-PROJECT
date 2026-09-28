@@ -1,0 +1,28 @@
+# Phase 1.6 - Shadow 미러링
+#
+# 같은 요청을 legacy로 보내고(route) new에도 복사해서 보낸다(mirror).
+# 미러는 fire-and-forget이다. new의 응답은 버려지고 클라이언트는 legacy 응답만 받는다.
+# 미러 요청의 Host에는 Envoy가 "-shadow" 접미사를 붙인다 -- 앱이 Host에 의존하면 안 된다.
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: order-shadow
+  namespace: istio-system
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - order-gateway
+  http:
+    - route:
+        - destination:
+            host: order.legacy.svc.cluster.local
+            port:
+              number: 8080
+      mirror:
+        host: order.new.svc.cluster.local
+        port:
+          number: 8080
+      mirrorPercentage:
+        # Phase 1은 스모크다. 모든 요청을 미러한다.
+        value: 100.0

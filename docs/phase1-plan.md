@@ -28,7 +28,13 @@ Phase 1은 이 Order 앱을 k8s에 올린다. 앱 코드 변경은 둘뿐: `APP_
 - 버전 고정: kind 버전, `kindest/node` 이미지(digest 포함), Istio 버전을 `docs/phase1-result.md`에 기록. Istio는 설치 시점의 공식 Kubernetes 지원 매트릭스로 node 이미지 버전을 맞춘다
 - 두 스택 모두 `APP_FIXED_CLOCK` env로 시각 고정
 - 트레이싱 샘플링 100% (기본 1%)
-- 미러 요청은 Host에 `-shadow`가 붙음 — 앱이 Host에 의존하면 안 됨
+- 미러 요청의 Host: **Istio 1.31은 접미사를 붙이지 않는다.** mirror 정책에
+  `disableShadowHostSuffixAppend: true`가 기본으로 들어가 Host가 양쪽 동일하다
+  (Istio 1.28에서 `DISABLE_SHADOW_HOST_SUFFIX`가 추가되며 기본 동작이 바뀜).
+  1.6에서 실측하고 **기본값을 유지하기로 정했다** — 양쪽이 바이트 단위로 같은 요청을 받아야
+  Host가 Evidence 비교에서 거짓 차이로 잡히지 않는다.
+  미러 여부 구분이 필요하면 클라이언트가 넣는 헤더(`X-Phase1-Smoke-Id` 등)를 쓴다.
+  예전 동작이 필요하면 istiod에 `DISABLE_SHADOW_HOST_SUFFIX=false`
 
 ## 하지 말 것
 
@@ -119,9 +125,17 @@ Phase 1은 이 Order 앱을 k8s에 올린다. 앱 코드 변경은 둘뿐: `APP_
 6. 두 curl pod 모두에서 WireMock `GET /ping` 호출은 성공해야 함 (허용 목록이 정상 동작)
 - `deploy/k8s/new/networkpolicy.yaml`, `deploy/k8s/istio/sidecar-new.yaml`, `deploy/k8s/new/wiremock.yaml`
 
-끝난 기준 — **두 실패의 서명이 달라야 통과**
-- ①: 즉시 HTTP 502, 해당 curl pod의 istio-proxy access log에 `BlackHoleCluster` (= sidecar가 미등록 목적지를 거부 — guardrail)
-- ②: HTTP 응답 없이 TCP 연결 타임아웃 (= sidecar가 없어도 NetworkPolicy가 차단 — 경계)
+끝난 기준 — **두 실패의 서명이 달라야 통과** (아래는 1.5에서 실측한 값)
+- ①: 즉시(≈10~20ms) 거부 — 프로토콜에 따라 서명이 둘로 갈린다 (= sidecar가 미등록 목적지를 거부 — guardrail)
+  - `http://example.com` → HTTP **502**, access log의 route가 `block_all`이고 `direct_response`.
+    HTTP 레벨에서 막히면 upstream 자체가 없으므로 로그에 `BlackHoleCluster`가 아니라 이 형태로 남는다
+  - `https://example.com` → curl **exit 35**(TLS connect error), access log의 upstream cluster가
+    문자 그대로 `BlackHoleCluster`, 응답 플래그 `UH`. sidecar가 내용을 볼 수 없어 TCP 레벨에서 블랙홀로 간다
+  - 두 서명 모두 기록한다. `BlackHoleCluster` 문자열만 찾으면 HTTP 쪽을 놓친다
+  - **access log는 기본으로 꺼져 있다.** meshConfig에 `accessLogFile: /dev/stdout`을 넣어야 증거를 볼 수 있다
+- ②: HTTP 응답 없이 TCP 연결 타임아웃 — curl **exit 28**, HTTP/HTTPS 동일 (= sidecar가 없어도 NetworkPolicy가 차단 — 경계)
+  - 같은 pod에서 `nslookup example.com`은 **성공**해야 한다. NetworkPolicy에서 kube-dns를 허용하므로
+    "이름은 풀리는데 연결이 안 되는" 상태가 되고, 이것이 "DNS가 고장났다"와 구분되는 격리 증거다
 - WireMock 호출 성공 ①② 모두
 - 결과(명령, 출력, 로그 발췌)를 `docs/isolation-proof.md`에 기록
 
@@ -138,7 +152,8 @@ Phase 1은 이 Order 앱을 k8s에 올린다. 앱 코드 변경은 둘뿐: `APP_
 끝난 기준
 - legacy·new 앱 로그 모두에 **같은 `X-Phase1-Smoke-Id`** (클라이언트가 넣은 헤더가 미러에 복사됨 — 최종 검증이 의존하는 성질)
 - `x-request-id`는 Envoy가 붙였는지 **관찰용**으로만 확인 (양쪽 같으면 기록, 아니어도 실패 아님)
-- new 쪽 로그의 Host 헤더에 `-shadow` 접미사
+- new 쪽 로그의 Host 헤더: Istio 1.31 기본값에서는 **접미사 없이 legacy와 동일**하다
+  (위 "확정 사항" 참조). 양쪽 Host가 같은 것을 확인하고 기록한다
 - 클라이언트는 legacy 응답만 받음
 
 Phase 1 종료 조건: 1.1~1.6 완료 + `docs/phase1-result.md`(Istio 버전, 각 단계 확인 결과, isolation-proof 링크).
