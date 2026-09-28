@@ -8,10 +8,8 @@ import com.pm.payment.dto.*;
 import com.pm.payment.entity.Payment;
 import com.pm.payment.exception.ResourceNotFoundException;
 import com.pm.payment.repository.PaymentRepository;
-import com.razorpay.Order;
-import com.razorpay.RazorpayClient;
+import com.pm.payment.gateway.PaymentGateway;
 import org.json.JSONObject;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -25,29 +23,26 @@ public class PaymentService {
     private final NotificationClient notificationClient;
     private final AuditClient auditClient; // New
     private final ObjectMapper objectMapper; // New
-
-    @Value("${razorpay.key.id}")
-    private String razorpayId;
-
-    @Value("${razorpay.key.secret}")
-    private String razorpaySecret;
+    // [LEGACY_CHANGES L-F1] Razorpay SDK 직접 호출 대신 PaymentGateway (키 설정은 RazorpayPaymentGateway로 이동)
+    private final PaymentGateway paymentGateway;
 
     public PaymentService(PaymentRepository paymentRepository, 
                           OrderClient orderClient,
                           NotificationClient notificationClient,
                           AuditClient auditClient,
-                          ObjectMapper objectMapper) {
+                          ObjectMapper objectMapper,
+                          PaymentGateway paymentGateway) {
         this.paymentRepository = paymentRepository;
         this.orderClient = orderClient;
         this.notificationClient = notificationClient;
         this.auditClient = auditClient;
         this.objectMapper = objectMapper;
+        this.paymentGateway = paymentGateway;
     }
 
     @Transactional
     public PaymentResponse processPayment(PaymentRequest request) {
         try {
-            RazorpayClient client = new RazorpayClient(razorpayId, razorpaySecret);
             int amountInPaise = request.getAmount().multiply(new BigDecimal(100)).intValue();
 
             JSONObject orderRequest = new JSONObject();
@@ -55,8 +50,8 @@ public class PaymentService {
             orderRequest.put("currency", "INR");
             orderRequest.put("receipt", "order_rcptid_" + request.getOrderId());
 
-            Order razorpayOrder = client.orders.create(orderRequest);
-            String razorpayOrderId = razorpayOrder.get("id");
+            // [LEGACY_CHANGES L-F1] client.orders.create(orderRequest).get("id") -> PaymentGateway
+            String razorpayOrderId = paymentGateway.createOrder(orderRequest);
 
             Payment payment = new Payment();
             payment.setOrderId(request.getOrderId());

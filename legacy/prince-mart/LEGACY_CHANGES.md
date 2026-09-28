@@ -94,3 +94,25 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
   실제 시각이면 최신순(`[3,2,1]`)이다. `OrderStatusHistoryRepository.findByOrderOrderIdOrderByChangedAtDesc`도 같은 성질이지만
   코드에서 호출되지 않는다. 비즈니스 로직은 건드리지 않고 이 성질을 문서화한다(docs/legacy-decision-log.md L5).
 - `Refund`는 upstream 코드에 생성 경로가 없다(엔티티와 리포지토리만 있음). 교체만 하고 실행 확인 대상에서 뺀다.
+
+---
+
+## F — 기능 패치
+
+### L-F1. (a) Razorpay 대체: `PaymentGateway`
+
+- 이유: Razorpay SDK(`razorpay-java` 1.4.3)는 API 호스트를 `static final`로 고정하고 있어 설정만으로 가짜 서버를 붙일 수 없다.
+  실험 환경에서는 실제 Razorpay로 나가면 안 되고(외부 의존·비결정), 외부 호출 Evidence가 WireMock journal에 남아야 한다.
+- 신규: `payment-service/.../gateway/`
+  - `PaymentGateway` — `String createOrder(JSONObject orderRequest) throws Exception`. SDK 호출과 같은 계약(요청 본문, PG 주문 id 반환, 실패 시 예외)
+  - `RazorpayPaymentGateway` — **기본값**(`payment-gateway.type` 없음 또는 `razorpay`). PaymentService에 있던 SDK 호출과 키 설정(`razorpay.key.*`)을 그대로 옮겼다
+  - `FakePgPaymentGateway` — `payment-gateway.type=fake`(local profile). `POST {payment-gateway.fake-url}/v1/orders`로 SDK와 같은 본문을 보내고,
+    4xx면 Razorpay 오류 본문의 `error.description`을 메시지로 가진 예외를 던진다
+- 변경: `service/PaymentService.java`
+  - `new RazorpayClient(...)` + `client.orders.create(orderRequest).get("id")` → `paymentGateway.createOrder(orderRequest)`
+  - `@Value razorpay.key.*` 필드 제거(RazorpayPaymentGateway로 이동), 생성자에 `PaymentGateway` 추가
+  - **그 외 PaymentService 로직은 바꾸지 않았다**(요청 본문 구성, 저장, 감사 로그, 실패 시 `FAILED` 응답과 메시지 전달 모두 그대로)
+- 설정: `application-local.yml`에 `payment-gateway.type: fake`, `payment-gateway.fake-url: ${PAYMENT_GATEWAY_URL}`
+- 가짜 PG(WireMock, `deploy/compose/wiremock/mappings/pg-orders-create*.json`)
+  - 성공: `{"id":"order_{receipt의 주문 번호}", ...}` — 결정적 id
+  - 실패 fixture: `amount == 9999900`(99,999원) → 400 `{"error":{"code":"BAD_REQUEST_ERROR","description":"Payment declined by fake PG (fixture: amount 99999)"}}`

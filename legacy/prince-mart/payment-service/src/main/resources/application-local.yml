@@ -35,3 +35,9 @@ eureka:
 # [LEGACY_CHANGES L-I1] 시각 고정. 비어 있으면 시스템 시각(UTC). config/ClockConfig 참조.
 app:
   fixed-clock: ${APP_FIXED_CLOCK:}
+
+# [LEGACY_CHANGES L-F1] Razorpay SDK 대신 가짜 PG(WireMock)를 HTTP로 호출한다(gateway/FakePgPaymentGateway).
+# 이 값이 없으면(upstream 기본) RazorpayPaymentGateway가 SDK로 실제 Razorpay를 호출한다.
+payment-gateway:
+  type: fake
+  fake-url: ${PAYMENT_GATEWAY_URL}
