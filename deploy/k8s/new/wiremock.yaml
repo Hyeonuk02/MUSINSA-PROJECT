@@ -1,0 +1,78 @@
+# Phase 1.5 - WireMock
+#
+# 격리를 검증할 때 "전부 막혔다"가 아니라 "밖은 막히고 안은 통한다"를 보여야 한다.
+# WireMock은 new 안에 있는 허용된 목적지 역할을 한다.
+# new는 istio-injection=enabled이므로 sidecar가 자동 주입된다 (메시 포함).
+#
+# Phase 2·3의 WireMock 연동 로직은 여기서 만들지 않는다. 스텁 하나뿐이다.
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: wiremock-mappings
+  namespace: new
+data:
+  ping.json: |
+    {
+      "request": { "method": "GET", "urlPath": "/ping" },
+      "response": {
+        "status": 200,
+        "body": "pong",
+        "headers": { "Content-Type": "text/plain" }
+      }
+    }
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiremock
+  namespace: new
+  labels:
+    app: wiremock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wiremock
+  template:
+    metadata:
+      labels:
+        app: wiremock
+    spec:
+      containers:
+        - name: wiremock
+          # wiremock/wiremock:3.13.1
+          image: wiremock/wiremock@sha256:d61e7720f89483fdef5366843b58d1dfd06bcce5828179c9f2f54de5c28354b0
+          imagePullPolicy: IfNotPresent
+          args: ["--disable-banner"]
+          ports:
+            - name: http-wiremock
+              containerPort: 8080
+          volumeMounts:
+            - name: mappings
+              mountPath: /home/wiremock/mappings
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /__admin/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 40
+      volumes:
+        - name: mappings
+          configMap:
+            name: wiremock-mappings
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wiremock
+  namespace: new
+spec:
+  selector:
+    app: wiremock
+  ports:
+    # 포트 이름은 Istio 프로토콜 판별 규칙(접두사)을 따른다 - 1.4에서 겪은 문제.
+    - name: http-wiremock
+      port: 8080
+      targetPort: 8080

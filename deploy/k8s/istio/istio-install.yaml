@@ -19,6 +19,14 @@ spec:
   profile: default
   meshConfig:
     enableTracing: true
+    # 1.5 guardrail. 서비스 레지스트리에 없는 목적지로 나가는 sidecar 트래픽을 거부한다.
+    # 이것은 보안 경계가 아니라 "등록되지 않은 의존성"을 드러내는 장치다.
+    # 실제 격리 경계는 Kubernetes NetworkPolicy다 (deploy/k8s/new/networkpolicy.yaml).
+    outboundTrafficPolicy:
+      mode: REGISTRY_ONLY
+    # BlackHoleCluster로 떨어졌다는 증거를 access log에서 봐야 하므로 켠다.
+    # default 프로파일은 access log가 꺼져 있다.
+    accessLogFile: /dev/stdout
     # Istio 트레이싱은 두 단계다. 여기서 provider를 "정의"만 하고,
     # 실제로 켜는 것은 Telemetry 리소스(telemetry.yaml)에서 이 이름을 선택하는 것이다.
     # Telemetry만 만들면 provider를 찾지 못한다.

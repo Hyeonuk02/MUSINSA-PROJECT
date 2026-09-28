@@ -461,8 +461,29 @@ istio-proxy의 `tracing`/`grpc` 로그 레벨도 `info`로 되돌렸다.
 Jaeger 조회는 `kubectl port-forward -n observability svc/jaeger 16686:16686` 후
 `http://localhost:16686`. **조회 API는 `/api/v3/*`다** (Jaeger v2. `/api/services`는 404).
 
-## 1.5 격리 (Fail-closed) — 미착수
+## 1.5 격리 (Fail-closed) — 완료
 
-결과는 `docs/isolation-proof.md`에 별도로 기록한다.
+전체 기록(명령·출력·로그 발췌)은 **[docs/isolation-proof.md](isolation-proof.md)** 에 있다. 요약만 적는다.
+
+정의 파일: `deploy/k8s/new/wiremock.yaml`, `deploy/k8s/istio/sidecar-new.yaml`,
+`deploy/k8s/new/networkpolicy.yaml`, `deploy/k8s/tools/curl-isolation-new.yaml`,
+`deploy/k8s/istio/istio-install.yaml`(meshConfig)
+
+| | 막는 주체 | 실패 서명 |
+|---|---|---|
+| ① sidecar 주입 pod, NetworkPolicy 전 | Istio `REGISTRY_ONLY` + `Sidecar` (guardrail) | 즉시(≈10~20ms). HTTP 502 + access log `block_all`, HTTPS curl 35 + `BlackHoleCluster`/`UH` |
+| ② 비주입 pod, NetworkPolicy 후 | Kubernetes NetworkPolicy (경계) | HTTP 응답 없이 TCP 타임아웃 15s (curl 28), HTTP/HTTPS 동일 |
+
+두 서명이 다르므로 막은 주체를 구분할 수 있다. **격리 증명은 ②다.**
+REGISTRY_ONLY는 sidecar를 우회하면 그만이므로 격리의 근거로 쓰지 않는다.
+
+- WireMock `GET /ping` → 200 `pong` — ①② 두 pod 모두 성공 (허용 목록 정상)
+- `accessLogFile: /dev/stdout`을 meshConfig에 추가했다. default 프로파일은 access log가 꺼져 있어
+  `BlackHoleCluster` 증거를 볼 수 없다
+- NetworkPolicy 허용 목록: kube-dns(53 UDP/TCP), `new` 전체, `istio-system` 15012,
+  `observability` 4317, `verify`. DNS를 허용해야 "이름은 풀리는데 연결이 안 된다"가 되어
+  격리 증거가 분명해진다
+- 격리가 끊지 않은 것: `new` sidecar 4개 모두 istiod와 SYNCED, Order→MySQL 정상(200),
+  1.4의 trace가 계속 Jaeger 도착(span 7개, `order.new` Envoy + `order-new` 앱)
 
 ## 1.6 Shadow 미러링 스모크 — 미착수
