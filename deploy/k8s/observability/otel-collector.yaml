@@ -22,8 +22,6 @@ data:
       batch: {}
 
     exporters:
-      debug:
-        verbosity: normal
       otlp:
         endpoint: jaeger.observability.svc.cluster.local:4317
         tls:
@@ -34,7 +32,7 @@ data:
         traces:
           receivers: [otlp]
           processors: [batch]
-          exporters: [otlp, debug]
+          exporters: [otlp]
       telemetry:
         logs:
           level: info
