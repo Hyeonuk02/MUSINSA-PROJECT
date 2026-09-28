@@ -47,6 +47,11 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
+		<!-- [LEGACY_CHANGES L-F2] PaymentCompleted 이벤트 소비. Boot 4는 자동 구성이 starter로 분리되어 있다 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-kafka</artifactId>
+		</dependency>
 
 		<dependency>
 			<groupId>com.mysql</groupId>

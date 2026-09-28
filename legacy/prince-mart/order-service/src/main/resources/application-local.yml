@@ -35,6 +35,9 @@ spring:
               - uri: ${AUDIT_SERVICE_URI}
             "[SHIPPING-SERVICE]":
               - uri: ${SHIPPING_SERVICE_URI}
+            # [LEGACY_CHANGES L-F2] 알림 발송이 payment에서 order consumer로 옮겨왔다
+            "[NOTIFICATION-SERVICE]":
+              - uri: ${NOTIFICATION_SERVICE_URI}
 
 eureka:
   client:
@@ -43,3 +46,13 @@ eureka:
 # [LEGACY_CHANGES L-I1] 시각 고정. 비어 있으면 시스템 시각(UTC). config/ClockConfig 참조.
 app:
   fixed-clock: ${APP_FIXED_CLOCK:}
+
+# [LEGACY_CHANGES L-F2] PaymentCompleted 이벤트 소비. 브로커는 스택마다 하나라 토픽·group 이름이 두 스택에서 같다.
+# earliest: S0 리셋으로 브로커가 새로 뜨면 커밋된 offset이 없으므로 처음부터 읽는다(리셋 뒤 첫 이벤트를 놓치지 않게).
+spring.kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+  consumer:
+    auto-offset-reset: earliest
+app.kafka:
+  payment-events-topic: payment-events
+  consumer-group: order-service

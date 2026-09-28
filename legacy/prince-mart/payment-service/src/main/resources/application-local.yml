@@ -41,3 +41,10 @@ app:
 payment-gateway:
   type: fake
   fake-url: ${PAYMENT_GATEWAY_URL}
+
+# [LEGACY_CHANGES L-F2] PaymentCompleted 이벤트 발행. 브로커는 스택마다 하나(스택 네트워크의 kafka)라
+# 토픽 이름이 두 스택에서 같다. key/value는 문자열(Boot 기본 StringSerializer).
+spring.kafka:
+  bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
+app.kafka:
+  payment-events-topic: payment-events

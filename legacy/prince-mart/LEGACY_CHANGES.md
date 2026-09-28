@@ -7,12 +7,13 @@
 
 이 코드는 "운영 트래픽 재현과 변경 전후 행동 비교를 통한 시스템 교체 검증" 실험의 **Legacy**다.
 Legacy의 동작은 비교의 기준이므로, 변경은 아래 세 등급으로 나누고 등급별로 커밋을 분리한다.
+항목 번호는 등급 약자를 쓴다(L-C1, L-I1, L-F1 …).
 
-| 등급 | 범위 | 비즈니스 동작 |
+| 등급 (커밋 접두사) | 범위 | 비즈니스 동작 |
 |---|---|---|
-| **C (설정)** | yml, profile, pom 드라이버, Dockerfile, env | 바꾸지 않는다 |
-| **I (통제·계측)** | 시각 고정, Evidence 필터, OTel | 바꾸지 않는다(결과 값의 시각 출처만 Clock으로 바뀜) |
-| **F (기능 패치)** | 이번에 허용된 것은 둘뿐: (a) Razorpay 대체, (b) Kafka 이벤트 | 바꾼다. 범위를 명시한다 |
+| **C 설정** (`legacy(config)`) | yml, profile, pom 드라이버, Dockerfile, env | 바꾸지 않는다 |
+| **I 통제·계측** (`legacy(instrument)`) | 시각 고정, Evidence 필터, OTel | 바꾸지 않는다(결과 값의 시각 출처만 Clock으로 바뀜) |
+| **F 기능 패치** (`legacy(feature)`) | 이번에 허용된 것은 둘뿐: (a) Razorpay 대체, (b) Kafka 이벤트 | 바꾼다. 범위를 명시한다 |
 
 ## 고치지 않는 Legacy 버그
 
@@ -116,3 +117,38 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
 - 가짜 PG(WireMock, `deploy/compose/wiremock/mappings/pg-orders-create*.json`)
   - 성공: `{"id":"order_{receipt의 주문 번호}", ...}` — 결정적 id
   - 실패 fixture: `amount == 9999900`(99,999원) → 400 `{"error":{"code":"BAD_REQUEST_ERROR","description":"Payment declined by fake PG (fixture: amount 99999)"}}`
+
+### L-F2. (b) Kafka 이벤트: `PaymentCompleted`
+
+- 이유: 노션 4주차 설계. 결제 확정 후 Payment → Order 동기 Feign 호출(`PUT /orders/{id}/status`)을 이벤트로 대체한다.
+  이벤트 발행 횟수·payload는 Evidence 비교 항목이다.
+- payment-service
+  - `pom.xml`: `org.springframework.kafka:spring-kafka` 추가(Boot 3.4 관리 버전)
+  - 신규 `event/PaymentEventPublisher.java`: 토픽 `payment-events`, key = orderId, value = JSON 문자열
+    `{"eventType":"PaymentCompleted","orderId","transactionId","amount","currency","audit":{"dataBefore","dataAfter"}}`
+    - `amount`는 원래 알림에 넣던 `payment.getAmount().toString()`
+    - `audit`은 원래 Payment가 보내던 감사 로그의 dataBefore/dataAfter 문자열(이 서비스 ObjectMapper로 직렬화). 직렬화 실패 시 null(원본처럼 감사 로그 생략)
+    - 동기 발행(완료까지 대기). 실패하면 예외 → 결제 상태 변경 트랜잭션 롤백
+  - `service/PaymentService.java` `completePaymentManually`: 결제를 COMPLETED로 저장한 뒤 **이벤트 발행으로 끝난다.**
+    제거: `orderClient.updateOrderStatus(...)`, `PAYMENT_COMPLETED_SUCCESS` 감사 로그, 알림 발송(실패 시 감사 로그 포함).
+    `OrderClient`/`NotificationClient` 필드와 생성자 인자 제거. 인터페이스 파일(`client/OrderClient.java`, `client/NotificationClient.java`)과
+    DTO는 diff를 줄이려고 남겼다(이제 호출되지 않음)
+  - `application-local.yml`: `spring.kafka.bootstrap-servers`, `app.kafka.payment-events-topic`
+- order-service
+  - `pom.xml`: `org.springframework.boot:spring-boot-starter-kafka` 추가(Boot 4는 Kafka 자동 구성이 starter로 분리됨)
+  - 신규 `event/PaymentCompletedListener.java` — 원래 Payment가 하던 후속 처리를 **같은 순서로** 한다
+    1. `OrderService.updateStatus(orderId, "PAID", "CONFIRMED")` — 기존 `PUT /orders/{id}/status`와 같은 메서드(이력·ORDER_STATUS_UPDATE 감사 로그·배송 요청)
+    2. 감사 로그 `PAYMENT_COMPLETED_SUCCESS` — 이벤트의 audit 문자열 그대로, `serviceName: "PAYMENT-SERVICE"` 그대로(호출 주체만 order-service)
+    3. 주문 확인 알림 — 실패 시 `POST_PAYMENT_NOTIFICATION_FAILED` 감사 로그
+  - 신규 `event/KafkaConsumerConfig.java`: `DefaultErrorHandler(FixedBackOff(0, 0))` — **재시도 없음**(재전달 시 이력·감사 로그·배송 요청 중복 방지)
+  - 신규 `client/NotificationClient.java`, `dto/NotificationRequest.java`: payment-service에서 복사.
+    `@JsonPropertyOrder`로 필드 선언 순서를 명시했다 — order(Boot 4, Jackson 3)는 기본 직렬화가 **알파벳순**이라
+    그대로 두면 알림 본문의 키 순서가 원본(payment, Jackson 2, 선언 순서)과 달라진다(실측)
+  - `application-local.yml`: NOTIFICATION-SERVICE 주소, `spring.kafka.*`(`auto-offset-reset: earliest`), 토픽·consumer group
+- **동작 차이(의도된 것, 이 패치의 결과)**
+  - `/payments/verify`는 주문 상태 변경을 기다리지 않고 200을 돌려준다. 상태 변경·감사 로그·배송·알림은 consumer가 비동기로 한다
+  - 없는 주문의 결제를 verify하면 원본은 Order 404 → 롤백 → 404였다. 이제는 결제가 COMPLETED로 커밋되고 200,
+    consumer는 `Order not found`로 실패(재시도 없음). 외부 호출은 원본과 같이 0건(실측)
+  - 감사 로그 PAYMENT_COMPLETED_SUCCESS와 알림의 호출 주체가 payment-service에서 order-service로 바뀐다
+- 실측: Kafka 전환 전후로 시나리오 26항목의 응답·DB 7테이블·WireMock journal(본문 포함)이 **바이트 단위로 같다.**
+  verify 1건의 외부 호출 순서도 같다(ORDER_STATUS_UPDATE 감사 → 배송 → PAYMENT_COMPLETED_SUCCESS 감사 → 알림).

@@ -33,6 +33,11 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
+		<!-- [LEGACY_CHANGES L-F2] PaymentCompleted 이벤트 발행 (Boot 3.4 관리 버전) -->
+		<dependency>
+			<groupId>org.springframework.kafka</groupId>
+			<artifactId>spring-kafka</artifactId>
+		</dependency>
         
 		<dependency>
 		    <groupId>com.razorpay</groupId>

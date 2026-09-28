@@ -2,12 +2,11 @@ package com.pm.payment.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.pm.payment.client.AuditClient; // New Client
-import com.pm.payment.client.NotificationClient;
-import com.pm.payment.client.OrderClient;
 import com.pm.payment.dto.*;
 import com.pm.payment.entity.Payment;
 import com.pm.payment.exception.ResourceNotFoundException;
 import com.pm.payment.repository.PaymentRepository;
+import com.pm.payment.event.PaymentEventPublisher;
 import com.pm.payment.gateway.PaymentGateway;
 import org.json.JSONObject;
 import org.springframework.stereotype.Service;
@@ -19,25 +18,23 @@ import java.math.BigDecimal;
 public class PaymentService {
 
     private final PaymentRepository paymentRepository;
-    private final OrderClient orderClient;
-    private final NotificationClient notificationClient;
     private final AuditClient auditClient; // New
     private final ObjectMapper objectMapper; // New
     // [LEGACY_CHANGES L-F1] Razorpay SDK 직접 호출 대신 PaymentGateway (키 설정은 RazorpayPaymentGateway로 이동)
     private final PaymentGateway paymentGateway;
+    // [LEGACY_CHANGES L-F2] OrderClient/NotificationClient 대신 이벤트 발행
+    private final PaymentEventPublisher paymentEventPublisher;
 
     public PaymentService(PaymentRepository paymentRepository, 
-                          OrderClient orderClient,
-                          NotificationClient notificationClient,
                           AuditClient auditClient,
                           ObjectMapper objectMapper,
-                          PaymentGateway paymentGateway) {
+                          PaymentGateway paymentGateway,
+                          PaymentEventPublisher paymentEventPublisher) {
         this.paymentRepository = paymentRepository;
-        this.orderClient = orderClient;
-        this.notificationClient = notificationClient;
         this.auditClient = auditClient;
         this.objectMapper = objectMapper;
         this.paymentGateway = paymentGateway;
+        this.paymentEventPublisher = paymentEventPublisher;
     }
 
     @Transactional
@@ -93,29 +90,10 @@ public class PaymentService {
         payment.setStatus("COMPLETED");
         Payment updatedPayment = paymentRepository.save(payment);
 
-        // 1. Handshake: Get the real User Email, Name, and UserID from Order Service
-        OrderResponse orderInfo = orderClient.updateOrderStatus(payment.getOrderId(), "PAID", "CONFIRMED");
-        System.out.println("Handshake successful for Order: " + payment.getOrderId());
-
-        // Audit the successful payment completion
-        sendAuditLog(orderInfo.getUserId(), "PAYMENT_COMPLETED_SUCCESS", dataBefore, updatedPayment);
-
-        // 2. Trigger Notification
-        NotificationRequest emailReq = new NotificationRequest();
-        emailReq.setUserId(orderInfo.getUserId()); 
-        emailReq.setRecipient(orderInfo.getUserEmail()); 
-        emailReq.setSubject("Order Confirmed - Prince Mart");
-        emailReq.setCustomerName(orderInfo.getCustomerName()); 
-        emailReq.setOrderId(payment.getOrderId().toString());
-        emailReq.setAmount(payment.getAmount().toString());
-
-        try {
-            notificationClient.sendConfirmation(emailReq);
-        } catch (Exception e) {
-            // Non-critical: Log the notification failure to Audit
-            sendAuditLog(orderInfo.getUserId(), "POST_PAYMENT_NOTIFICATION_FAILED", null, e.getMessage());
-            System.err.println("Non-critical Error: Failed to trigger notification - " + e.getMessage());
-        }
+        // [LEGACY_CHANGES L-F2] 동기 Feign 핸드셰이크(PUT /orders/{id}/status) + 감사 로그 + 알림 발송을
+        // PaymentCompleted 이벤트 발행으로 대체했다. 세 가지 후속 처리는 Order consumer가 같은 순서로 한다.
+        // 감사 로그 본문(dataBefore/dataAfter)은 여기서 직렬화해 이벤트에 싣는다(원본과 같은 ObjectMapper).
+        paymentEventPublisher.publishPaymentCompleted(updatedPayment, dataBefore);
     }
 
     // Centralized Helper for External Auditing
