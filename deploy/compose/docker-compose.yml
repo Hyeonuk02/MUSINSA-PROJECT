@@ -1,0 +1,174 @@
+# Prince Mart Legacy 실험 스택 (Compose 임시 실행 환경)
+#
+# k8s(deploy/k8s)로 합칠 때 1:1로 옮겨지도록 구성한다.
+#   - 스택 = 네트워크 하나(k8s 네임스페이스에 대응). 스택 안에서는 짧은 이름
+#     (order, coupon, payment, mysql-order, ..., wiremock)으로 서로를 찾는다.
+#     그래서 legacy/new 컨테이너의 env가 완전히 같다.
+#   - MySQL 데이터는 tmpfs에만 있다. 컨테이너 재생성 = S0 리셋(k8s emptyDir + Recreate와 같은 의미).
+#     스키마는 mysql-initdb/<service>/ 의 init SQL 하나가 소유한다(hyeonuk-dev D4).
+#
+# 실행: docker compose -f deploy/compose/docker-compose.yml up -d --build --wait
+# 리셋: deploy/compose/reset.sh
+
+name: prince-mart
+
+x-mysql: &mysql
+  image: mysql:8.4@sha256:0744ee5ef89ce6ccfa13de3e579fe6b9e27f93dd70da9c06d2c908b1b193fb8d
+  # 메모리만 줄이는 설정. 동작(SQL 의미, 문자셋, 격리 수준)은 기본값 그대로다.
+  command: ["--performance-schema=OFF", "--innodb-buffer-pool-size=64M"]
+  tmpfs:
+    - /var/lib/mysql
+  healthcheck:
+    # -h 127.0.0.1로 TCP를 강제한다. init SQL 실행 중에는 이미지가 --skip-networking으로
+    # 임시 서버를 띄우므로 이 ping이 실패한다. 즉 healthy = "스키마까지 준비됨"(hyeonuk-dev D3).
+    test: ["CMD-SHELL", "mysqladmin ping -h 127.0.0.1 -u root -p\"$$MYSQL_ROOT_PASSWORD\" --silent"]
+    interval: 2s
+    timeout: 3s
+    retries: 60
+
+x-mysql-env: &mysql-env
+  MYSQL_ROOT_PASSWORD: root
+  MYSQL_USER: pm
+  MYSQL_PASSWORD: pm
+
+# 앱 공통 env. 스택마다 값이 같다(이름 해석이 스택 네트워크 안에서 일어나므로).
+x-app-env: &app-env
+  SPRING_PROFILES_ACTIVE: local
+  DB_USER: pm
+  DB_PASSWORD: pm
+  ORDER_DB_URL: jdbc:mysql://mysql-order:3306/order_db?serverTimezone=UTC
+  COUPON_DB_URL: jdbc:mysql://mysql-coupon:3306/coupon_db?serverTimezone=UTC
+  PAYMENT_DB_URL: jdbc:mysql://mysql-payment:3306/payment_db?serverTimezone=UTC
+  # 스택 내부 서비스
+  ORDER_SERVICE_URI: http://order:8085
+  COUPON_SERVICE_URI: http://coupon:8091
+  PAYMENT_SERVICE_URI: http://payment:8086
+  # 스택 밖 의존성 -> 전부 WireMock
+  CART_SERVICE_URI: http://wiremock:8080
+  IDENTITY_SERVICE_URI: http://wiremock:8080
+  INVENTORY_SERVICE_URI: http://wiremock:8080
+  AUDIT_SERVICE_URI: http://wiremock:8080
+  SHIPPING_SERVICE_URI: http://wiremock:8080
+  NOTIFICATION_SERVICE_URI: http://wiremock:8080
+  # Step 4에서 PaymentGateway로 대체하기 전까지 SDK가 요구하는 값(더미). 실제 Razorpay로 나가지 않는다.
+  RAZORPAY_KEY_ID: rzp_test_dummy
+  RAZORPAY_KEY_SECRET: dummy
+
+x-app-health: &app-health
+  interval: 3s
+  timeout: 3s
+  retries: 60
+  start_period: 20s
+
+x-wiremock: &wiremock
+  # wiremock/wiremock:3.13.1 (hyeonuk-dev deploy/k8s/new/wiremock.yaml과 같은 digest)
+  image: wiremock/wiremock@sha256:d61e7720f89483fdef5366843b58d1dfd06bcce5828179c9f2f54de5c28354b0
+  command: ["--disable-banner"]
+  volumes:
+    - ./wiremock/mappings:/home/wiremock/mappings:ro
+  healthcheck:
+    test: ["CMD-SHELL", "curl -fs http://127.0.0.1:8080/__admin/health >/dev/null"]
+    interval: 2s
+    timeout: 3s
+    retries: 60
+
+services:
+  # ---------------------------------------------------------------- legacy stack
+  mysql-order-legacy:
+    <<: *mysql
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: order_db
+    volumes:
+      - ./mysql-initdb/order:/docker-entrypoint-initdb.d:ro
+    networks:
+      legacy:
+        aliases: [mysql-order]
+
+  mysql-coupon-legacy:
+    <<: *mysql
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: coupon_db
+    volumes:
+      - ./mysql-initdb/coupon:/docker-entrypoint-initdb.d:ro
+    networks:
+      legacy:
+        aliases: [mysql-coupon]
+
+  mysql-payment-legacy:
+    <<: *mysql
+    environment:
+      <<: *mysql-env
+      MYSQL_DATABASE: payment_db
+    volumes:
+      - ./mysql-initdb/payment:/docker-entrypoint-initdb.d:ro
+    networks:
+      legacy:
+        aliases: [mysql-payment]
+
+  wiremock-legacy:
+    <<: *wiremock
+    ports:
+      - "8089:8080"
+    networks:
+      legacy:
+        aliases: [wiremock]
+
+  order-legacy:
+    build:
+      context: ../../legacy/prince-mart/order-service
+      dockerfile: DockerFile
+    image: prince-mart/order-service:legacy
+    environment:
+      <<: *app-env
+    ports:
+      - "8085:8085"
+    healthcheck:
+      <<: *app-health
+      # actuator 의존성이 없으므로(upstream pom) 포트가 열렸는지로 본다(hyeonuk-dev order와 같은 방식).
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8085'"]
+    depends_on:
+      mysql-order-legacy: { condition: service_healthy }
+    networks:
+      legacy:
+        aliases: [order]
+
+  coupon-legacy:
+    build:
+      context: ../../legacy/prince-mart/coupon-service
+      dockerfile: DockerFile
+    image: prince-mart/coupon-service:legacy
+    environment:
+      <<: *app-env
+    ports:
+      - "8091:8091"
+    healthcheck:
+      <<: *app-health
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8091'"]
+    depends_on:
+      mysql-coupon-legacy: { condition: service_healthy }
+    networks:
+      legacy:
+        aliases: [coupon]
+
+  payment-legacy:
+    build:
+      context: ../../legacy/prince-mart/payment-service
+      dockerfile: DockerFile
+    image: prince-mart/payment-service:legacy
+    environment:
+      <<: *app-env
+    ports:
+      - "8086:8086"
+    healthcheck:
+      <<: *app-health
+      test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8086'"]
+    depends_on:
+      mysql-payment-legacy: { condition: service_healthy }
+    networks:
+      legacy:
+        aliases: [payment]
+
+networks:
+  legacy: {}

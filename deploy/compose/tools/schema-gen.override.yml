@@ -1,0 +1,22 @@
+# 스키마 1회 생성용 override (tools/dump-schema.sh 전용). 평소 실행에는 쓰지 않는다.
+# initdb를 빈 디렉터리로 바꾸고 Hibernate ddl-auto=update로 테이블을 만들게 한 뒤
+# mysqldump --no-data로 떠서 mysql-initdb/<service>/01-schema.sql에 고정한다.
+services:
+  mysql-order-legacy:
+    volumes: !override
+      - ./tools/empty-initdb:/docker-entrypoint-initdb.d:ro
+  mysql-coupon-legacy:
+    volumes: !override
+      - ./tools/empty-initdb:/docker-entrypoint-initdb.d:ro
+  mysql-payment-legacy:
+    volumes: !override
+      - ./tools/empty-initdb:/docker-entrypoint-initdb.d:ro
+  order-legacy:
+    environment:
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  coupon-legacy:
+    environment:
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
+  payment-legacy:
+    environment:
+      SPRING_JPA_HIBERNATE_DDL_AUTO: update
