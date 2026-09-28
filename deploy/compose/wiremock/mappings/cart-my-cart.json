@@ -1,0 +1,21 @@
+{
+  "request": {
+    "method": "GET",
+    "url": "/cart/my-cart",
+    "headers": {
+      "X-User-Id": {
+        "matches": "[0-9]+"
+      }
+    }
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "body": "{\"cartId\":1,\"userId\":{{request.headers.X-User-Id}},\"status\":\"ACTIVE\",\"items\":[{\"productId\":101,\"variantId\":1001,\"quantity\":2,\"priceSnapshot\":20000},{\"productId\":102,\"variantId\":1002,\"quantity\":1,\"priceSnapshot\":60000}]}"
+  }
+}

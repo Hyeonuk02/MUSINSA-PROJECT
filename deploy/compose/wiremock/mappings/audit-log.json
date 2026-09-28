@@ -1,0 +1,9 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/audit/log"
+  },
+  "response": {
+    "status": 200
+  }
+}

@@ -52,9 +52,8 @@ x-app-env: &app-env
   AUDIT_SERVICE_URI: http://wiremock:8080
   SHIPPING_SERVICE_URI: http://wiremock:8080
   NOTIFICATION_SERVICE_URI: http://wiremock:8080
-  # Step 4에서 PaymentGateway로 대체하기 전까지 SDK가 요구하는 값(더미). 실제 Razorpay로 나가지 않는다.
-  RAZORPAY_KEY_ID: rzp_test_dummy
-  RAZORPAY_KEY_SECRET: dummy
+  # 가짜 PG (payment local profile의 payment-gateway.type=fake). Razorpay SDK는 쓰지 않으므로 키가 필요 없다.
+  PAYMENT_GATEWAY_URL: http://wiremock:8080
 
 x-app-health: &app-health
   interval: 3s

@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/auth/addresses/id/[0-9]+"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "body": "{\"id\":{{request.pathSegments.[3]}},\"fullName\":\"Hong Gildong\",\"addressLine1\":\"1 Test-ro\",\"addressLine2\":null,\"city\":\"Seoul\",\"state\":\"Seoul\",\"country\":\"KR\",\"postalCode\":\"04500\",\"phone\":\"010-0000-0000\"}"
+  }
+}

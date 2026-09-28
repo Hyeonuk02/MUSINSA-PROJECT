@@ -1,0 +1,9 @@
+{
+  "request": {
+    "method": "DELETE",
+    "url": "/cart/clear"
+  },
+  "response": {
+    "status": 200
+  }
+}
