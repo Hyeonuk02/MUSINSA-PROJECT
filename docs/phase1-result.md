@@ -622,4 +622,7 @@ kubectl apply -f deploy/k8s/new/networkpolicy.yaml
 kubectl apply -f deploy/k8s/istio/gateway.yaml -f deploy/k8s/istio/virtualservice-shadow.yaml
 ```
 
+> Phase 2.1 이후: WireMock은 `deploy/k8s/base/wiremock.yaml`로 옮겨져 `apply -k` overlay에 포함된다(legacy/new 공통).
+> 위 절차를 그대로 재현하려면 `phase1-done` 태그를 체크아웃한다.
+
 검증용 pod는 `deploy/k8s/tools/`에 따로 있다 (애플리케이션 스택이 아니므로 overlay에 넣지 않는다).

@@ -1,31 +1,18 @@
-# Phase 1.5 - WireMock
+# WireMock - 결제 게이트웨이 스텁 (legacy / new 공통)
 #
-# 격리를 검증할 때 "전부 막혔다"가 아니라 "밖은 막히고 안은 통한다"를 보여야 한다.
-# WireMock은 new 안에 있는 허용된 목적지 역할을 한다.
-# new는 istio-injection=enabled이므로 sidecar가 자동 주입된다 (메시 포함).
+# Phase 1.5에서 new 전용(격리 검증의 "허용된 목적지")으로 만들었고,
+# Phase 2.1에서 base로 옮겨 legacy / new가 같은 매니페스트·같은 스텁을 쓴다.
+# 스텁이 한 곳에만 있어야 두 스택의 외부 응답이 어긋나지 않는다.
 #
-# Phase 2·3의 WireMock 연동 로직은 여기서 만들지 않는다. 스텁 하나뿐이다.
-apiVersion: v1
-kind: ConfigMap
-metadata:
-  name: wiremock-mappings
-  namespace: new
-data:
-  ping.json: |
-    {
-      "request": { "method": "GET", "urlPath": "/ping" },
-      "response": {
-        "status": 200,
-        "body": "pong",
-        "headers": { "Content-Type": "text/plain" }
-      }
-    }
----
+# 스텁 (wiremock-mappings/, configMapGenerator)
+#   GET  /ping            1.5 격리 검증용
+#   POST /gateway/charge  2.1 결제. transactionId = "tx-" + Idempotency-Key 헤더.
+#                         random 금지 -- legacy/new가 같은 키로 같은 값을 받아야 한다.
+#                         stub 단위 "transformers": ["response-template"]로 템플릿을 켠다.
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: wiremock
-  namespace: new
   labels:
     app: wiremock
 spec:
@@ -67,7 +54,6 @@ apiVersion: v1
 kind: Service
 metadata:
   name: wiremock
-  namespace: new
 spec:
   selector:
     app: wiremock

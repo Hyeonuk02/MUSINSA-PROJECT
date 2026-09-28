@@ -42,7 +42,7 @@ spec:
             - until nc -z mysql 3306; do echo "waiting for mysql:3306"; sleep 2; done
       containers:
         - name: order
-          image: order-app:phase1
+          image: order-app:phase2
           # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
           imagePullPolicy: IfNotPresent
           ports:
@@ -83,6 +83,10 @@ spec:
               # 이게 맞아야 Envoy span과 앱 span이 한 trace가 된다.
               value: tracecontext,baggage,b3,b3multi
             # OTEL_SERVICE_NAME / OTEL_RESOURCE_ATTRIBUTES는 legacy/new overlay에서 지정한다.
+            - name: PAYMENT_GATEWAY_URL
+              # Phase 2.1: 같은 네임스페이스의 WireMock. 상대 이름을 쓰면 overlay 네임스페이스로 풀린다
+              # (legacy -> wiremock.legacy, new -> wiremock.new). new의 egress 허용(같은 ns) 안이다.
+              value: http://wiremock:8080
             - name: APP_FIXED_CLOCK
               # legacy/new 모두 같은 값. 시각 차이가 Evidence 비교에 섞이지 않게 한다.
               value: "2026-09-01T00:00:00Z"

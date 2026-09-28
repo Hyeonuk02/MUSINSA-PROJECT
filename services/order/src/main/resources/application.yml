@@ -28,6 +28,10 @@ app:
   # 비어 있으면 시스템 시각(개발 편의). k8s에서는 APP_FIXED_CLOCK env로 주입한다.
   fixed-clock: ${APP_FIXED_CLOCK:}
 
+payment:
+  # Phase 2.1: 결제 게이트웨이(WireMock). k8s에서는 PAYMENT_GATEWAY_URL env로 같은 네임스페이스의 WireMock을 가리킨다.
+  gateway-url: ${PAYMENT_GATEWAY_URL:http://localhost:8089}
+
 # 비교 대상 application header 목록 (확정 목록은 추가 결정 필요 #2). 현재 값은 문서 예시.
 request-log:
   headers: Content-Type,Idempotency-Key
