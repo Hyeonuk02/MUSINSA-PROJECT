@@ -1,0 +1,33 @@
+# [LEGACY_CHANGES L-C2] 실험 환경용 local profile (설정 등급, SPRING_PROFILES_ACTIVE=local)
+#
+# application.yml(upstream)은 그대로 두고 이 파일이 덮어쓴다.
+# - DB: Postgres -> MySQL 8.4. 스키마 소유자는 MySQL init SQL 하나다(ddl-auto none, sql.init never).
+# - Eureka를 끄고 Feign 대상 주소를 simple discovery로 고정한다. 주소는 env로 받아
+#   legacy/new가 같은 파일을 쓴다.
+spring:
+  datasource:
+    driver-class-name: com.mysql.cj.jdbc.Driver
+  sql:
+    init:
+      mode: never
+  jpa:
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  cloud:
+    discovery:
+      client:
+        simple:
+          instances:
+            "[ORDER-SERVICE]":
+              - uri: ${ORDER_SERVICE_URI}
+            "[NOTIFICATION-SERVICE]":
+              - uri: ${NOTIFICATION_SERVICE_URI}
+            "[AUDIT-SERVICE]":
+              - uri: ${AUDIT_SERVICE_URI}
+
+eureka:
+  client:
+    enabled: false

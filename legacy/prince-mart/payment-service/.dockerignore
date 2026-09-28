@@ -1,7 +1,7 @@
-target/*.jar
-!target/*.jar
-src/
-pom.xml
+# [LEGACY_CHANGES L-C3] 멀티스테이지 빌드용. upstream은 src/와 pom.xml을 제외했다.
+target/
 .mvn/
 mvnw
 mvnw.cmd
+.idea/
+.vscode/
