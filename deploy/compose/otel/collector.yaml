@@ -1,0 +1,25 @@
+# OTel Collector (hyeonuk-dev deploy/k8s/observability/otel-collector.yaml과 같은 파이프라인)
+# 받는 것: 앱(OTel Java agent)의 OTLP. 보내는 것: Jaeger로 OTLP.
+receivers:
+  otlp:
+    protocols:
+      grpc:
+        endpoint: 0.0.0.0:4317
+      http:
+        endpoint: 0.0.0.0:4318
+
+processors:
+  batch: {}
+
+exporters:
+  otlp:
+    endpoint: jaeger:4317
+    tls:
+      insecure: true
+
+service:
+  pipelines:
+    traces:
+      receivers: [otlp]
+      processors: [batch]
+      exporters: [otlp]

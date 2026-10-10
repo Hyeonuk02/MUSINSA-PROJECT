@@ -84,6 +84,22 @@ x-app-env: &app-env
   PAYMENT_GATEWAY_URL: http://wiremock:8080
   # 스택마다 브로커 하나(스택 네트워크의 kafka). 토픽·group 이름이 두 스택에서 같다.
   KAFKA_BOOTSTRAP_SERVERS: kafka:9092
+  # OTel Java agent (hyeonuk-dev deploy/k8s/base/order.yaml과 같은 값). agent jar는 otel-agent-init이 볼륨에 복사한다(D5).
+  JAVA_TOOL_OPTIONS: -javaagent:/otel/javaagent.jar
+  OTEL_EXPORTER_OTLP_ENDPOINT: http://otel-collector:4317
+  OTEL_EXPORTER_OTLP_PROTOCOL: grpc
+  OTEL_TRACES_SAMPLER: always_on        # 샘플링 100%
+  OTEL_METRICS_EXPORTER: none
+  OTEL_LOGS_EXPORTER: none
+  OTEL_PROPAGATORS: tracecontext,baggage,b3,b3multi
+  # 서버 span에 남길 요청 헤더. replayRequestId가 nginx(mirror)·Feign을 거쳐 각 서비스에 도착했는지 trace로 확인한다.
+  OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: X-Replay-Request-Id,X-Run-Id,X-Session-Id,baggage,Host
+
+# 스택별로 다른 OTel 식별자. 서비스 이름(OTEL_SERVICE_NAME)과 함께 이 두 값만 legacy/new가 다르다(hyeonuk-dev D5와 같은 규칙).
+x-otel-legacy: &otel-legacy
+  OTEL_RESOURCE_ATTRIBUTES: service.namespace=legacy
+x-otel-new: &otel-new
+  OTEL_RESOURCE_ATTRIBUTES: service.namespace=new
 
 x-app-health: &app-health
   interval: 3s
@@ -95,8 +111,8 @@ x-app-health: &app-health
 x-order: &order
   image: prince-mart/order-service:legacy
   pull_policy: never
-  environment:
-    <<: *app-env
+  volumes:
+    - otel-agent:/otel:ro
   healthcheck:
     <<: *app-health
     # actuator 의존성이 없으므로(upstream pom) 포트가 열렸는지로 본다(hyeonuk-dev order와 같은 방식).
@@ -105,8 +121,8 @@ x-order: &order
 x-coupon: &coupon
   image: prince-mart/coupon-service:legacy
   pull_policy: never
-  environment:
-    <<: *app-env
+  volumes:
+    - otel-agent:/otel:ro
   healthcheck:
     <<: *app-health
     test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8091'"]
@@ -114,8 +130,8 @@ x-coupon: &coupon
 x-payment: &payment
   image: prince-mart/payment-service:legacy
   pull_policy: never
-  environment:
-    <<: *app-env
+  volumes:
+    - otel-agent:/otel:ro
   healthcheck:
     <<: *app-health
     test: ["CMD-SHELL", "bash -c '</dev/tcp/127.0.0.1/8086'"]
@@ -192,32 +208,44 @@ services:
 
   order-legacy:
     <<: *order
+    environment:
+      <<: [*app-env, *otel-legacy]
+      OTEL_SERVICE_NAME: order-legacy
     build:
       context: ../../legacy/prince-mart/order-service
       dockerfile: DockerFile
     ports: ["8085:8085"]
     depends_on:
+      otel-agent-init: { condition: service_completed_successfully }
       mysql-order-legacy: { condition: service_healthy }
       kafka-legacy: { condition: service_healthy }
     networks: { legacy: { aliases: [order] } }
 
   coupon-legacy:
     <<: *coupon
+    environment:
+      <<: [*app-env, *otel-legacy]
+      OTEL_SERVICE_NAME: coupon-legacy
     build:
       context: ../../legacy/prince-mart/coupon-service
       dockerfile: DockerFile
     ports: ["8091:8091"]
     depends_on:
+      otel-agent-init: { condition: service_completed_successfully }
       mysql-coupon-legacy: { condition: service_healthy }
     networks: { legacy: { aliases: [coupon] } }
 
   payment-legacy:
     <<: *payment
+    environment:
+      <<: [*app-env, *otel-legacy]
+      OTEL_SERVICE_NAME: payment-legacy
     build:
       context: ../../legacy/prince-mart/payment-service
       dockerfile: DockerFile
     ports: ["8086:8086"]
     depends_on:
+      otel-agent-init: { condition: service_completed_successfully }
       mysql-payment-legacy: { condition: service_healthy }
       kafka-legacy: { condition: service_healthy }
     networks: { legacy: { aliases: [payment] } }
@@ -246,7 +274,11 @@ services:
 
   order-new:
     <<: *order
+    environment:
+      <<: [*app-env, *otel-new]
+      OTEL_SERVICE_NAME: order-new
     depends_on:
+      otel-agent-init: { condition: service_completed_successfully }
       order-legacy: { condition: service_started }   # 이미지 빌드가 legacy 쪽에서 먼저 끝나야 한다
       mysql-order-new: { condition: service_healthy }
       kafka-new: { condition: service_healthy }
@@ -254,14 +286,22 @@ services:
 
   coupon-new:
     <<: *coupon
+    environment:
+      <<: [*app-env, *otel-new]
+      OTEL_SERVICE_NAME: coupon-new
     depends_on:
+      otel-agent-init: { condition: service_completed_successfully }
       coupon-legacy: { condition: service_started }
       mysql-coupon-new: { condition: service_healthy }
     networks: { new: { aliases: [coupon] } }
 
   payment-new:
     <<: *payment
+    environment:
+      <<: [*app-env, *otel-new]
+      OTEL_SERVICE_NAME: payment-new
     depends_on:
+      otel-agent-init: { condition: service_completed_successfully }
       payment-legacy: { condition: service_started }
       mysql-payment-new: { condition: service_healthy }
       kafka-new: { condition: service_healthy }
@@ -283,8 +323,39 @@ services:
       payment-new: { condition: service_healthy }
     networks: [legacy, new]
 
+  # OTel Java agent 2.31.1. digest 고정 이미지에서 jar만 공유 볼륨으로 복사하고 끝난다(hyeonuk-dev D5의 initContainer와 같음).
+  # 기동 중 다운로드하지 않으므로 new의 internal 네트워크와 충돌하지 않고, legacy/new가 같은 agent를 쓴다.
+  otel-agent-init:
+    image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java@sha256:342ad4c72909bb92b7cd6fa09d5fdd50f41879b5657329e729baeacb46d9a02e
+    command: ["cp", "/javaagent.jar", "/otel/javaagent.jar"]
+    volumes:
+      - otel-agent:/otel
+    network_mode: none
+
+  # OTLP 수신 -> Jaeger로 전달(hyeonuk-dev deploy/k8s/observability/otel-collector.yaml과 같은 구성·digest).
+  otel-collector:
+    image: otel/opentelemetry-collector@sha256:b6d2b9a85b1029d05b5ad913150c1f014eed4ae99be81a1813ca5ade4a191913
+    command: ["--config=/conf/config.yaml"]
+    volumes:
+      - ./otel/collector.yaml:/conf/config.yaml:ro
+    depends_on: [jaeger]
+    networks:
+      legacy: { aliases: [otel-collector] }
+      new: { aliases: [otel-collector] }
+      observability: {}
+
+  # Jaeger v2 all-in-one(같은 digest). UI http://localhost:16686, 조회 API는 /api/v3/*.
+  jaeger:
+    image: jaegertracing/jaeger@sha256:3d0ac795ff98aa04d1be04311d2dac6c25b4bfc8322dc02e53bc5b170c5018c3
+    ports: ["16686:16686"]
+    networks: [observability]
+
+volumes:
+  otel-agent: {}
+
 networks:
   legacy: {}
+  observability: {}
   # 외부로 나갈 수 없는 네트워크. 허용되는 상대는 같은 네트워크에 붙은 컨테이너뿐이다
   # (new 스택 자신 + 이후 붙일 공용 컴포넌트: nginx, OTel Collector, Evidence Store).
   new:

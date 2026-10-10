@@ -204,3 +204,38 @@ WireMock journal 127건(본문 포함)·DB 7테이블이 **정규화 없이 동�
 **대안**
 - new에 별도 compose 파일 — 정의가 두 벌이 되어 어긋날 수 있다.
 - nginx에서 짧은 이름 + 네트워크별 resolver — 설정이 복잡해지고 얻는 것이 없다.
+
+### L9. 요청 ID 전파는 OTel Java agent(실행 시 주입), Collector·Jaeger는 팀원과 같은 구성
+
+**결정**
+- OTel Java agent 2.31.1을 digest 고정 이미지에서 `otel-agent-init`이 공유 볼륨으로 복사하고, 앱은 `JAVA_TOOL_OPTIONS`로 붙인다(hyeonuk-dev D5).
+  앱 이미지와 Legacy 코드는 바뀌지 않는다.
+- agent env는 hyeonuk-dev `deploy/k8s/base/order.yaml`과 같다(OTLP gRPC, `always_on`, metrics/logs 끔,
+  propagators `tracecontext,baggage,b3,b3multi`). 스택마다 다른 env는 `OTEL_SERVICE_NAME`(`order-legacy`/`order-new` …)과
+  `OTEL_RESOURCE_ATTRIBUTES=service.namespace=legacy|new`뿐이다.
+- 서버 span에 요청 헤더 `X-Replay-Request-Id`, `X-Run-Id`, `X-Session-Id`, `baggage`, `Host`를 기록한다
+  (`OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS`).
+- Collector(`deploy/compose/otel/collector.yaml`: OTLP → batch → Jaeger)와 Jaeger v2는 같은 digest. Collector는 두 스택 네트워크에 붙고,
+  Jaeger는 별도 `observability` 네트워크(UI `localhost:16686`).
+- nginx는 upstream 이름을 요청 시점에 Docker DNS로 해석한다(`resolver 127.0.0.11`). 앱 컨테이너가 재생성되어 IP가 바뀌어도
+  nginx를 다시 띄울 필요가 없다.
+
+**근거**
+- 코드 변경 없이 Feign·Kafka 헤더로 baggage가 전파된다. Coupon의 `FeignConfig`처럼 인터셉터를 직접 짤 필요가 없었다.
+- 팀원 구성과 같아야 합칠 때 compose env가 k8s Deployment env로 그대로 옮겨진다.
+
+**실측(Step 6-3, 6-4)** — nginx 경유 체인(쿠폰 주문 R000001 → verify R000002 → 조회 R000003)
+- Boot 4.0.3(order)·4.0.5(coupon)·3.4.2(payment) 모두 agent 2.31.1이 오류 없이 붙었다(`opentelemetry-javaagent - version: 2.31.1`).
+- 요청 1건 = 스택마다 trace 1개. R000001은 order·coupon·payment span 53개가 한 trace(B1의 Coupon→Order 역조회 span도 보인다).
+- 진입 서비스 서버 span: `X-Replay-Request-Id`가 legacy·new 모두 도착. Host는 양쪽 `localhost:8000`(D8 확인).
+  Feign으로 호출된 coupon·payment 서버 span에는 X-Replay-Request-Id가 없고 `baggage: replayRequestId=R000001,runId=smoke`가 있다
+  → Evidence는 baggage에서 replayRequestId를 읽어야 한다.
+- Kafka: `PaymentCompleted` 레코드 헤더에 `baggage: replayRequestId=R000002,runId=smoke`(+ traceparent, b3)가 실린다.
+  payment `publish`와 order `process` span이 같은 trace이고, consumer가 낸 외부 호출 4건(감사·배송·감사·알림)에도 같은 baggage가 붙는다.
+- span 1개짜리 trace는 앱 기동 시 Hibernate의 DB 메타데이터 조회(`INFORMATION_SCHEMA.KEYWORDS` 등)뿐이다. 요청과 무관하다.
+- agent를 붙여도 시나리오 26/26, 응답·DB·외부 호출(메서드·URL·본문)이 붙이기 전과 같다.
+  외부 호출과 Kafka 레코드에는 `traceparent`·`baggage`·`b3` 헤더가 새로 붙는다(스택마다 trace id가 달라 정규화 대상).
+
+**대안**
+- Feign 인터셉터 + Kafka 헤더 직접 전파(계측 등급 코드) — agent가 동작해 필요 없었다.
+- 앱 이미지에 agent 포함 — D5에서 기각된 방식.
