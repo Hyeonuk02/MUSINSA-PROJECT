@@ -2,3 +2,5 @@ target/
 .idea/
 build/
 *.log
+.venv/
+__pycache__/
