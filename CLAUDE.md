@@ -19,44 +19,53 @@ Phase 1 인프라 위에서 k6 → Istio 미러 → Legacy/New → Evidence 필�
 한 줄로 관통시킨다. 판정 엔진은 만들지 않는다.
 종료 시점의 Evidence JSON 형식이 Phase 3 엔진의 입력 계약이 된다.
 
-### 2.1 Order API를 business key 기반으로
+### 2.1 Order API를 business key 기반으로 — ✅ 완료
 - POST /api/orders {orderKey}, GET /api/orders/by-key/{orderKey}, POST /api/orders/{orderKey}/pay (Idempotency-Key), cancel
-- WireMock 결제 스텁을 legacy/new 양쪽에
+- WireMock 결제 스텁을 legacy/new 양쪽에 (deploy/k8s/base/wiremock.yaml 공유, transactionId = tx-{Idempotency-Key})
 
 ### 2.2 corpus v1
 - 독립 세션 3개, 각 세션은 생성→조회→결제→조회, 에러 경로 포함. JSON + 스키마 검증
 
+### 2.3 전 — 스택 간 DB 네트워크 격리 실측
+- new(비주입·주입) → mysql.legacy, legacy → mysql.new 3306 연결 실패 확인 → isolation-proof.md "스택 간 DB 격리"
+
 ### 2.3 Evidence Store v0 + Evidence JSON v0
 - verify 네임스페이스, POST/exists/count/export. 포트명 http-evidence
 - Gateway에 /_evidence/ 라우트(mirror 없음, /api 라우트보다 앞)
+- Evidence JSON v0에 dbAccess {statements[{seq, sql}], truncated}, callTree(null 예약) 포함
 
-### 2.4 Order 앱 Evidence 필터
+### 2.4 Order 앱 Evidence 필터 + ReplayContext + StatementInspector
 - request/response 캡처 → 응답 커밋 후 비동기 POST, X-Evidence-Internal: true
 - Evidence POST 클라이언트는 java.net.http.HttpClient + 해당 계측만 off
+- ReplayContext(ThreadLocal) + EvidenceStatementInspector가 요청 스레드의 SQL 원문 기록
+- 전송 큐 유실 금지(spill), graceful shutdown + flush 훅
 
 ### 2.5 k6 VU=1 + 요청당 New 완료 폴링
-### 2.6 run script — S0 리셋 → k6 → flush barrier → export
-### 2.7 동일성·pairing 검증 (전건 대조)
-### 2.8 VU=3 × 3회 반복 → diff 집합 동일 확인. 실패 시 VU=1
+### 2.6 run script — S0 리셋 → k6 → flush barrier(spill 회수 포함, 다음 reset 전) → export
+### 2.7 동일성·pairing 검증 (전건 대조, dbAccess 제외)
+### 2.8 A/A run — VU=3 × 3회 반복 → Response·dbAccess diff 집합 동일 확인. 실패 시 VU=1
 
 ## 확정 사항
 
 - replayRequestId는 k6(corpus)가 부여, X-Replay-Request-Id. Envoy mirror가 헤더 복사
 - business key(orderKey)는 corpus에서 결정론적 파생. 후속 요청은 orderKey로 대상 지정
 - Evidence 키 (runId, replayRequestId, stack). Evidence POST는 비교·span 대상 아님
+- Evidence 전송은 유실 금지: 큐 상한·재시도 소진 시 버리지 않고 로컬 spill, flush barrier가 회수
+- DB Evidence는 StatementInspector가 SQL 원문만 기록. 앱에서 종류·횟수·테이블 계산이나 SQL 주석 삽입 금지. Hibernate JDBC 배치 off, DB 접근은 JPA 경로만(JdbcTemplate·native batch 금지)
 - 완료 폴링: 요청마다 Store exists로 New 도착 확인 후 다음 요청
-- flush barrier: Store count == 기대 건수 확인 후 export·리셋
+- flush barrier: Store count(+spill 회수분) == 기대 건수 확인 후 export·리셋
 - Legacy/New 앱 코드 동일. 고정 시각 유지. S0 리셋 = MySQL rollout restart
 - Phase 1 교훈 적용: Service 포트명 접두사(http-/grpc-), 멀티아치 이미지 로드 절차, 런타임 다운로드 금지, new는 default-deny egress(verify 허용됨)
 
 ## 하지 말 것
 
 Phase 2에서는 다음을 구현하지 않는다.
-Coupon/Payment 실서비스, Kafka, DB·이벤트·외부 호출 Evidence, Normalization·4분류·Rule·Human Review, Call Graph, 결함 주입, 성능 테스트, Istio 추가 기능, Evidence Store DB·인증·UI.
+Coupon/Payment 실서비스, Kafka, 이벤트·외부 호출 Evidence(DB Evidence는 원문 기록까지만 포함), @Async·Kafka consumer 스레드로의 ReplayContext 전파, Normalization·4분류·Rule·Human Review(2.8 스크립트의 최소 정규화 제외), Call Graph(callTree는 null 예약만), 결함 주입, 성능 테스트, Istio 추가 기능, Evidence Store DB·인증·UI.
 
 ## 작업 방식
 
-- 반드시 Phase 2.1부터 순서대로 진행한다.
+- 2.1은 완료. "2.3 전" 격리 실측을 먼저 하고 2.2부터 순서대로 진행한다.
+- DB Evidence는 StatementInspector로 SQL 원문만 기록한다. 앱에서 종류·횟수·테이블을 계산하거나 SQL 주석을 삽입하지 않는다(그건 Phase 3 엔진 또는 CDC 확장의 몫).
 - 한 번에 한 단계만 진행한다.
 - 구현 전에 이번 단계에서 무엇을 할지와 완료 기준을 먼저 설명한다.
 - 내가 실행 결과를 확인한 뒤 다음 단계로 넘어간다.

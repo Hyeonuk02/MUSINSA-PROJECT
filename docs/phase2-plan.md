@@ -1,5 +1,6 @@
 # Phase 2 상세 계획 — 단일 파이프라인 end-to-end
 
+> v3 (2026-10-11): **DB Evidence(StatementInspector, SQL 원문)를 Phase 2에 포함**, Evidence JSON v0에 `dbAccess`·`callTree` 추가, Evidence 전송 큐 유실 금지(spill)·graceful shutdown, 2.8을 **A/A run**으로 명명, 2.3 전 스택 간 DB 네트워크 격리 실측 추가. 2.1 완료(구현 시 확정 사항 반영).
 > v2 (검토 반영): 2.8 canonical JSON 비교·비교 유지 필드 명확화·주장 완화, 2.1 WireMock 템플릿 문법 정정, 2.6 kubectl 명령 정정
 >
 > `CLAUDE.md`는 방향·확정 사항·단계 요약만 담고, **단계별 세부 작업과 완료 기준은 이 문서가 기준**이다. 전체 설계는 `docs/architecture.md`(v10.1). Phase 1 결과와 실측 교훈은 `docs/phase1-result.md`, `docs/isolation-proof.md`, `docs/decision-log.md`. CLAUDE.md와 다르면 이 문서와 architecture.md가 우선한다.
@@ -7,6 +8,8 @@
 ## Phase 2의 목적
 
 Phase 1 인프라 위에서 **k6 → Istio 미러 → Legacy/New → Evidence 필터 → Evidence Store → export JSON**을 한 줄로 관통시킨다. 판정 엔진은 만들지 않는다. 종료 시점에 "같은 요청이 양쪽에 갔고 그 결과가 로컬 JSON으로 있다"가 되어야 하고, **그 JSON 형식이 곧 Phase 3 엔진의 입력 계약**이다. 이후 엔진 개발은 클러스터 없이 진행한다.
+
+Evidence는 Response에 더해 **DB 접근(SQL 원문)**을 요청 단위로 포함한다. 종류·횟수·테이블 등 파생값은 Phase 3 엔진이 원문에서 계산하며, **앱은 가공하지 않는다**("기록은 최대 해상도, 판정은 선언된 해상도").
 
 Phase 2에서 실측으로 확인할 것 (v10.1 2장의 가정): 독립 세션 + client business key + 요청당 New 완료 폴링 조건에서, **현재 corpus로 VU=3 반복 실행 시 요청 pairing과 비교 결과가 안정적으로 유지되는지** → 2.8에서 "VU=3, 3회 반복, diff 집합 동일"로 확인. 이는 "VU=N에서 항상 성립한다"는 일반 명제의 증명이 아니라 **이 corpus·이 조건에서의 안정성 확인**이다(논문·발표에서 그렇게 표현). 실패하면 VU=1(설정값 하나).
 
@@ -28,23 +31,27 @@ Phase 2에서 실측으로 확인할 것 (v10.1 2장의 가정): 독립 세션 +
 - business key: `orderKey`는 k6가 corpus에서 결정론적 파생(`ok-<replayRequestId>`). **후속 요청은 orderKey로 대상 지정**
 - Evidence 키: `(runId, replayRequestId, stack)`. Phase 2의 service는 `order`뿐
 - Evidence POST는 `X-Evidence-Internal: true`, 응답 커밋 후 비동기. 비교·span 대상 아님
+- **Evidence 전송은 유실 금지**: 큐 상한·재시도 소진 시 버리지 않고 로컬 spill, flush barrier가 회수
+- **DB Evidence는 `StatementInspector`가 SQL 원문만 기록**. 앱에서 종류·횟수·테이블 계산이나 SQL 주석 삽입을 하지 않는다. Hibernate JDBC 배치 off, DB 접근은 JPA 경로만(`JdbcTemplate`·native batch 금지)
 - 완료 폴링: k6가 요청마다 Evidence Store `exists`로 New 도착 확인 후 다음 요청
-- flush barrier: run script가 Store 수신 건수 == 기대 건수 확인 후 export·리셋
+- flush barrier: run script가 Store 수신 건수(+spill 회수분) == 기대 건수 확인 후 export·리셋
 - 고정 시각 `APP_FIXED_CLOCK` 유지, S0 리셋 = MySQL `rollout restart`
 - Legacy/New 앱 코드 동일(Phase 2 내내). 결함 주입은 Phase 3
 
 ## 하지 말 것
 
-- Coupon/Payment 실서비스, Kafka, DB 접근·이벤트·외부 호출 Evidence(Phase 3)
-- Normalization·4분류·Rule·Human Review(Phase 3) — 2.8의 비교 스크립트는 최소 정규화(id·시각 제거)만
-- Call Graph(Phase 4), 성능 테스트, Istio 추가 기능
+- Coupon/Payment 실서비스, Kafka, **이벤트·외부 호출 Evidence**(Phase 3). DB Evidence는 Phase 2에 포함하되 **원문 기록까지만**
+- `@Async`·Kafka consumer 스레드로의 ReplayContext 전파(Phase 3)
+- Normalization·4분류·Rule·Human Review(Phase 3) — 2.8의 비교 스크립트는 최소 정규화(id·시각 제거, SQL alias 치환)만
+- Call Graph(Phase 4) — Evidence JSON의 `callTree`는 `null`로 자리만 예약
+- 성능 테스트, Istio 추가 기능
 - Evidence Store에 DB 도입(파일로 충분), 인증, UI
 
 ---
 
 ## 단계 — 하나 끝나면 다음
 
-### 2.1 Order API를 business key 기반으로 + WireMock 결제 스텁 양쪽 배포
+### 2.1 Order API를 business key 기반으로 + WireMock 결제 스텁 양쪽 배포 — ✅ 완료
 
 할 것
 - `services/order/`에 API 추가·변경 (기존 `GET /api/orders/{id}`는 유지):
@@ -57,7 +64,12 @@ Phase 2에서 실측으로 확인할 것 (v10.1 2장의 가정): 독립 세션 +
 - WireMock을 `legacy`에도 배포(1.5의 `new` 매니페스트 재사용, 스텁 동일). 스텁: `POST /gateway/charge` → 200, **transactionId는 요청의 Idempotency-Key에서 결정론적으로 생성**(random 절대 금지 — Legacy/New가 같은 값을 받아야 함). Order는 게이트웨이 호출 시 `Idempotency-Key`를 **헤더로도** 전달하고, 스텁은 WireMock 문법대로 `{{request.headers.Idempotency-Key}}`(또는 본문에서 `{{jsonPath request.body '$.idempotencyKey'}}`)를 쓴다. 템플릿이 적용되려면 stub에 `"transformers": ["response-template"]`를 넣거나 시작 옵션 `--global-response-templating`이 필요하다. 구현 시 실제 응답으로 문법 검증
 - 이미지 재빌드 → 멀티아치 절차로 kind 로드 → 양쪽 overlay 재배포
 
-끝난 기준
+구현 시 확정 (2.1 질문 3개)
+- 주문 items는 `order_items(order_id, line_no, sku, qty, price)` 테이블로 정규화, 응답에 `line_no` 순서로 포함
+- transactionId 형식 `tx-{Idempotency-Key}` (예: `tx-idem-R000003`)
+- WireMock 매니페스트는 `deploy/k8s/base/wiremock.yaml`로 이동, legacy/new overlay가 함께 배포(스텁 한 벌)
+
+끝난 기준 (충족)
 - 양쪽 스택에서 `curl`로 생성(201) → by-key 조회(200) → pay(200, PAID, transactionId) → 같은 Idempotency-Key로 pay 재요청(200, 게이트웨이 호출 1회 유지 — WireMock `__admin/requests` count로 확인) → cancel(409)
 - **legacy와 new에서 같은 Idempotency-Key로 결제하면 transactionId가 동일**(예: `tx-idem-R000003`) — 결정론 확인
 - 같은 orderKey로 생성 재요청 409
@@ -89,6 +101,18 @@ Phase 2에서 실측으로 확인할 것 (v10.1 2장의 가정): 독립 세션 +
 - 세션 3개, 요청 12~14건, 에러 경로 2건 포함
 - `validate.py` 통과
 
+### 2.3 전 — 스택 간 DB 네트워크 격리 실측 (10분, `docs/isolation-proof.md` 보강)
+
+Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다. 스택 간 격리가 **설정(JDBC URL)이 아니라 네트워크**로 보장됨을 실측한다.
+
+| 시도 | 기대 | 결과 |
+|---|---|---|
+| `new` ns pod(비주입 curl) → `mysql.legacy.svc.cluster.local:3306` TCP | NetworkPolicy로 타임아웃 | (기입) |
+| `new` ns pod(sidecar 주입) → 동일 | 동일 | (기입) |
+| `legacy` ns pod → `mysql.new.svc.cluster.local:3306` | 동일 | (기입) |
+
+끝난 기준: 세 경우 모두 연결 실패. 표를 `docs/isolation-proof.md`에 추가(제목: "스택 간 DB 격리").
+
 ### 2.3 Evidence Store v0 + Evidence JSON v0
 
 할 것
@@ -113,33 +137,70 @@ Phase 2에서 실측으로 확인할 것 (v10.1 2장의 가정): 독립 세션 +
   "version": "legacy-eq",
   "request":  { "method": "POST", "path": "/api/orders/ok-R000001/pay", "query": "", "headers": { "content-type": "application/json", "idempotency-key": "idem-R000003" }, "bodyHash": "sha256:..." },
   "response": { "status": 200, "headers": { "content-type": "application/json" }, "bodyHash": "sha256:...", "body": "{...}" },
+  "dbAccess": {
+    "statements": [
+      { "seq": 1, "sql": "select o1_0.id,o1_0.order_key,o1_0.status from orders o1_0 where o1_0.order_key=?" },
+      { "seq": 2, "sql": "insert into payments (amount,order_id,transaction_id,id) values (?,?,?,?)" }
+    ],
+    "truncated": false
+  },
+  "callTree": null,
   "timing":   { "arrivedAt": "2026-...Z", "completedAt": "2026-...Z", "arrivedNano": 0, "completedNano": 0 },
   "capturedAt": "2026-...Z"
 }
 ```
   - `request.headers`·`response.headers`는 **지정 목록만**(REQUEST_LOG_HEADERS 재사용). `response.body`는 32KB 상한, 초과 시 hash만
-  - DB/외부 호출/이벤트 필드는 v0에 없음 — Phase 3에서 추가(`schemaVersion` 올림)
+  - `dbAccess.statements[].sql`은 Hibernate가 JDBC로 보내기 직전의 문자열(바인딩 전, 값은 `?`). **가공·파싱·분류 없음**. 상한: 문장당 2,048자(초과분 잘라내고 `truncated: true`), 요청당 200건(초과 시 이후 문장 버리고 `truncated: true`)
+  - `callTree`는 Phase 3에서 채움. Phase 2에서는 항상 `null` — 필드 자리만 예약
+  - 외부 호출/이벤트 필드는 v0에 없음 — Phase 3에서 추가(`schemaVersion` 올림)
 
 끝난 기준
 - 클러스터 안에서 `curl` POST → exists 200 → count 정확 → export로 JSON 확보
 - 호스트에서 `http://localhost/_evidence/count?runId=x` 응답(200) 및 **미러되지 않음**(new 쪽 로그에 `/_evidence` 요청 없음)
 - Store 이미지가 멀티아치 절차로 kind에 로드됨
+- `docs/evidence-schema-v0.json`이 `dbAccess`·`callTree`를 포함하고 예시가 schema를 통과
 
-### 2.4 Order 앱의 Evidence 필터
+### 2.4 Order 앱의 Evidence 필터 + ReplayContext + StatementInspector
 
 할 것
+
+**(a) 요청 컨텍스트 — `ReplayContext`**
+- ThreadLocal 홀더 `ReplayContext { replayRequestId, runId, sessionId }`
+- Evidence 필터(`OncePerRequestFilter`, `Ordered.HIGHEST_PRECEDENCE`)가 `X-Replay-Request-Id`·`X-Run-Id`·`X-Session-Id`에서 읽어 set, `finally`에서 clear(스레드 재사용 대비). 헤더가 없는 요청(수동 curl, 스모크)은 **Evidence를 남기지 않음**(로그만)
+- 요청별 Evidence 버퍼는 `chain.doFilter()`가 **반환한 뒤** 닫는다 — open-in-view로 컨트롤러 반환 후 직렬화 중에도 SELECT가 나감
+
+**(b) Request/Response 캡처**
 - Phase 0 `RequestLogFilter`를 확장(또는 별도 `EvidenceFilter`): `ContentCachingRequestWrapper/ResponseWrapper`로 request/response 캡처 → `chain.doFilter` 완료(응답 커밋) 후 **비동기**(작은 executor)로 Store에 POST
 - 헤더: `X-Evidence-Internal: true`. `stack`·`service`·`version`은 env(`EVIDENCE_STACK=legacy|new`, `EVIDENCE_SERVICE=order`, `EVIDENCE_VERSION`)
-- `runId`·`replayRequestId`·`sessionId`는 요청 헤더 `X-Run-Id`·`X-Replay-Request-Id`·`X-Session-Id`에서. 헤더가 없는 요청(수동 curl, 스모크)은 **Evidence를 남기지 않음**(로그만)
 - Evidence POST용 HTTP 클라이언트는 **`java.net.http.HttpClient`**로 하고 OTel agent에서 그 계측만 끔(`OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED=false`) → 앱 span에 Evidence POST가 안 섞임. 비즈니스 외부 호출(WireMock)은 `RestClient`라 계속 계측됨. Envoy outbound span은 남으니 Phase 3에서 destination이 `evidence-store`인 span은 traceTopology에서 제외
-- 실패 시 재시도 3회 후 로그. 큐 상한. 앱 종료 시 flush
-- `REQUEST_LOG_HEADERS`에 `X-Replay-Request-Id, X-Run-Id, X-Session-Id, Idempotency-Key, Content-Type` 
+- `REQUEST_LOG_HEADERS`에 `X-Replay-Request-Id, X-Run-Id, X-Session-Id, Idempotency-Key, Content-Type`
+
+**(c) DB 접근 — `EvidenceStatementInspector`**
+- `implements org.hibernate.resource.jdbc.spi.StatementInspector`. `inspect(sql)`: `ReplayContext`에 id가 있으면 현재 요청 버퍼에 `{seq, sql}` append, 없으면 무시(부팅·스키마 검증 쿼리). 항상 `sql`을 **그대로 반환**
+- 등록: `HibernatePropertiesCustomizer` 빈으로 `hibernate.session_factory.statement_inspector`에 **인스턴스**를 넣는다(클래스명 문자열로 넣으면 Spring 빈 주입 불가 → ReplayContext 접근 못 함)
+- 고정: `hibernate.jdbc.batch_size` 미설정(배치 off). DB 접근은 JPA 경로만
+- Phase 2 범위는 **요청 스레드만**
+
+**(d) 전송 큐 — 유실 금지**
+- 비동기 POST 실패 시 재시도 3회. 큐 상한 도달 또는 재시도 소진 시 **버리지 않는다** — 로컬 파일 `/var/evidence/spill/<runId>/<replayRequestId>-<stack>.json`로 spill
+- run script의 flush barrier가 spill 파일까지 회수한 뒤 기대 건수를 센다(2.6)
+
+**(e) graceful shutdown**
+- `server.shutdown=graceful`, `spring.lifecycle.timeout-per-shutdown-phase=20s`
+- 종료 훅에서 Evidence 큐 flush(미전송분은 spill)
+- k8s `terminationGracePeriodSeconds: 30` (앱 타임아웃보다 길게)
+- 근거: S0 리셋이 `rollout restart`라 매 run마다 pod가 종료됨 → 마지막 요청들의 Evidence가 큐에 남은 채 죽을 수 있음
+
 - Legacy/New **동일 코드**
 
 끝난 기준
 - Ingress로 헤더 붙여 요청 1건 → Store에 legacy·new Evidence 각 1건, 같은 replayRequestId, `request.bodyHash` 동일
+- `POST /api/orders` Evidence의 `dbAccess.statements`에 INSERT 포함, `GET by-key`는 SELECT만. 앱 기동 시 스키마 검증 쿼리는 어떤 요청의 `dbAccess`에도 없음
+- `callTree`는 `null`
 - Jaeger에서 해당 trace의 **앱 span에는 Evidence POST client span이 없음**, Envoy outbound span에만 `evidence-store` 보임
 - 응답 시간이 Evidence POST와 무관(POST 실패시켜도 응답 정상)
+- Store를 내려둔 채 요청 → spill 파일 생성 → Store 올리고 회수 스크립트 실행 → Store에 도착
+- 요청 직후 `rollout restart` → 마지막 요청의 Evidence가 Store 또는 spill에 존재
 
 ### 2.5 k6 — VU=1, 완료 폴링
 
@@ -168,9 +229,11 @@ for i in 1..N:
            kubectl rollout status  deployment/mysql -n new
            → order readiness 대기(양쪽) → WireMock __admin/requests/reset 양쪽
   k6:      RUN_ID=runId VUS=V k6 run k6/run.js
-  barrier: /_evidence/count?runId&stack=legacy 와 new 가 기대 건수(= 발송 건수 − degraded 세션의 건너뛴 건수)와 같아질 때까지 폴링(최대 30초). 미달 시 누락 requestId 목록 출력 후 중단
+  barrier: (1) 양쪽 order pod의 spill 디렉터리에 runId 파일이 있으면 Store로 재전송 후 삭제
+           (2) /_evidence/count?runId&stack=legacy 와 new 가 기대 건수(= 발송 건수 − degraded 세션의 건너뛴 건수)와 같아질 때까지 폴링(최대 30초). 미달 시 누락 requestId 목록 출력 후 중단
   export:  /_evidence/export?runId&stack=legacy → runs/<runId>/legacy.json, new → runs/<runId>/new.json, k6-summary.json, run-meta.json(corpus 버전, 이미지 digest, 고정 시각, VUS)
 ```
+- barrier(spill 회수)는 **반드시 다음 iteration의 reset 전**에 끝나야 한다(spill이 emptyDir이면 pod 재시작 시 사라짐)
 - `runs/`는 `.gitignore`(결과는 docs에 요약만)
 
 끝난 기준
@@ -184,37 +247,43 @@ for i in 1..N:
   - 짝: 양쪽 존재 여부(Undelivered 목록)
   - request: method / path / query / 지정 헤더 / bodyHash 일치
   - 출력: 항목별 PASS(n/n), Undelivered 목록, 실패 시 requestId와 필드
+  - `dbAccess`는 여기서 비교하지 않음(요청 동일성만)
 
 끝난 기준
 - 2.6의 run 3개 모두 전건 PASS, Undelivered 0
 
-### 2.8 VU=3 × 3회 반복 — 현재 조건에서 요청 단위 비교의 안정성 확인
+### 2.8 A/A run — VU=3 × 3회 반복, 현재 조건에서 요청 단위 비교의 안정성 확인
+
+코드가 같은 두 스택(Legacy = New)으로 돌리는 **A/A run**이다. 목적은 Legacy/New 차이 탐지가 아니라 **파이프라인 자체가 잡음을 만들지 않음**을 확인하는 것. Phase 3 각 단계의 완료 조건에도 "A/A run 3회, diff 0 또는 잡음 목록 명시"를 둔다.
 
 할 것
-- `engine/diff_v0.py --run runs/<runId>`: 응답 비교의 최소판. `response.status` 일치 + `response.body`가 JSON이면 **parse → 제외 필드 제거 → key 정렬 → canonical JSON 직렬화 → 비교** (문자열 비교 금지: key 순서만 달라도 DIFF가 남). 제외 필드는 **DB auto `id`만**. `orderKey`·`status`·`amount`·`transactionId`(WireMock이 Idempotency-Key에서 결정론적으로 생성)·`createdAt`(고정 시각이므로 양쪽 동일해야 함)은 **유지해서 비교** — createdAt이 다르면 고정 시각이 깨진 것이고, transactionId가 다르면 결제 결과가 다른 것. 차이 나는 requestId 집합을 출력. 이건 Phase 3 Normalization의 자리표시자이지 엔진이 아님
+- `engine/diff_v0.py --run runs/<runId>`: 비교의 최소판
+  - **Response**: `response.status` 일치 + `response.body`가 JSON이면 **parse → 제외 필드 제거 → key 정렬 → canonical JSON 직렬화 → 비교** (문자열 비교 금지: key 순서만 달라도 DIFF가 남). 제외 필드는 **DB auto `id`만**. `orderKey`·`status`·`amount`·`transactionId`(WireMock이 Idempotency-Key에서 결정론적으로 생성)·`createdAt`(고정 시각이므로 양쪽 동일해야 함)은 **유지해서 비교** — createdAt이 다르면 고정 시각이 깨진 것이고, transactionId가 다르면 결제 결과가 다른 것
+  - **dbAccess**: 문장 **개수·순서**와 각 `sql`의 정규화 문자열 일치. 정규화 = 소문자화, 연속 공백을 1개로, Hibernate alias(`[a-z]+\d+_\d+`) → `_a_` 치환. 원문 그대로 비교 금지(alias 생성 순서가 바뀔 수 있음). **이 정규화는 이 스크립트에만 둔다 — 앱에 넣지 않는다**
+  - 차이 나는 requestId 집합(response / dbAccess 구분)을 출력. 이건 Phase 3 Normalization의 자리표시자이지 엔진이 아님
 - `run.sh --iterations 3 --vus 3` → run 3개 → 각 run의 diff 집합 비교
 
 끝난 기준
 - 세 run의 diff 집합이 **동일**(코드가 같으므로 공집합 기대). Undelivered 0, degraded 0. 결과는 "현재 corpus·세션 독립 조건에서 VU=3 반복 실행이 안정적"으로 기록(일반화 주장 금지)
-- 동일하지 않으면: 차이 난 requestId의 Evidence를 나란히 놓고 원인 분류(타이밍/유실/ID) → `docs/phase2-result.md`에 기록 → `--vus 1`로 재실행해 공집합 확인 → **VU=1 확정**을 decision-log에
+- 동일하지 않으면: 차이 난 requestId의 Evidence를 나란히 놓고 원인 분류(타이밍/유실/ID/비결정 쿼리 순서/open-in-view 지연 SELECT) → `docs/phase2-result.md`에 기록 → `--vus 1`로 재실행해 공집합 확인 → **VU=1 확정**을 decision-log에
 
-Phase 2 종료 조건: 2.1~2.8 완료 + `docs/phase2-result.md`(Evidence 스키마 v0 확정본 링크, 2.8 결과, VU 결정) + `git tag phase2-done`. **이 시점부터 Phase 3 엔진 개발은 `runs/` JSON만으로 클러스터 없이 진행.**
+Phase 2 종료 조건: 2.1~2.8 완료 + `docs/phase2-result.md`(Evidence 스키마 v0 확정본 링크, 2.8 결과, VU 결정, A/A 잡음 목록) + `git tag phase2-done`. **이 시점부터 Phase 3 엔진 개발은 `runs/` JSON만으로 클러스터 없이 진행.**
 
 ---
 
 ## 레포 구조 (Phase 2에서 채워지는 부분)
 
 ```
-services/order/          business key API, EvidenceFilter
+services/order/          business key API, EvidenceFilter, ReplayContext, EvidenceStatementInspector
 evidence-store/          FastAPI 단일 파일 + Dockerfile
 corpus/                  corpus-v1.json, schema.json, validate.py
-k6/                      run.js, run.sh
+k6/                      run.js, run.sh (spill 회수 포함)
 engine/                  verify_sameness.py, diff_v0.py   (로컬 실행, 클러스터 접근 없음)
 deploy/k8s/verify/       evidence-store.yaml
 deploy/k8s/istio/        virtualservice-gateway.yaml (/_evidence 라우트 + /api 라우트·mirror)
-deploy/k8s/legacy/       wiremock.yaml 추가
+deploy/k8s/base/         wiremock.yaml (2.1에서 legacy/new 공유로 이동)
 runs/                    (gitignore) run별 export
-docs/                    evidence-schema-v0.json, phase2-result.md
+docs/                    evidence-schema-v0.json, phase2-result.md, isolation-proof.md(스택 간 DB 격리 추가)
 ```
 
 ## 추가 결정 필요 (구현 중 정하지 말고 질문)
@@ -223,9 +292,11 @@ docs/                    evidence-schema-v0.json, phase2-result.md
 - `response.body` 저장 상한(32KB 기본)과 초과 정책
 - 완료 폴링 타임아웃(10초 기본)·flush barrier 타임아웃(30초 기본)
 - degraded 세션 처리: 남은 요청 건너뜀(기본) vs run 전체 중단
-- WireMock 응답의 결정론적 transactionId 생성 방식
+- spill 디렉터리 위치(emptyDir 기본 + "barrier가 reset 전" 순서 보장 vs hostPath)
+- `terminationGracePeriodSeconds`·shutdown 타임아웃 값(30s/20s 기본)
+- ~~WireMock 응답의 결정론적 transactionId 생성 방식~~ → 2.1에서 `tx-{Idempotency-Key}`로 확정
 - 2.8에서 diff 집합이 다를 때 VU=1로 내릴지, 원인이 유실이면 폴링 타임아웃만 늘릴지
 
 ## 실행 지시 (CLAUDE.md에도 동일)
 
-위 문서를 기준으로 Phase 2.1부터 시작하자. 한 번에 한 단계만 진행하고, 각 단계에서 무엇을 만들지와 끝난 기준을 먼저 설명한 뒤 내가 실행 결과를 확인하면 다음으로 넘어간다. 오류는 해당 단계에서 해결한다. 문서에 없는 설계 결정이 필요하면 임의로 정하지 말고 질문해라. "하지 말 것" 목록과 Phase 3 이후 항목은 구현하지 않는다. 단계마다 `phase2.x: ...` 형식으로 커밋한다.
+위 문서를 기준으로 **"2.3 전" 격리 실측을 먼저 하고 2.2부터** 진행하자(2.1 완료). 한 번에 한 단계만 진행하고, 각 단계에서 무엇을 만들지와 끝난 기준을 먼저 설명한 뒤 내가 실행 결과를 확인하면 다음으로 넘어간다. 오류는 해당 단계에서 해결한다. 문서에 없는 설계 결정이 필요하면 임의로 정하지 말고 질문해라. "하지 말 것" 목록과 Phase 3 이후 항목은 구현하지 않는다. 단계마다 `phase2.x: ...` 형식으로 커밋한다. 시작 전에 루트 `CLAUDE.md`의 Phase 2 표와 확정 사항을 이 문서(v3)와 맞추고, `docs/decision-log.md`에 "DB Evidence v3 / Evidence 전송 큐 정책 / DB 격리의 두 축" 세 항목을 추가해라(내용은 `phase2-plan-patch-v3.md` 3절).

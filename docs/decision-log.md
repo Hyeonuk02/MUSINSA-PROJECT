@@ -265,3 +265,70 @@ Istio 1.28에서 `DISABLE_SHADOW_HOST_SUFFIX`가 추가되며 기본 동작이 �
 
 이 결정에 따라 `architecture.md`의 1.2 표와 5.3 Normalization,
 `phase1-plan.md`의 확정 사항과 1.6 기준을 실측대로 고쳤다.
+
+---
+
+## Phase 2 — 단일 파이프라인 end-to-end
+
+### D9. DB Evidence 수집 방식 (v3, 2026-10-11)
+
+**선택 지점**
+Legacy/New의 DB 동작이 같은지를 어떤 수단으로 관측하는가.
+
+**이력**
+
+- v1 (아키텍처 v7~v10.1): Hibernate Statistics / Repository AOP로 요청별 횟수(+필요 시 값).
+  한계: Statistics는 SessionFactory 전역 카운터라 동시 요청에서 요청별 분리 불가,
+  "앱이 보낸 것"만 보고 실제 저장 결과는 안 봄.
+- v2 (2026-10-01 검토): 토스 세션 "shadow + CDC + dataset(count/sum/hash)"를 보고
+  Debezium(MySQL binlog)으로 DB 바깥에서 실제 변경 행(before/after) 수집 검토.
+  난제: binlog에 요청 ID 없음 → SQL 주석(sqlcommenter 패턴)에 rid를 넣고
+  `binlog_rows_query_log_events=ON` + Debezium `include.query`로 전달하는 매핑 방안 도출
+  (우리 제안, 토스 조합 아님).
+- **v3 (확정)**: CDC를 기본에서 제외하고 두 층으로
+  1. **요청 단위**: `StatementInspector`로 SQL 원문 `{seq, sql}` 기록. 종류·횟수·테이블은 엔진이 파생. 원문 "DB 접근 횟수" 충족
+  2. **run 단위**: run 종료 후 Legacy/New 최종 DB 상태 비교 — business key(orderKey) 조인,
+     id·시각 정규화, count → sum → hash. diff 행은 orderKey로 세션에 역매핑
+
+**근거**
+
+- 원문 요구는 "DB 접근 횟수"이며 inspector로 충족. 비용 0, 의존성 0
+- 최종 상태 비교는 현업(토스 정산, Uber 회계, Stripe 이전)과 같은 방식이고 business key가 있어
+  CDC 없이도 세션 귀속이 됨 → Human Review 범위 축소 지표에 충분
+- "기록은 최대 해상도(원문), 판정은 선언된 해상도(엔진 규칙)": 파싱·정규화 규칙을 앱에 넣으면
+  규칙 변경마다 Legacy/New 양쪽 재배포 → "코드 이외는 상수" 위반.
+  엔진(클러스터 밖)에 두면 재배포 없이 재분석 가능
+- 영향 행 수·바인딩 파라미터까지 필요하면 datasource-proxy(JDBC 프록시)로 교체 가능 — 수집 자리가 같아 스키마 불변
+
+**대안 (확장으로 보존)**
+CDC + SQL 주석 매핑. 필요해지는 경우: business key 없는 행(공유 카운터) 귀속,
+중간 전이(A→B→A) 관측, 요청 단위 정확 귀속. Phase 4 여유 시.
+
+**한계**
+최종 상태 비교는 run 종료 스냅샷이라 중간 전이를 못 봄. inspector는 Hibernate 경로만 봄
+(JPA-only 규약으로 보완). SQL 주석 기법은 ORM 중립(sqlcommenter)이나 CDC까지 살아남는지는
+DB 의존(MySQL 가능, PostgreSQL은 request_id 컬럼 필요).
+
+**변경 없음**
+S0 리셋은 입력 조건 고정 수단으로 유지.
+
+### D10. Evidence 전송 큐는 유실 금지 (2026-10-11)
+
+**결정**
+큐 상한·재시도 소진 시 버리지 않고 로컬 spill, flush barrier가 회수.
+graceful shutdown + flush 훅.
+
+**근거**
+토스 로그 appender(neverBlock=버림)와 목적이 반대다. 로그는 부가 기능이고 Evidence는 검증 본체라,
+유실되면 Undelivered로 잡혀 run이 무효가 된다.
+
+### D11. DB 격리의 두 축 — 스택 축은 네트워크로 보장 (2026-10-11)
+
+**결정**
+서비스 축(Order↔Coupon, 소유권·사이드이펙트 경계)과 스택 축(legacy↔new, 실험 유효성)은 다른 결정이다.
+스택 축 격리는 설정(JDBC URL)이 아니라 네트워크(NetworkPolicy)로 보장한다.
+
+**근거**
+실무 shadow testing은 Legacy/New가 같은 DB를 보는 경우가 흔하다(Stripe shadow read, Grab DAO mock).
+따라서 스택 축 격리는 이 프로젝트의 명시적 선택이고, 설정 실수로 깨지지 않도록 네트워크로 막는다.
+실측은 [isolation-proof.md](isolation-proof.md) "스택 간 DB 격리".

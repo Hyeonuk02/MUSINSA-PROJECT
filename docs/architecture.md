@@ -152,7 +152,7 @@ for iteration in 1..K:
 ## 5. Evidence
 
 ### 5.1 항목과 수집
-Response / DB Read·Write(횟수, 필요 시 값) / External API Call / Event / Error Path / 실행 순서. 서비스 내부 필터(`OncePerRequestFilter` 등)가 수집해 응답 커밋 후 비동기로 Store에 POST.
+Response / **DB 접근: StatementInspector가 요청별 SQL 원문을 기록하고, 엔진이 종류·횟수·테이블·지문을 파생한다. 실제 저장 결과는 run 종료 후 최종 DB 상태 비교(business key 조인, count/sum/hash)로 본다.** / External API Call / Event / Error Path / 실행 순서. 서비스 내부 필터(`OncePerRequestFilter` 등)가 수집해 응답 커밋 후 비동기로 Store에 POST.
 
 **관측 트래픽 제외 규칙**: Store POST에 `X-Evidence-Internal: true`. traceTopology·External API Call 비교에서 제외, OTel span 억제, 요청 처리 시간에 영향 없게 비동기. flush barrier가 도착을 보장.
 
