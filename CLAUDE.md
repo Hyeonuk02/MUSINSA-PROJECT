@@ -55,6 +55,7 @@ Phase 1 인프라 위에서 k6 → Istio 미러 → Legacy/New → Evidence 필�
 - 완료 폴링: 요청마다 Store exists로 New 도착 확인 후 다음 요청
 - flush barrier: Store count(+spill 회수분) == 기대 건수 확인 후 export·리셋
 - Legacy/New 앱 코드 동일. 고정 시각 유지. S0 리셋 = MySQL rollout restart
+- legacy/new의 검증 대상 서비스 pod(order, 이후 coupon)는 sidecar 주입 필수 (MySQL server-first + PERMISSIVE mTLS 제약, docs/isolation-proof.md "관찰"). probe/tooling/verify pod에는 적용하지 않음
 - Phase 1 교훈 적용: Service 포트명 접두사(http-/grpc-), 멀티아치 이미지 로드 절차, 런타임 다운로드 금지, new는 default-deny egress(verify 허용됨)
 
 ## 하지 말 것
@@ -64,7 +65,7 @@ Coupon/Payment 실서비스, Kafka, 이벤트·외부 호출 Evidence(DB Evidenc
 
 ## 작업 방식
 
-- 2.1은 완료. "2.3 전" 격리 실측을 먼저 하고 2.2부터 순서대로 진행한다.
+- 2.1, "2.3 전" 격리 실측 완료. 2.2부터 순서대로 진행한다.
 - DB Evidence는 StatementInspector로 SQL 원문만 기록한다. 앱에서 종류·횟수·테이블을 계산하거나 SQL 주석을 삽입하지 않는다(그건 Phase 3 엔진 또는 CDC 확장의 몫).
 - 한 번에 한 단계만 진행한다.
 - 구현 전에 이번 단계에서 무엇을 할지와 완료 기준을 먼저 설명한다.

@@ -96,6 +96,7 @@ Phase 2에서 실측으로 확인할 것 (v10.1 2장의 가정): 독립 세션 +
 ```
 - 규칙: 세션 간 공유 상태 없음(각자 orderKey), 본문에 실행 시점 값 없음, `id` 전역 유일, 파일 버전 고정
 - `corpus/schema.json`(JSON Schema)과 검증 스크립트(`corpus/validate.py`): 필수 필드, id 유일, orderKey가 같은 세션 안에서만 참조되는지
+- `expectMissing: true` (요청 단위, 선택): 없는 키 조회(404) 요청에 표기. **의미는 `validate.py`에서만** — "orderKey는 같은 세션 안에서 생성된 것만 참조" 규칙의 예외(그 세션에서 만들지 않은 키 참조 허용). k6와 `engine/verify_sameness.py`는 무시한다(판정은 Evidence 비교로만). `schema.json`의 description에 같은 의미를 명시. 409 경로(PAID 후 cancel)는 세션 내 키 참조라 플래그 없음
 
 끝난 기준
 - 세션 3개, 요청 12~14건, 에러 경로 2건 포함
@@ -223,6 +224,10 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
 ```
 for i in 1..N:
   runId = <base>-<i>
+  preflight: istioctl proxy-config secret 으로 istio-system ingressgateway pod, legacy/new 각 order pod의
+           proxy 인증서(default, Cert Chain) VALID CERT / NOT AFTER 확인
+           → 만료, 또는 istioctl 실패·pod 없음 등으로 정상 확인 불가면 run을 시작하지 않고 중단(fail-closed)
+           → 자동 복구(rollout restart 등) 없음 — 사람이 복구 후 재실행
   reset:   kubectl rollout restart deployment/mysql -n legacy
            kubectl rollout restart deployment/mysql -n new          (kubectl은 -n을 하나만 받음 — 네임스페이스별로 따로)
            kubectl rollout status  deployment/mysql -n legacy
@@ -233,6 +238,7 @@ for i in 1..N:
            (2) /_evidence/count?runId&stack=legacy 와 new 가 기대 건수(= 발송 건수 − degraded 세션의 건너뛴 건수)와 같아질 때까지 폴링(최대 30초). 미달 시 누락 requestId 목록 출력 후 중단
   export:  /_evidence/export?runId&stack=legacy → runs/<runId>/legacy.json, new → runs/<runId>/new.json, k6-summary.json, run-meta.json(corpus 버전, 이미지 digest, 고정 시각, VUS)
 ```
+- preflight 근거: 호스트 sleep 후 워크로드 인증서 만료로 메시 전체 503 UC가 난 실측(`docs/isolation-proof.md` "관찰")
 - barrier(spill 회수)는 **반드시 다음 iteration의 reset 전**에 끝나야 한다(spill이 emptyDir이면 pod 재시작 시 사라짐)
 - `runs/`는 `.gitignore`(결과는 docs에 요약만)
 

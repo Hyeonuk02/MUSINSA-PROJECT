@@ -328,14 +328,35 @@ ingress:
 
 **통과**: 교차 스택 세 경우 모두 연결 실패, 대조군 정상.
 
-## 측정 중 관찰 (격리와 무관, 기록)
+## 관찰
 
-- **비주입 client → sidecar가 있는 자기 mysql은 정책과 무관하게 실패한다.** 정책을 지운 상태에서도 같은
-  `ERROR 2013 … (110)`이었다. MySQL은 서버가 먼저 greeting을 보내는데, PERMISSIVE mTLS의 inbound Envoy는
-  평문/TLS를 판별하려고 클라이언트의 첫 바이트를 기다려 양쪽이 서로를 기다린다(server-first 프로토콜 제약).
-  실제 order는 sidecar 주입 pod라 이 경로를 쓰지 않는다. 그래서 대조군은 sidecar pod로만 잡았다.
-- **workload 인증서 만료로 메시 HTTP가 503 UC.** 측정 중 ingressgateway·mesh-check·isolation-injected 세 proxy의
-  인증서가 갱신되지 않은 채 만료(`istioctl proxy-config secret` → `valid=false`, notAfter 2026-10-11 08:51~11:07Z)되어
-  Ingress 포함 메시 HTTP 호출이 `503 UC`였다. NetworkPolicy를 지워도 동일해 정책과 무관함을 확인했고,
-  세 pod 재시작으로 복구. agent 로그에 수 시간씩 빈 구간이 있어 호스트(Docker VM) sleep 동안 갱신 타이머가
-  밀린 것으로 추정한다(검증은 안 함). 장시간 방치 후 run 전에는 `istioctl proxy-config secret`로 만료를 점검한다.
+격리 판정과는 무관하지만 측정 중 드러난 것. 운영 절차·확정 사항에 반영했다.
+
+### 1. 호스트 sleep 후 워크로드 인증서 만료 → 메시 전체 503
+
+측정 중 Ingress 포함 메시 HTTP 호출이 전부 `503 UC`(`upstream_reset_before_response_started{connection_termination}`)였다.
+`istioctl proxy-config secret`으로 보니 ingressgateway·mesh-check·isolation-injected 세 proxy의 인증서가
+갱신되지 않은 채 만료돼 있었다(`VALID CERT false`, NOT AFTER 2026-10-11 08:51~11:07Z, 측정 시각 14:3xZ).
+NetworkPolicy를 지워도 동일해 정책과 무관함을 확인했고, 세 pod 재시작으로 복구했다.
+agent 로그에 수 시간씩 빈 구간이 있어 호스트(Docker VM) sleep 동안 갱신 타이머가 밀린 것으로 추정한다(원인 검증은 안 함).
+
+→ **2.6 run script에 preflight를 둔다**: 매 run의 reset 전에 ingressgateway와 legacy/new order pod의 proxy 인증서를 확인하고,
+만료됐거나 확인할 수 없으면 run을 시작하지 않는다(fail-closed, 자동 복구 없음). `docs/phase2-plan.md` 2.6.
+
+### 2. 비주입 client ↔ sidecar가 있는 MySQL은 연결되지 않는다 — 문서화된 Istio 동작
+
+비주입 client pod에서 같은 네임스페이스의 mysql(sidecar 있음)로 접속하면 NetworkPolicy 유무와 관계없이
+`ERROR 2013 … waiting for initial communication packet (110)`이었다.
+이것은 Istio 문서에 명시된 동작이다 —
+[Application Requirements › Server first protocols](https://istio.io/latest/docs/ops/deployment/application-requirements/#server-first-protocols):
+
+- MySQL(3306)은 서버가 먼저 바이트를 보내는 server-first 프로토콜이며, Istio는 3306을 server-first 포트로 등록해 자동으로 TCP로 취급한다
+- PERMISSIVE mTLS는 연결의 첫 바이트를 검사해 mTLS인지 plaintext인지 판별하는데, server-first 프로토콜은 서버가 먼저 보내므로 이 판별과 호환되지 않는다
+- 문서의 권장 해법은 해당 포트의 mTLS를 STRICT 또는 DISABLE로 두는 것이다
+
+이 프로젝트에서는 검증 대상 서비스 pod(order, 이후 coupon)가 모두 sidecar 주입 pod라 이 경로를 쓰지 않는다
+→ `CLAUDE.md` 확정 사항에 "검증 대상 서비스 pod는 sidecar 주입 필수"로 고정. 격리 실측의 대조군은 sidecar pod로만 잡았다
+(mysql-probe의 비주입 pod는 교차 스택 차단 확인용으로 의도적으로 비주입).
+MySQL Service 포트명은 바꾸지 않는다(3306은 자동 TCP라 불필요).
+
+후속 검토: mysql 포트 PeerAuthentication STRICT(2차 격리 레이어) — Phase 2 종료 후 결정
