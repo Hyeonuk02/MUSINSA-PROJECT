@@ -260,3 +260,82 @@ outbound|4317||otel-collector.observability.svc.cluster.local ... health_flags::
 - 두 실패의 서명이 서로 다르다 — 막은 주체를 구분할 수 있다
 - 허용 목록(같은 네임스페이스·istiod·Collector·verify)은 정상 동작하며,
   제어면·애플리케이션·관측면 어느 것도 끊기지 않았다
+
+---
+
+# 스택 간 DB 격리 (Phase 2, 2.3 전)
+
+Phase 1.3a는 **데이터 독립성**(new 리셋 시 legacy 불변)만 확인했고, 위 1.5는 `new`에서 **밖으로 나가는 것(egress)**만 다뤘다.
+여기서는 legacy↔new 사이에서 상대 스택 DB에 **네트워크로 도달할 수 없음**을 보인다.
+격리를 설정(JDBC URL)이 아니라 네트워크로 보장하는 이유는 decision-log D11.
+
+측정 방법: `mysql:8.4` client로 **실제 로그인**(`select @@hostname`)을 시도한다.
+curl `telnet://`은 쓰지 않았다. sidecar가 TCP를 로컬에서 먼저 받아 주고 MySQL은 서버가 먼저 말하는
+프로토콜이라 연결 여부가 정확히 보이지 않았다(대조군조차 판정 불가).
+client pod 매니페스트: `deploy/k8s/tools/mysql-probe.yaml`.
+
+## 1차 측정 — 3번이 뚫려 있었다
+
+NetworkPolicy는 `new/default-deny-egress` 하나뿐이었다.
+
+| 시도 | 기대 | 결과 | 막은 주체 |
+|---|---|---|---|
+| ① `new` pod(비주입) → `mysql.legacy:3306` | 차단 | 차단 — `Connection timed out` | NetworkPolicy(new egress) |
+| ② `new` pod(sidecar) → `mysql.legacy:3306` | 차단 | 차단 — `ERROR 2013 … reading initial communication packet`, access log `BlackHoleCluster UH` | Istio guardrail (Sidecar egress 허용 목록 밖) |
+| ③ `legacy` pod → `mysql.new:3306` | 차단 | **접속 성공** — `select @@hostname` → new의 mysql pod 이름 | 없음 |
+
+③은 new mysql sidecar의 inbound access log에도 legacy mysql pod IP에서 온 3306 연결이 정상 종료로 남았다.
+legacy에는 egress 제한이 없고, new에는 ingress 제한이 없기 때문이다.
+
+## 조치 — A: DB pod ingress를 소유 서비스로 좁힌다
+
+`deploy/k8s/base/mysql-networkpolicy.yaml` (base에 두어 legacy/new 동일 적용)
+
+```yaml
+podSelector: { matchLabels: { app: mysql } }
+policyTypes: [Ingress]
+ingress:
+  - from:
+      - podSelector: { matchLabels: { app: order } }   # namespaceSelector 없음 = 같은 ns만
+    ports: [{ port: 3306, protocol: TCP }]
+```
+
+- 허용 = **같은 네임스페이스의 소유 서비스(app=order)에서 3306만**. 같은 ns라도 다른 pod는 차단
+- Phase 3에서 Coupon DB가 생기면 `app=<coupon-db>` ← `app=coupon` 형태로 같은 정책을 붙인다
+- mysql readiness는 exec probe라 영향 없음. 적용 후 mysql `rollout restart`로 새로 뜬 pod도 2/2(istio-proxy readiness 포함)
+- 검토한 대안: B(new ns 전체 default-deny ingress — 미러·probe 경로 재검증 범위가 큼), C(legacy egress 제한 — 운영 역할 쪽에 허용 목록 부담)
+
+## 최종 측정 (조치 후)
+
+교차 스택 시도에는 **소유 서비스 레이블(app=order)을 흉내 낸** client pod를 썼다 — 가장 강한 경우.
+(probe pod는 readinessProbe를 항상 실패시켜 order Service endpoint에서 빠지게 했다.)
+
+| 시도 | 기대 | 결과 | 막은 주체 |
+|---|---|---|---|
+| ① `new` pod(비주입, app=order) → `mysql.legacy:3306` | 차단 | 차단 — `ERROR 2003 … (110)`, 5s 타임아웃 | NetworkPolicy (new egress + legacy mysql ingress) |
+| ② `new` pod(sidecar, app=order) → `mysql.legacy:3306` | 차단 | 차단 — `ERROR 2013 … reading initial communication packet`, 즉시 | Istio guardrail (+ 아래층 NetworkPolicy) |
+| ③ `legacy` pod(sidecar, app=order) → `mysql.new:3306` | 차단 | **차단** — `ERROR 2013 … waiting for initial communication packet (110)`, 5s. new mysql inbound log에 해당 IP 없음 | NetworkPolicy (new mysql ingress) |
+| ③' `legacy` mysql pod → `mysql.new:3306` (1차에서 뚫린 경로) | 차단 | 차단 — 동일 서명 | NetworkPolicy |
+
+대조군
+
+| 시도 | 기대 | 결과 |
+|---|---|---|
+| `legacy` pod(app=order) → `mysql.legacy` | 성공 | 성공 — legacy mysql pod 이름 |
+| `new` pod(app=order) → `mysql.new` | 성공 | 성공 — new mysql pod 이름 |
+| `legacy` pod(app=dbprobe) → `mysql.legacy` | 차단(소유 서비스 아님) | 차단 — `ERROR 2013 … (110)` |
+| 실제 order 앱 → 자기 mysql (mysql 재시작 후 새 커넥션) | 성공 | 성공 — Ingress `GET /api/orders/by-key/…` 404(DB 조회 결과), new는 미러 수신 |
+
+**통과**: 교차 스택 세 경우 모두 연결 실패, 대조군 정상.
+
+## 측정 중 관찰 (격리와 무관, 기록)
+
+- **비주입 client → sidecar가 있는 자기 mysql은 정책과 무관하게 실패한다.** 정책을 지운 상태에서도 같은
+  `ERROR 2013 … (110)`이었다. MySQL은 서버가 먼저 greeting을 보내는데, PERMISSIVE mTLS의 inbound Envoy는
+  평문/TLS를 판별하려고 클라이언트의 첫 바이트를 기다려 양쪽이 서로를 기다린다(server-first 프로토콜 제약).
+  실제 order는 sidecar 주입 pod라 이 경로를 쓰지 않는다. 그래서 대조군은 sidecar pod로만 잡았다.
+- **workload 인증서 만료로 메시 HTTP가 503 UC.** 측정 중 ingressgateway·mesh-check·isolation-injected 세 proxy의
+  인증서가 갱신되지 않은 채 만료(`istioctl proxy-config secret` → `valid=false`, notAfter 2026-10-11 08:51~11:07Z)되어
+  Ingress 포함 메시 HTTP 호출이 `503 UC`였다. NetworkPolicy를 지워도 동일해 정책과 무관함을 확인했고,
+  세 pod 재시작으로 복구. agent 로그에 수 시간씩 빈 구간이 있어 호스트(Docker VM) sleep 동안 갱신 타이머가
+  밀린 것으로 추정한다(검증은 안 함). 장시간 방치 후 run 전에는 `istioctl proxy-config secret`로 만료를 점검한다.

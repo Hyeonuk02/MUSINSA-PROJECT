@@ -280,7 +280,7 @@ corpus/                  corpus-v1.json, schema.json, validate.py
 k6/                      run.js, run.sh (spill 회수 포함)
 engine/                  verify_sameness.py, diff_v0.py   (로컬 실행, 클러스터 접근 없음)
 deploy/k8s/verify/       evidence-store.yaml
-deploy/k8s/istio/        virtualservice-gateway.yaml (/_evidence 라우트 + /api 라우트·mirror)
+deploy/k8s/istio/        virtualservice-shadow.yaml  (/_evidence 라우트 + /api 라우트·mirror)
 deploy/k8s/base/         wiremock.yaml (2.1에서 legacy/new 공유로 이동)
 runs/                    (gitignore) run별 export
 docs/                    evidence-schema-v0.json, phase2-result.md, isolation-proof.md(스택 간 DB 격리 추가)

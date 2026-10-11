@@ -1,0 +1,28 @@
+# Phase 2 (2.3 전) - 스택 간 DB 격리
+#
+# Phase 1.5의 NetworkPolicy는 new의 egress만 막아서 legacy -> mysql.new 접속이 열려 있었다
+# (실측: docs/isolation-proof.md "스택 간 DB 격리").
+# DB 쪽 ingress를 "같은 네임스페이스의 소유 서비스 pod에서 3306만"으로 좁혀
+# 스택 축 격리를 설정(JDBC URL)이 아니라 네트워크로 보장한다.
+#
+# base에 두므로 legacy / new가 같은 정책을 갖는다 (스택 구성 동일).
+# namespaceSelector가 없는 podSelector는 정책이 속한 네임스페이스 안의 pod만 고른다.
+# Phase 3에서 Coupon DB가 생기면 같은 형태로 app=<db>, from app=coupon 정책을 추가한다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: mysql-ingress-owner-only
+spec:
+  podSelector:
+    matchLabels:
+      app: mysql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: order
+      ports:
+        - port: 3306
+          protocol: TCP

@@ -332,3 +332,5 @@ graceful shutdown + flush 훅.
 실무 shadow testing은 Legacy/New가 같은 DB를 보는 경우가 흔하다(Stripe shadow read, Grab DAO mock).
 따라서 스택 축 격리는 이 프로젝트의 명시적 선택이고, 설정 실수로 깨지지 않도록 네트워크로 막는다.
 실측은 [isolation-proof.md](isolation-proof.md) "스택 간 DB 격리".
+
+스택 간 DB 격리는 설정이 아니라 NetworkPolicy **ingress**(`base/mysql-networkpolicy.yaml`, DB pod ← 같은 ns 소유 서비스 3306만)로 보장한다 — 1.5(D6)는 new의 egress만 다뤄 legacy → mysql.new가 열려 있었음(실측 후 막음).

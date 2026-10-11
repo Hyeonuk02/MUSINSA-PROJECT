@@ -1,0 +1,84 @@
+# Phase 2 (2.3 전) - 스택 간 DB 격리 실측용 mysql client pod
+#
+# mysql:8.4 이미지(노드에 이미 있음)를 client로만 쓴다. 실제 로그인으로 도달 여부를 본다.
+# app=order 레이블은 NetworkPolicy mysql-ingress-owner-only의 허용 대상을 흉내 내기 위한 것.
+# order Service selector(app=order)에도 걸리므로 readinessProbe를 항상 실패시켜
+# endpoint에서 빠지게 한다 (실제 트래픽이 probe pod로 가지 않게).
+#
+#   legacy/dbprobe-owner           app=order, sidecar   -> mysql.new 차단 / mysql.legacy 성공(대조)
+#   legacy/dbprobe-other           app=dbprobe, sidecar -> mysql.legacy 차단(소유 서비스만 허용 확인)
+#   new/dbprobe-owner              app=order, sidecar   -> mysql.legacy 차단 / mysql.new 성공(대조)
+#   new/dbprobe-owner-uninjected   app=order, no sidecar -> mysql.legacy 차단
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dbprobe-owner
+  namespace: legacy
+  labels:
+    app: order
+    role: dbprobe
+spec:
+  containers:
+    - name: client
+      image: mysql:8.4
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      readinessProbe:
+        exec:
+          command: ["false"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dbprobe-other
+  namespace: legacy
+  labels:
+    app: dbprobe
+    role: dbprobe
+spec:
+  containers:
+    - name: client
+      image: mysql:8.4
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      readinessProbe:
+        exec:
+          command: ["false"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dbprobe-owner
+  namespace: new
+  labels:
+    app: order
+    role: dbprobe
+spec:
+  containers:
+    - name: client
+      image: mysql:8.4
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      readinessProbe:
+        exec:
+          command: ["false"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: dbprobe-owner-uninjected
+  namespace: new
+  labels:
+    app: order
+    role: dbprobe
+  annotations:
+    sidecar.istio.io/inject: "false"
+spec:
+  containers:
+    - name: client
+      image: mysql:8.4
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      readinessProbe:
+        exec:
+          command: ["false"]
