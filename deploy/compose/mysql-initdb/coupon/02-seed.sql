@@ -20,3 +20,14 @@ INSERT INTO coupons (code, discount_type, discount_value, max_discount, min_orde
 ('PGFAIL1',  'fixed',         1.00, NULL,        0.00,  '2026-12-31 23:59:59', NULL),
 -- B1: 사용 한도 1회. coupon_usage가 기록되지 않으므로 한도를 넘어 재사용된다
 ('LIMIT1',   'fixed',      3000.00, NULL,        0.00,  '2026-12-31 23:59:59', 1);
+
+-- corpus-v1 세션 전용 쿠폰(baseline/corpus/corpus-v1.json). 세션 사이에 공유 상태가 없도록 세션마다 따로 둔다.
+-- 위 쿠폰과 조건은 같고 코드만 다르다. 사용 한도 판정은 쿠폰 전체 사용 수(모든 사용자)를 세므로 공유하면 세션이 서로 영향을 준다.
+INSERT INTO coupons (code, discount_type, discount_value, max_discount, min_order_value, expiry_date, usage_limit) VALUES
+('S02-FIX5000', 'fixed',      5000.00, NULL,        50000.00,  '2026-12-31 23:59:59', NULL),
+('S03-PCT10',   'percentage',   10.00, 8000.00,         0.00,  '2026-12-31 23:59:59', NULL),
+('S04-EXPIRED', 'fixed',      5000.00, NULL,             0.00,  '2026-08-01 00:00:00', NULL),
+('S05-MIN200K', 'fixed',      5000.00, NULL,        200000.00,  '2026-12-31 23:59:59', NULL),
+('S06-PGFAIL1', 'fixed',         1.00, NULL,             0.00,  '2026-12-31 23:59:59', NULL),
+('S07-LIMIT1',  'fixed',      3000.00, NULL,             0.00,  '2026-12-31 23:59:59', 1),
+('S11-FIX5000', 'fixed',      5000.00, NULL,        50000.00,  '2026-12-31 23:59:59', NULL);

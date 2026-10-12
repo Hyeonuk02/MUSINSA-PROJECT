@@ -96,6 +96,8 @@ x-app-env: &app-env
   OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: X-Replay-Request-Id,X-Run-Id,X-Session-Id,baggage,Host
   # Evidence 계측(com.pm.evidence)이 보내는 곳. 두 스택이 같은 Store를 쓴다(k8s에서는 verify ns).
   EVIDENCE_STORE_URL: http://evidence-store:8080
+  # 실행 중인 코드의 버전. 베이스라인(A/A)에서는 두 스택 모두 Legacy 코드다.
+  EVIDENCE_VERSION: prince-mart-legacy
 
 # 스택별로 다른 식별자. 서비스 이름(OTEL_SERVICE_NAME)과 함께 이 값들만 legacy/new가 다르다(hyeonuk-dev D5와 같은 규칙).
 # EVIDENCE_STACK은 Evidence 키(runId, replayRequestId, stack)의 stack이다.
@@ -334,9 +336,9 @@ services:
       payment-new: { condition: service_healthy }
     networks: [legacy, new]
 
-  # Evidence Store v0 (evidence-store/). 두 스택이 함께 쓴다. 호스트 8099는 k6·run script·export용.
+  # Evidence Store v0 (baseline/evidence-store/). 두 스택이 함께 쓴다. 호스트 8099는 k6·run script·export용.
   evidence-store:
-    build: ../../evidence-store
+    build: ../../baseline/evidence-store
     image: prince-mart/evidence-store:v0
     volumes:
       - evidence-data:/data

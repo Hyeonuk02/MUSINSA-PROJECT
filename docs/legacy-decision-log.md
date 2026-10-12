@@ -257,12 +257,12 @@ WireMock journal 127건(본문 포함)·DB 7테이블이 **정규화 없이 동�
   replayRequestId는 `X-Replay-Request-Id` 또는 baggage에서 읽는다(OTel API 없이 헤더 문자열 파싱).
 - 앱 밖(`deploy/compose/tools/collect.py`): run 뒤 스택별 WireMock journal을 baggage로 묶어 `kind=external`, Kafka 토픽을 처음부터 읽어
   `kind=event`로 같은 키에 넣는다.
-- Evidence Store v0(`evidence-store/`): Python 표준 라이브러리 + SQLite 파일. 두 스택이 공유하고 호스트 8099.
+- Evidence Store v0(`baseline/evidence-store/`): Python 표준 라이브러리 + SQLite 파일. 두 스택이 공유하고 호스트 8099.
   v10.1 §11-2(Store 저장소 파일 vs 경량 DB)가 미결이라 **임시 선택**이다. 엔드포인트와 export 형식이 같으면 바꿔도 비교 엔진은 영향이 없다.
 - **Store POST는 억제하지 않고 비즈니스 trace와 분리한다.** 요청 스레드는 큐에 넣기만 하고 전용 스레드가 보낸다.
   OTel agent는 큐를 거친 작업에 context를 잇지 않으므로 POST는 별도 trace가 된다. 분석(Observed edge)은 replayRequestId가 찍힌
   서버 span이 있는 trace만 쓰고, 안전장치로 목적지가 evidence-store인 span을 버린다. `X-Evidence-Internal: true`는 그대로 붙인다.
-- 스키마는 [evidence-schema-v0.md](evidence-schema-v0.md)에 고정한다. 키 `(runId, replayRequestId, stack)` + service·kind·seq.
+- 스키마는 [legacy-evidence-schema-v0.md](legacy-evidence-schema-v0.md)에 고정한다. 키 `(runId, replayRequestId, stack)` + service·kind·seq.
 
 **근거**
 - k8s + Istio에서는 앱에서 억제해도 Store POST의 Envoy span이 남는다(나가는 sidecar, Store sidecar). 앱 억제(`InstrumentationUtil.suppressInstrumentation`,
@@ -285,3 +285,59 @@ WireMock journal 127건(본문 포함)·DB 7테이블이 **정규화 없이 동�
 - `opentelemetry-api` + suppressInstrumentation — 위 이유로 배제.
 - Collector filter processor로 Store span 제거 — core Collector 이미지에 없고(contrib 필요), 팀원 구성과 달라진다.
 - 서비스별로 계측 코드를 따로 작성 — 어긋날 수 있다.
+
+### L11. 베이스라인 도구는 `baseline/`에 별도로, 형식은 팀원 Phase 2 계약에 맞춘다
+
+**배경**
+hyeonuk-dev에 Phase 2 계획(v2)과 2.1 구현이 올라왔다(팀원 order 앱 + business key). 루트의 `corpus/`, `k6/`, `engine/`,
+`evidence-store/`, `runs/`, `docs/evidence-schema-v0.json`을 만들 계획이다. 이 트랙은 Prince Mart Legacy(베이스라인)를
+**별개로 구축**하는 일이고, 팀원 설계는 합치기 쉽게 참고만 한다.
+
+**결정**
+- 이 트랙의 도구는 모두 `baseline/` 아래에 둔다: `baseline/evidence-store/`(Step 6에서 루트에 올린 것을 옮김),
+  `baseline/corpus/`, `baseline/k6/`, (Step 8) `baseline/engine/`, 결과는 `baseline/runs/`(gitignore).
+  스키마 문서는 `docs/legacy-evidence-schema-v0.md`.
+- 형식은 팀원 계약(phase2-plan 2.2~2.6)에 맞추고 필요한 것만 확장한다.
+  - Evidence 공통 필드: `schemaVersion`, `sessionId`, `version`, `request.path`, 소문자 헤더 맵, `bodyHash: "sha256:..."`,
+    `response.headers/bodyHash`, ISO 시각 + `arrivedNano/completedNano`, `capturedAt` (계측 코드 L-I2 수정)
+  - Store API: `exists` 200/404, `count&stack`, `export` 배열·`&stack`, `DELETE /runs/{runId}`. 같은 Evidence 재전송은 덮어씀
+  - corpus: `{version, sessions[{id, user, requests[{id, method, path, body, headers}]}]}` JSON + 확장 `userId`, `capture`, `expect`
+  - 결과 배치: `runs/<runId>/legacy.json·new.json·k6-summary.json·run-meta.json`
+  - degraded 정책: 완료 대기 타임아웃이면 그 세션의 남은 요청을 건너뜀
+
+**근거**
+같은 루트 경로를 쓰면 합칠 때 `evidence-store/Dockerfile`, `corpus/corpus-v1.json`, `k6/run.sh` 등이 충돌하고 같은 도구가 두 벌 생긴다.
+형식이 같으면 합칠 때는 "어느 구현을 남길지"만 고르면 된다. Store 저장소는 팀원 계획(파일, Phase 2에서 DB 금지)과 다르게
+SQLite다(L10, v10.1 §11-2 미결). API가 같아 바꿔도 k6·엔진은 영향이 없다.
+
+### L12. corpus·k6·run script: 세션 독립, 양쪽 스택 완료 대기, flush barrier에서 consumer lag
+
+**결정**
+- corpus(`baseline/corpus/corpus-v1.json`): `scenarios.py` 26항목을 독립 세션 11개, 요청 28건으로 옮겼다.
+  세션마다 다른 사용자(201~211)와 **세션 전용 쿠폰**(`S02-FIX5000` 등, coupon S0 시드에 추가)을 쓴다.
+  쿠폰 사용 한도 판정은 쿠폰 전체 사용 수를 세므로 쿠폰을 공유하면 세션이 서로 영향을 준다.
+  체인 값(`orderId`, `transactionId`)은 `capture`로 legacy 응답에서 이어받고 `${이름}`으로 쓴다(business key 없음, L1).
+  `expect.evidence` = 스택당 기대 앱 Evidence 건수(쿠폰 없는 주문 2, 할인 쿠폰 주문 5, 무효 쿠폰 주문 3, verify 2, 직접 쿠폰 사용 2, 그 밖 1).
+  `validate.py`가 구조·id 유일·사용자/쿠폰 비공유·변수 바인딩·실행 시점 토큰을 검사한다.
+- k6(`baseline/k6/run.js`, `grafana/k6` v2.3.0 digest 고정): VU=1, 세션 순서대로. 헤더 `X-User-Id`, `X-Replay-Request-Id`,
+  `X-Run-Id`, `X-Session-Id`, `baggage: replayRequestId,runId,sessionId`. 요청마다 **legacy·new 두 스택의 Evidence가 `expect.evidence`에
+  도달할 때까지**(50ms 간격, 10초) 기다린다. compose의 legacy 네트워크에서 nginx로 보낸다(외부 클라이언트 위치).
+- consumer offset: `enable.auto.commit = false`(Spring Kafka 기본, 기동 로그로 확인). consume Evidence는 처리 직후(afterRecord)에 남으므로
+  "Evidence 도착 = 처리 완료"다. offset 커밋은 그 뒤라 **consumer lag 0은 flush barrier에서 한 번** 확인한다(k6는 HTTP만 할 수 있다).
+- run script(`baseline/k6/run.py`): reset → 조건 해시·run 정보 등록 → k6 → flush barrier(스택별 count == 보낸 요청의 기대 합 + lag 0)
+  → `collect.py` → export·DB 덤프. 비교 유효 조건 해시 = hash(corpus, S0 init SQL+토픽, WireMock 매핑, 고정 시각, 이미지 ID, Normalization 규칙).
+
+**근거**
+- Kafka 때문에 "new 도착"만 보는 팀원 방식(`exists?stack=new`)으로는 legacy 쪽 consumer 처리 전에 다음 요청이 갈 수 있다(Step 6에서 실측:
+  consumer 지연 동안 조회·취소가 먼저 처리됨). 요청별 기대 건수를 양쪽에서 기다리면 두 스택 모두 비동기 처리까지 끝난 뒤 다음 요청을 보낸다.
+
+**실측(Step 7, run `smoke-7`)**
+- corpus 검증 오류 0. 28/28 전송, legacy 응답 status 전부 기대값, degraded 0.
+- 완료 대기: 요청당 최대 168ms, 합 1.7초. barrier: legacy·new 앱 Evidence 65/65, lag 0.
+- collect: 스택마다 외부 호출 127건(21요청), 이벤트 3건, baggage 없는 호출·이벤트 0.
+- 순서 민감 케이스가 양쪽 같음: B4(취소 후 verify) CONFIRMED/PAID, B5(verify 후 취소) CANCELLED/PAID.
+- 소요: 리셋 58초, k6 6초, 전체 79초.
+
+**대안**
+- corpus를 YAML로 — k6가 YAML을 읽지 못하고 Python 표준 라이브러리에도 없다. 팀원 계약도 JSON.
+- 요청마다 lag 0 확인 — k6에서 불가, consume Evidence로 같은 의미를 얻는다.

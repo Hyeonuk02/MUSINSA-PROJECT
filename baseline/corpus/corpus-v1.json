@@ -1,0 +1,512 @@
+{
+  "version": "corpus-v1",
+  "description": "Prince Mart 베이스라인 corpus. 세션 = 상태 의존성·독립성의 단위(세션마다 다른 사용자·쿠폰). 형식은 hyeonuk-dev Phase 2 계획(2.2)과 같고 userId·capture·expect·tags·note는 이 트랙의 확장이다.",
+  "conventions": {
+    "headers": "k6가 X-User-Id(session.userId, request.headers로 덮어쓸 수 있음), X-Replay-Request-Id(request.id), X-Run-Id, X-Session-Id, baggage(replayRequestId,runId,sessionId)를 넣는다",
+    "capture": "legacy 응답 JSON의 최상위 필드를 세션 변수로 저장한다. 이후 path/body의 ${이름}을 치환한다",
+    "expect.status": "legacy 응답 status(클라이언트가 받는 것)",
+    "expect.evidence": "스택마다 기대하는 앱 Evidence 건수(kind=http + consume). k6 완료 대기와 flush barrier가 쓴다"
+  },
+  "sessions": [
+    {
+      "id": "S01",
+      "user": "user-201",
+      "userId": 201,
+      "tags": [
+        "normal",
+        "verify",
+        "query"
+      ],
+      "description": "정상 주문(쿠폰 없음) -> 결제 확정 -> 조회 3종",
+      "requests": [
+        {
+          "id": "R000001",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR"
+          },
+          "capture": {
+            "orderId": "orderId",
+            "txn": "transactionId"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          }
+        },
+        {
+          "id": "R000002",
+          "method": "POST",
+          "path": "/payments/verify?orderId=${txn}&paymentId=pay-S01",
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          }
+        },
+        {
+          "id": "R000003",
+          "method": "GET",
+          "path": "/orders/order/${orderId}",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          },
+          "note": "CONFIRMED/PAID"
+        },
+        {
+          "id": "R000004",
+          "method": "GET",
+          "path": "/orders/my-orders",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          }
+        },
+        {
+          "id": "R000005",
+          "method": "GET",
+          "path": "/orders/history",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "S02",
+      "user": "user-202",
+      "userId": 202,
+      "tags": [
+        "normal",
+        "coupon",
+        "B1"
+      ],
+      "description": "고정 할인 쿠폰 주문 2회. B1: 사용 기록 누락으로 같은 쿠폰 재사용",
+      "requests": [
+        {
+          "id": "R000006",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S02-FIX5000"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 5
+          },
+          "note": "95,000원, coupon use 404(B1)"
+        },
+        {
+          "id": "R000007",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S02-FIX5000"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 5
+          },
+          "note": "B1: 다시 95,000원"
+        }
+      ]
+    },
+    {
+      "id": "S03",
+      "user": "user-203",
+      "userId": 203,
+      "tags": [
+        "normal",
+        "coupon"
+      ],
+      "description": "퍼센트 쿠폰(최대 할인 적용)",
+      "requests": [
+        {
+          "id": "R000008",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S03-PCT10"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 5
+          },
+          "note": "92,000원"
+        }
+      ]
+    },
+    {
+      "id": "S04",
+      "user": "user-204",
+      "userId": 204,
+      "tags": [
+        "coupon",
+        "B3"
+      ],
+      "description": "만료 쿠폰. B3: 검증 실패를 삼키고 정가",
+      "requests": [
+        {
+          "id": "R000009",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S04-EXPIRED"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 3
+          },
+          "note": "100,000원"
+        }
+      ]
+    },
+    {
+      "id": "S05",
+      "user": "user-205",
+      "userId": 205,
+      "tags": [
+        "coupon",
+        "B3"
+      ],
+      "description": "최소 금액 미달 쿠폰. B3",
+      "requests": [
+        {
+          "id": "R000010",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S05-MIN200K"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 3
+          },
+          "note": "100,000원"
+        }
+      ]
+    },
+    {
+      "id": "S06",
+      "user": "user-206",
+      "userId": 206,
+      "tags": [
+        "error",
+        "payment-failure"
+      ],
+      "description": "결제 실패(99,999원 -> 가짜 PG 거절)",
+      "requests": [
+        {
+          "id": "R000011",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S06-PGFAIL1"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 5
+          },
+          "note": "CANCELLED/FAILED, transactionId 없음"
+        }
+      ]
+    },
+    {
+      "id": "S07",
+      "user": "user-207",
+      "userId": 207,
+      "tags": [
+        "coupon",
+        "B1"
+      ],
+      "description": "사용 한도 1회 쿠폰 2회 사용. B1",
+      "requests": [
+        {
+          "id": "R000012",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S07-LIMIT1"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 5
+          },
+          "note": "97,000원"
+        },
+        {
+          "id": "R000013",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR",
+            "couponCode": "S07-LIMIT1"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 5
+          },
+          "note": "B1: 한도 초과인데 97,000원"
+        }
+      ]
+    },
+    {
+      "id": "S08",
+      "user": "user-208",
+      "userId": 208,
+      "tags": [
+        "cancel",
+        "B6"
+      ],
+      "description": "취소 -> 재취소(B6: IllegalStateException이 404) -> 남의 주문 조회(B6)",
+      "requests": [
+        {
+          "id": "R000014",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR"
+          },
+          "capture": {
+            "orderId": "orderId",
+            "txn": "transactionId"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          }
+        },
+        {
+          "id": "R000015",
+          "method": "PUT",
+          "path": "/orders/${orderId}/cancel",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          }
+        },
+        {
+          "id": "R000016",
+          "method": "PUT",
+          "path": "/orders/${orderId}/cancel",
+          "expect": {
+            "status": 404,
+            "evidence": 1
+          },
+          "note": "B6"
+        },
+        {
+          "id": "R000017",
+          "method": "GET",
+          "path": "/orders/order/${orderId}",
+          "headers": {
+            "X-User-Id": "999"
+          },
+          "expect": {
+            "status": 404,
+            "evidence": 1
+          },
+          "note": "B6: Unauthorized가 404"
+        }
+      ]
+    },
+    {
+      "id": "S09",
+      "user": "user-209",
+      "userId": 209,
+      "tags": [
+        "cancel",
+        "verify",
+        "B4"
+      ],
+      "description": "취소된 주문을 결제 확정. B4",
+      "requests": [
+        {
+          "id": "R000018",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR"
+          },
+          "capture": {
+            "orderId": "orderId",
+            "txn": "transactionId"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          }
+        },
+        {
+          "id": "R000019",
+          "method": "PUT",
+          "path": "/orders/${orderId}/cancel",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          }
+        },
+        {
+          "id": "R000020",
+          "method": "POST",
+          "path": "/payments/verify?orderId=${txn}&paymentId=pay-S09",
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          },
+          "note": "B4"
+        },
+        {
+          "id": "R000021",
+          "method": "GET",
+          "path": "/orders/order/${orderId}",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          },
+          "note": "B4: CONFIRMED/PAID"
+        }
+      ]
+    },
+    {
+      "id": "S10",
+      "user": "user-210",
+      "userId": 210,
+      "tags": [
+        "verify",
+        "cancel",
+        "B5"
+      ],
+      "description": "결제 확정 후 취소. B5",
+      "requests": [
+        {
+          "id": "R000022",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR"
+          },
+          "capture": {
+            "orderId": "orderId",
+            "txn": "transactionId"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          }
+        },
+        {
+          "id": "R000023",
+          "method": "POST",
+          "path": "/payments/verify?orderId=${txn}&paymentId=pay-S10",
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          }
+        },
+        {
+          "id": "R000024",
+          "method": "PUT",
+          "path": "/orders/${orderId}/cancel",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          },
+          "note": "B5: CANCELLED인데 PAID"
+        },
+        {
+          "id": "R000025",
+          "method": "GET",
+          "path": "/orders/order/${orderId}",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          }
+        }
+      ]
+    },
+    {
+      "id": "S11",
+      "user": "user-211",
+      "userId": 211,
+      "tags": [
+        "cancel",
+        "coupon",
+        "B2"
+      ],
+      "description": "취소된 주문에 쿠폰 사용 기록. B2",
+      "requests": [
+        {
+          "id": "R000026",
+          "method": "POST",
+          "path": "/orders/place",
+          "body": {
+            "shippingAddressId": 1,
+            "billingAddressId": 1,
+            "currency": "INR"
+          },
+          "capture": {
+            "orderId": "orderId",
+            "txn": "transactionId"
+          },
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          }
+        },
+        {
+          "id": "R000027",
+          "method": "PUT",
+          "path": "/orders/${orderId}/cancel",
+          "expect": {
+            "status": 200,
+            "evidence": 1
+          }
+        },
+        {
+          "id": "R000028",
+          "method": "POST",
+          "path": "/coupons/use?orderId=${orderId}&code=S11-FIX5000",
+          "expect": {
+            "status": 200,
+            "evidence": 2
+          },
+          "note": "B2: 거절돼야 하는데 200, coupon -> order 역조회 포함"
+        }
+      ]
+    }
+  ]
+}

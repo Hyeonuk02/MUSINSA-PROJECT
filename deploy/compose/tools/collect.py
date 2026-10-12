@@ -71,7 +71,7 @@ def main():
 
     evidence, report = [], {}
     for st in args.stacks:
-        by_req, untagged = {}, 0
+        by_req, sessions, untagged = {}, {}, 0
         for x in journal(st):
             r = x["request"]
             b = baggage(r.get("headers", {}).get("baggage"))
@@ -79,6 +79,7 @@ def main():
             if not rid or b.get("runId") != args.run_id:
                 untagged += 1
                 continue
+            sessions[rid] = b.get("sessionId")
             by_req.setdefault(rid, []).append({
                 "order": len(by_req.get(rid, [])) + 1,
                 "method": r["method"], "url": r["url"], "body": r.get("body", ""),
@@ -86,8 +87,8 @@ def main():
                 "headers": {k: r["headers"][k] for k in sorted(r.get("headers", {}))},
             })
         for rid, calls in by_req.items():
-            evidence.append({"schema": "evidence/v0", "runId": args.run_id, "replayRequestId": rid, "stack": st,
-                             "service": "wiremock", "kind": "external", "seq": 1, "calls": calls})
+            evidence.append({"schemaVersion": "v0", "runId": args.run_id, "replayRequestId": rid, "sessionId": sessions.get(rid),
+                             "stack": st, "service": "wiremock", "kind": "external", "seq": 1, "calls": calls})
 
         events, untagged_ev = 0, 0
         for topic in TOPICS:
@@ -96,9 +97,9 @@ def main():
                 if not b.get("replayRequestId") or b.get("runId") != args.run_id:
                     untagged_ev += 1
                     continue
-                evidence.append({"schema": "evidence/v0", "runId": args.run_id, "replayRequestId": b["replayRequestId"],
-                                 "stack": st, "service": "kafka", "kind": "event", "seq": rec["offset"] + 1,
-                                 "message": rec})
+                evidence.append({"schemaVersion": "v0", "runId": args.run_id, "replayRequestId": b["replayRequestId"],
+                                 "sessionId": b.get("sessionId"), "stack": st, "service": "kafka", "kind": "event",
+                                 "seq": rec["offset"] + 1, "message": rec})
                 events += 1
         report[st] = {"externalRequests": len(by_req), "externalCalls": sum(len(c) for c in by_req.values()),
                       "externalUntagged": untagged, "events": events, "eventsUntagged": untagged_ev}
