@@ -284,6 +284,13 @@ for i in 1..N:
   - `dbAccess`는 여기서 비교하지 않음(요청 동일성만)
   - 메모: `response.body`가 `null`(32KB 초과)이면 `bodyHash`만 비교 (응답을 비교하는 2.8 `diff_v0.py`에도 동일 적용)
 
+구현 시 확정 (2.7)
+- `engine/verify_sameness.py --run runs/<runId> [--run ...]`. 의존은 표준 라이브러리 + jsonschema(루트 `requirements.txt`, `.venv` 하나)
+- 입력 계약 먼저: 모든 레코드가 schema 통과 + `runId`가 run 디렉터리 이름과, `stack`이 파일(legacy/new.json)과 일치. 위반이면 즉시 FAIL(이후 검사 안 함)
+- "보낸 것"의 기준은 `k6-summary.json`의 `sent`. Undelivered = sent − 레코드 id, Unexpected = 레코드 id − sent(스택별)
+- 비교 헤더는 엔진 안의 상수 `EVIDENCE_HEADERS` 5개(소문자) — 엔진은 앱·매니페스트를 import하지 않는다. 목록 밖 헤더 키가 있으면 참고로만 출력
+- k6 `status[id]` == legacy `response.status` 불일치는 FAIL. 미러 지연(new − legacy, completedAt·arrivedAt)은 참고 통계. 실측(p26-1..3): 중앙값 0~0.6ms — Envoy가 route와 mirror를 동시에 내보내므로 "지연"은 거의 없고 음수(new가 먼저 끝남)도 나온다
+
 끝난 기준
 - 2.6의 run 3개 모두 전건 PASS, Undelivered 0
 

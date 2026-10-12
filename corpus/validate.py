@@ -3,7 +3,7 @@
 
 사용: .venv/bin/python corpus/validate.py [corpus/corpus-v1.json]
       .venv/bin/python corpus/validate.py --self-test
-의존: corpus/requirements.txt (jsonschema)
+의존: 루트 requirements.txt (jsonschema) — .venv/bin/pip install -r requirements.txt
 
 검사 규칙
   1. schema.json 통과 (필수 필드, 형식)

@@ -340,7 +340,7 @@ graceful shutdown + flush 훅.
 **결정**
 앱 안(Evidence 필터·ReplayContext·StatementInspector·이후 Kafka 인터셉터)은 앱 언어(Java),
 앱 밖(Evidence Store·corpus 도구·엔진)은 Python. 2.3 Evidence Store는 이에 따라 Python(FastAPI)으로 확정.
-호스트 실행 환경은 레포 루트 `.venv` 하나(engine 의존성이 생기면 `corpus/requirements.txt`를 루트 `requirements.txt`로 합침).
+호스트 실행 환경은 레포 루트 `.venv` 하나(2.7에서 `corpus/requirements.txt`를 루트 `requirements.txt`로 합쳤다).
 
 **근거**
 - 오프라인 파일(`runs/` JSON) 비교 작업이라 스크립트 형태가 맞다
