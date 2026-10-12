@@ -39,6 +39,7 @@ evidence:
   enabled: ${EVIDENCE_ENABLED:true}
   store-url: ${EVIDENCE_STORE_URL:}
   stack: ${EVIDENCE_STACK:}
+  version: ${EVIDENCE_VERSION:}
   service: coupon
   headers: Content-Type,X-User-Id,X-Replay-Request-Id,X-Run-Id,X-Session-Id,baggage,Host,Idempotency-Key
 # DB 접근: Hibernate가 준비하는 SQL을 요청 단위로 기록한다(SQL은 바꾸지 않음).

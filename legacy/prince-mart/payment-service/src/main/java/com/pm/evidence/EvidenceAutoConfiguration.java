@@ -27,8 +27,9 @@ public class EvidenceAutoConfiguration {
     EvidenceRecorder evidenceRecorder(EvidenceSender sender,
                                       @Value("${evidence.stack}") String stack,
                                       @Value("${evidence.service}") String service,
+                                      @Value("${evidence.version:}") String version,
                                       @Value("${app.fixed-clock:}") String fixedClock) {
-        return new EvidenceRecorder(sender, stack, service, fixedClock);
+        return new EvidenceRecorder(sender, stack, service, version, fixedClock);
     }
 
     @Bean

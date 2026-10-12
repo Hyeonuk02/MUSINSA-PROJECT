@@ -77,15 +77,16 @@ final class EvidenceFilter extends OncePerRequestFilter implements Ordered {
 
             Map<String, Object> req = new LinkedHashMap<>();
             req.put("method", request.getMethod());
-            req.put("uri", request.getRequestURI());
+            req.put("path", request.getRequestURI());
             req.put("query", request.getQueryString() == null ? "" : request.getQueryString());
-            req.put("headers", selectedHeaders(request));
+            req.put("headers", selectedHeaders(request::getHeaders));
             req.put("bodyHash", sha256(requestBody));
             req.put("body", new String(requestBody, StandardCharsets.UTF_8));
 
             Map<String, Object> res = new LinkedHashMap<>();
             res.put("status", status);
-            res.put("contentType", wrapped.getContentType());
+            res.put("headers", selectedHeaders(name -> Collections.enumeration(wrapped.getHeaders(name))));
+            res.put("bodyHash", sha256(responseBody));
             res.put("body", new String(responseBody, StandardCharsets.UTF_8));
 
             Map<String, Object> body = new LinkedHashMap<>();
@@ -95,17 +96,19 @@ final class EvidenceFilter extends OncePerRequestFilter implements Ordered {
         }
     }
 
-    private Map<String, List<String>> selectedHeaders(HttpServletRequest request) {
-        Map<String, List<String>> headers = new LinkedHashMap<>();
+    /** 지정 목록 중 실제로 있는 헤더만, 소문자 키로. 여러 값은 ", "로 잇는다(hyeonuk-dev Phase 2 계약과 같은 모양). */
+    private Map<String, String> selectedHeaders(java.util.function.Function<String, java.util.Enumeration<String>> values) {
+        Map<String, String> headers = new LinkedHashMap<>();
         for (String name : headerNames) {
-            headers.put(name, Collections.list(request.getHeaders(name)));
+            List<String> v = Collections.list(values.apply(name));
+            if (!v.isEmpty()) headers.put(name.toLowerCase(java.util.Locale.ROOT), String.join(", ", v));
         }
         return headers;
     }
 
     static String sha256(byte[] bytes) {
         try {
-            return HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
+            return "sha256:" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
         } catch (NoSuchAlgorithmException e) {
             throw new IllegalStateException(e);
         }

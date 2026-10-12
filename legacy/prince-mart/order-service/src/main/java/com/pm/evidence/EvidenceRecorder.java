@@ -1,25 +1,30 @@
 package com.pm.evidence;
 
+import java.time.Instant;
 import java.util.LinkedHashMap;
 import java.util.Map;
 
 /**
- * [LEGACY_CHANGES L-I2] Evidence JSON v0 봉투를 만들고 전송기에 넘긴다(docs/evidence-schema-v0.md).
- * HTTP 필터와 Kafka consumer 인터셉터가 같은 봉투를 쓴다.
+ * [LEGACY_CHANGES L-I2] Evidence JSON v0 봉투를 만들고 전송기에 넘긴다(docs/legacy-evidence-schema-v0.md).
+ * HTTP 필터와 Kafka consumer 인터셉터가 같은 봉투를 쓴다. 공통 필드 이름은 hyeonuk-dev Phase 2 계획(2.3)의
+ * Evidence JSON v0과 같게 맞췄고(schemaVersion, sessionId, version, request.path, timing.*Nano), DB 접근·나가는 호출·
+ * 이벤트·예외는 이 트랙의 확장 필드다.
  */
 public final class EvidenceRecorder {
 
-    public static final String SCHEMA = "evidence/v0";
+    public static final String SCHEMA_VERSION = "v0";
 
     private final EvidenceSender sender;
     private final String stack;
     private final String service;
+    private final String version;
     private final String fixedClock;
 
-    EvidenceRecorder(EvidenceSender sender, String stack, String service, String fixedClock) {
+    EvidenceRecorder(EvidenceSender sender, String stack, String service, String version, String fixedClock) {
         this.sender = sender;
         this.stack = stack;
         this.service = service;
+        this.version = version;
         this.fixedClock = fixedClock;
     }
 
@@ -29,11 +34,13 @@ public final class EvidenceRecorder {
         long completedAtNano = System.nanoTime();
 
         Map<String, Object> e = new LinkedHashMap<>();
-        e.put("schema", SCHEMA);
+        e.put("schemaVersion", SCHEMA_VERSION);
         e.put("runId", r.runId);
         e.put("replayRequestId", r.replayRequestId);
+        e.put("sessionId", r.sessionId);
         e.put("stack", stack);
         e.put("service", service);
+        e.put("version", version);
         e.put("kind", r.kind);
         e.put("seq", r.seq);
         e.putAll(body);
@@ -43,13 +50,14 @@ public final class EvidenceRecorder {
         e.put("events", r.events);
 
         Map<String, Object> timing = new LinkedHashMap<>();
-        timing.put("arrivedAt", r.arrivedAt);
-        timing.put("completedAt", completedAt);
-        timing.put("arrivedAtNano", r.arrivedAtNano);
-        timing.put("completedAtNano", completedAtNano);
+        timing.put("arrivedAt", Instant.ofEpochMilli(r.arrivedAt).toString());
+        timing.put("completedAt", Instant.ofEpochMilli(completedAt).toString());
+        timing.put("arrivedNano", r.arrivedAtNano);
+        timing.put("completedNano", completedAtNano);
         // 참고 지표(비교 대상 아님). Store POST는 이 시간에 포함되지 않는다(전송은 응답 후 별도 스레드).
         timing.put("durationMs", (completedAtNano - r.arrivedAtNano) / 1_000_000.0);
         e.put("timing", timing);
+        e.put("capturedAt", Instant.ofEpochMilli(completedAt).toString());
 
         Map<String, Object> runContext = new LinkedHashMap<>();
         runContext.put("runId", r.runId);

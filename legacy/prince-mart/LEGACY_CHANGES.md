@@ -120,7 +120,9 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
   payment만 `spring.kafka.producer.properties[interceptor.classes]`
 - Boot 3(payment)·Boot 4(order, coupon)에서 위치가 같은 Spring 코어 API만 쓴다(Filter 빈은 `Ordered`로 자동 등록,
   Boot 4에서 패키지가 바뀐 `FilterRegistrationBean` 등은 쓰지 않음). OTel API에 의존하지 않는다.
-- 스키마: [`docs/evidence-schema-v0.md`](../../docs/evidence-schema-v0.md)
+- 스키마: [`docs/legacy-evidence-schema-v0.md`](../../docs/legacy-evidence-schema-v0.md)
+  (공통 필드 이름은 hyeonuk-dev Phase 2 계약과 같게 맞춤: schemaVersion, sessionId, version, request.path, 소문자 헤더 맵,
+  `sha256:` 해시, ISO 시각 + nano. legacy-decision-log L11)
 
 ---
 
