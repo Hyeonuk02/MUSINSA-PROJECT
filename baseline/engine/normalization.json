@@ -1,0 +1,31 @@
+{
+  "version": "norm-v1",
+  "description": "B1(정규화 후 diff) 규칙. B0(exact diff)는 이 규칙 없이 비교한다. 이 파일은 비교 유효 조건 해시에 들어간다(run.py).",
+  "identityFields": {
+    "note": "짝을 짓는 키와 스택 식별자. 비교 대상이 아니다(B0·B1 모두 제외).",
+    "fields": ["stack"]
+  },
+  "ignoreFields": {
+    "note": "실측 시각·소요 시간. 스택·실행마다 달라지는 참고 지표(v10.1: latency는 판정 기준 아님).",
+    "paths": ["timing", "capturedAt", "outbound[].durationMs"]
+  },
+  "dropHeaders": {
+    "note": "OTel이 싣는 trace 식별자. 스택마다 trace id가 다르다(legacy-decision-log L9). baggage는 replayRequestId·runId·sessionId라 양쪽 같으므로 남긴다. Host는 D8에 따라 정규화하지 않는다.",
+    "names": ["traceparent", "tracestate", "b3", "x-b3-traceid", "x-b3-spanid", "x-b3-parentspanid", "x-b3-sampled", "x-b3-flags"]
+  },
+  "jsonBodies": {
+    "note": "JSON 문자열 필드는 파싱해서 비교한다(키 순서 무시, 숫자는 값으로). Boot/Jackson 버전 차이로 생기는 키 순서(L7)와 BigDecimal scale(L6) 표기 차이를 흡수한다.",
+    "paths": ["request.body", "response.body", "calls[].body", "message.value", "events[].value"],
+    "sortKeys": true,
+    "canonicalNumbers": true
+  },
+  "maskAutoIncrementIds": {
+    "note": "v10.1 §5.3. A/A에서는 끈다: 두 스택이 같은 S0·같은 순서로 실행되므로 ID가 같아야 하고, 마스킹하면 결정성 깨짐을 숨긴다. New 비교에서 켠다.",
+    "enabled": false,
+    "fields": ["orderId", "paymentId", "orderItemId", "historyId", "usageId", "refundId"]
+  },
+  "tables": {
+    "note": "테이블 비교: 행 수, 숫자 열 합, 정렬된 행 해시. A/A에서는 정규화 없이 비교한다(고정 시각·결정적 ID).",
+    "ignoreColumns": []
+  }
+}
