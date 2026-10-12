@@ -15,6 +15,8 @@ spec:
       labels:
         app: order
     spec:
+      # Phase 2.4: 앱 graceful shutdown(20s/phase) + Evidence drain(10s)보다 길게.
+      terminationGracePeriodSeconds: 30
       initContainers:
         # OTel Java agent를 공유 emptyDir로 복사한다.
         #
@@ -42,7 +44,7 @@ spec:
             - until nc -z mysql 3306; do echo "waiting for mysql:3306"; sleep 2; done
       containers:
         - name: order
-          image: order-app:phase2-4a1
+          image: order-app:phase2-4b
           # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
           imagePullPolicy: IfNotPresent
           ports:
@@ -96,6 +98,8 @@ spec:
             - name: otel-agent
               mountPath: /otel
               readOnly: true
+            - name: evidence-spill
+              mountPath: /var/evidence/spill
           readinessProbe:
             # Tomcat은 기동 마지막에 포트를 연다. actuator를 넣지 않기 위해 TCP로 본다.
             tcpSocket:
@@ -106,6 +110,13 @@ spec:
       volumes:
         - name: otel-agent
           emptyDir: {}
+        # Phase 2.4: Evidence 전송 실패분(spill). pod가 교체(rollout restart)돼도 남아야 회수할 수 있어
+        # emptyDir이 아니라 노드 hostPath다. 파일명에 stack이 있어 legacy/new가 같은 노드 디렉터리를 써도 충돌 없음.
+        # kind 노드 1개 전제(노드가 여럿이면 pod가 다른 노드에 떠 회수가 어긋난다). 운영이면 PVC.
+        - name: evidence-spill
+          hostPath:
+            path: /var/evidence/spill
+            type: DirectoryOrCreate
 ---
 apiVersion: v1
 kind: Service

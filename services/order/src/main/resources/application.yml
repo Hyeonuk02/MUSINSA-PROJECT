@@ -13,6 +13,9 @@ spring:
       # (deploy/k8s/base/mysql-initdb/schema.sql). 앱은 DDL을 만들지 않는다.
       # emptyDir + init SQL 재실행이 곧 S0 리셋이라는 성질을 앱이 흐리지 않게 하기 위함.
       mode: never
+  lifecycle:
+    # graceful shutdown·Evidence drain 각 phase의 상한. k8s terminationGracePeriodSeconds(30s)보다 짧게.
+    timeout-per-shutdown-phase: 20s
   jpa:
     open-in-view: false
     hibernate:
@@ -23,6 +26,9 @@ spring:
 
 server:
   port: 8080
+  # Phase 2.4: 진행 중 요청을 끝내고 멈춘다. 그 뒤 EvidenceSender가 큐를 drain(최대 10초)하고 남은 건 spill.
+  # S0 리셋·재배포가 rollout restart라 매 run마다 pod가 종료되기 때문이다.
+  shutdown: graceful
 
 app:
   # 비어 있으면 시스템 시각(개발 편의). k8s에서는 APP_FIXED_CLOCK env로 주입한다.

@@ -10,6 +10,7 @@ import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.core.Ordered;
 
+import java.nio.file.Path;
 import java.util.List;
 
 /**
@@ -21,6 +22,7 @@ import java.util.List;
  * <ul>
  *   <li>EVIDENCE_STORE_URL — 없으면 수집기 전체를 등록하지 않는다(로컬 실행용)
  *   <li>EVIDENCE_STACK / EVIDENCE_SERVICE / EVIDENCE_VERSION / EVIDENCE_HEADERS — STORE_URL이 있는데 비어 있으면 기동 실패
+ *   <li>EVIDENCE_SPILL_DIR — 전송 실패분을 쓰는 디렉터리(기본 /var/evidence/spill, k8s는 hostPath)
  *   <li>EVIDENCE_HEADERS — Evidence에 남길 요청·응답 헤더 목록. 디버깅 로그용 REQUEST_LOG_HEADERS와 분리한다
  *       (x-request-id·Host 같은 실행 시점 값은 로그에는 필요하지만 Evidence에는 판정 잡음)
  * </ul>
@@ -43,8 +45,9 @@ public class EvidenceAutoConfiguration {
     }
 
     @Bean
-    public EvidenceSender evidenceSender(@Value("${EVIDENCE_STORE_URL}") String storeUrl) {
-        return new EvidenceSender(storeUrl);
+    public EvidenceSender evidenceSender(@Value("${EVIDENCE_STORE_URL}") String storeUrl,
+                                         @Value("${EVIDENCE_SPILL_DIR:/var/evidence/spill}") String spillDir) {
+        return new EvidenceSender(storeUrl, Path.of(spillDir));
     }
 
     @Bean

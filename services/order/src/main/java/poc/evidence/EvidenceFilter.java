@@ -129,7 +129,7 @@ public class EvidenceFilter extends OncePerRequestFilter {
         evidence.put("timing", timing);
         evidence.put("capturedAt", Instant.now().toString());
 
-        sender.enqueue(runId + "/" + replayRequestId + "/" + stack, jsonMapper.writeValueAsBytes(evidence));
+        sender.enqueue(runId, replayRequestId, stack, jsonMapper.writeValueAsBytes(evidence));
     }
 
     private Map<String, String> selectedRequestHeaders(HttpServletRequest request) {
