@@ -94,12 +94,17 @@ x-app-env: &app-env
   OTEL_PROPAGATORS: tracecontext,baggage,b3,b3multi
   # 서버 span에 남길 요청 헤더. replayRequestId가 nginx(mirror)·Feign을 거쳐 각 서비스에 도착했는지 trace로 확인한다.
   OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: X-Replay-Request-Id,X-Run-Id,X-Session-Id,baggage,Host
+  # Evidence 계측(com.pm.evidence)이 보내는 곳. 두 스택이 같은 Store를 쓴다(k8s에서는 verify ns).
+  EVIDENCE_STORE_URL: http://evidence-store:8080
 
-# 스택별로 다른 OTel 식별자. 서비스 이름(OTEL_SERVICE_NAME)과 함께 이 두 값만 legacy/new가 다르다(hyeonuk-dev D5와 같은 규칙).
+# 스택별로 다른 식별자. 서비스 이름(OTEL_SERVICE_NAME)과 함께 이 값들만 legacy/new가 다르다(hyeonuk-dev D5와 같은 규칙).
+# EVIDENCE_STACK은 Evidence 키(runId, replayRequestId, stack)의 stack이다.
 x-otel-legacy: &otel-legacy
   OTEL_RESOURCE_ATTRIBUTES: service.namespace=legacy
+  EVIDENCE_STACK: legacy
 x-otel-new: &otel-new
   OTEL_RESOURCE_ATTRIBUTES: service.namespace=new
+  EVIDENCE_STACK: new
 
 x-app-health: &app-health
   interval: 3s
@@ -216,6 +221,7 @@ services:
       dockerfile: DockerFile
     ports: ["8085:8085"]
     depends_on:
+      evidence-store: { condition: service_healthy }
       otel-agent-init: { condition: service_completed_successfully }
       mysql-order-legacy: { condition: service_healthy }
       kafka-legacy: { condition: service_healthy }
@@ -231,6 +237,7 @@ services:
       dockerfile: DockerFile
     ports: ["8091:8091"]
     depends_on:
+      evidence-store: { condition: service_healthy }
       otel-agent-init: { condition: service_completed_successfully }
       mysql-coupon-legacy: { condition: service_healthy }
     networks: { legacy: { aliases: [coupon] } }
@@ -245,6 +252,7 @@ services:
       dockerfile: DockerFile
     ports: ["8086:8086"]
     depends_on:
+      evidence-store: { condition: service_healthy }
       otel-agent-init: { condition: service_completed_successfully }
       mysql-payment-legacy: { condition: service_healthy }
       kafka-legacy: { condition: service_healthy }
@@ -278,6 +286,7 @@ services:
       <<: [*app-env, *otel-new]
       OTEL_SERVICE_NAME: order-new
     depends_on:
+      evidence-store: { condition: service_healthy }
       otel-agent-init: { condition: service_completed_successfully }
       order-legacy: { condition: service_started }   # 이미지 빌드가 legacy 쪽에서 먼저 끝나야 한다
       mysql-order-new: { condition: service_healthy }
@@ -290,6 +299,7 @@ services:
       <<: [*app-env, *otel-new]
       OTEL_SERVICE_NAME: coupon-new
     depends_on:
+      evidence-store: { condition: service_healthy }
       otel-agent-init: { condition: service_completed_successfully }
       coupon-legacy: { condition: service_started }
       mysql-coupon-new: { condition: service_healthy }
@@ -301,6 +311,7 @@ services:
       <<: [*app-env, *otel-new]
       OTEL_SERVICE_NAME: payment-new
     depends_on:
+      evidence-store: { condition: service_healthy }
       otel-agent-init: { condition: service_completed_successfully }
       payment-legacy: { condition: service_started }
       mysql-payment-new: { condition: service_healthy }
@@ -322,6 +333,22 @@ services:
       coupon-new: { condition: service_healthy }
       payment-new: { condition: service_healthy }
     networks: [legacy, new]
+
+  # Evidence Store v0 (evidence-store/). 두 스택이 함께 쓴다. 호스트 8099는 k6·run script·export용.
+  evidence-store:
+    build: ../../evidence-store
+    image: prince-mart/evidence-store:v0
+    volumes:
+      - evidence-data:/data
+    ports: ["8099:8080"]
+    healthcheck:
+      test: ["CMD-SHELL", "python -c \"import urllib.request; urllib.request.urlopen('http://127.0.0.1:8080/health')\""]
+      interval: 2s
+      timeout: 3s
+      retries: 30
+    networks:
+      legacy: { aliases: [evidence-store] }
+      new: { aliases: [evidence-store] }
 
   # OTel Java agent 2.31.1. digest 고정 이미지에서 jar만 공유 볼륨으로 복사하고 끝난다(hyeonuk-dev D5의 initContainer와 같음).
   # 기동 중 다운로드하지 않으므로 new의 internal 네트워크와 충돌하지 않고, legacy/new가 같은 agent를 쓴다.
@@ -352,6 +379,7 @@ services:
 
 volumes:
   otel-agent: {}
+  evidence-data: {}
 
 networks:
   legacy: {}

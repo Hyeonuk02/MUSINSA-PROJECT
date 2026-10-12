@@ -51,10 +51,11 @@ k8s 네임스페이스 안에서 짧은 Service 이름으로 찾는 구조와 �
 
 **결정**
 MySQL과 Kafka 데이터 디렉터리를 tmpfs에 둔다. `deploy/compose/reset.sh`는
-1. MySQL·Kafka 컨테이너를 `--force-recreate`로 새로 만들고 healthy(`mysqladmin ping -h 127.0.0.1`(D3) / 토픽 존재)까지 기다린다.
-2. **앱 컨테이너를 재시작**한다(같은 컨테이너라 네트워크 주소가 유지되어 nginx upstream이 그대로 유효).
-3. Order consumer가 파티션을 받고 같은 member로 3초 연속 유지될 때까지 기다린다.
-4. WireMock journal을 비운다.
+1. **앱 컨테이너를 멈춘다.**
+2. MySQL·Kafka 컨테이너를 `--force-recreate`로 새로 만들고 healthy(`mysqladmin ping -h 127.0.0.1`(D3) / 토픽 존재)까지 기다린다.
+3. **앱을 다시 시작**한다.
+4. Order consumer group이 `Stable`, 멤버 1개, 파티션 할당 상태로 2회 연속 확인될 때까지 기다린다.
+5. WireMock journal을 비운다.
 
 스키마는 Hibernate `ddl-auto=update`로 한 번 만든 뒤 `mysqldump --no-data`로 떠서
 `deploy/compose/mysql-initdb/<service>/01-schema.sql`에 고정했다(`tools/dump-schema.sh`).
@@ -71,9 +72,16 @@ k8s의 emptyDir + `strategy: Recreate` + `rollout restart`(D4)와 같은 의미�
 - 6-5의 Evidence `seq` 같은 앱 메모리 상태가 run마다 1부터 시작해야 legacy/new를 맞출 수 있다.
 - 재생성된 DB·브로커의 IP가 바뀌어도 앱이 오래된 DNS 캐시(JVM 기본 30초)를 쓰지 않는다.
 
+처음 구현(Kafka 재생성 → 앱 restart)에도 구멍이 있었다. 재생성과 restart 사이 몇 초 동안 **옛 앱의 consumer가 새 브로커 그룹에 먼저 들어가고**,
+restart로 죽으면서 그룹을 깔끔하게 떠나지 못했다. 새 consumer는 브로커가 옛 멤버의 세션 만료를 기다리는 동안(실측 22초) 합류하지 못했고,
+리셋 스크립트의 "같은 member 3초 유지" 판정은 죽은 옛 멤버를 보고 통과했다. 그 결과 체인 도중 할당이 일어나 verify의 consumer 처리가
+3초 늦어졌고, 그 사이 조회·취소가 먼저 처리됐다. 그래서 순서를 **앱 정지 → 재생성 → 앱 시작**으로 바꾸고 판정을
+"group Stable + 멤버 1개 + 파티션 1개"로 강화했다.
+
 **실측**
-- 앱 재시작 방식: 리셋 46초. 스택마다 consumer 할당 정확히 1회, 리셋 후 20초 동안 rebalance 0회.
-  시나리오 5회 연속 26/26, 5회의 응답·외부 호출·DB가 모두 동일.
+- 앱 재시작 방식(최초): 리셋 46초. 스택마다 consumer 할당 1회. 시나리오 5회 연속 26/26, 5회 결과 동일.
+- 앱 정지 → 재생성 → 시작(최종): 리셋 약 53초. 앱 시작 후 약 0.3초 만에 그룹 합류·할당 1회.
+  nginx 경유 체인에서 verify의 consumer 처리가 바로 다음 순번(seq 3)으로 들어가고 legacy/new seq 순서가 같다.
 - (이전) 앱 재시작 없이 MySQL만 재생성: 11초, 첫 요청에서 Hikari가 끊긴 커넥션을 버리고 재연결(`Failed to validate connection`).
 
 `mysqldump`는 테이블을 이름순으로 내보내 FK 참조 순서와 어긋나므로(`coupon_usage` → `coupons`)
@@ -82,6 +90,7 @@ init SQL을 `SET FOREIGN_KEY_CHECKS=0/1`로 감쌌다.
 **대안**
 - `TRUNCATE ... RESTART IDENTITY`(사전 검증에서 Postgres로 사용) — MySQL에는 `RESTART IDENTITY`가 없고, 위 이유로 배제.
 - 앱 재시작 없이 consumer 안정 대기만 강화 — 토픽 ID 변경 rebalance가 언제 일어날지(metadata 갱신 시점)에 달려 있어 보장이 없다.
+- 앱 restart(정지 없이) — 위 "옛 멤버" 문제로 배제.
 
 ### L4. MySQL은 메모리만 줄여서 띄운다
 
@@ -239,3 +248,40 @@ WireMock journal 127건(본문 포함)·DB 7테이블이 **정규화 없이 동�
 **대안**
 - Feign 인터셉터 + Kafka 헤더 직접 전파(계측 등급 코드) — agent가 동작해 필요 없었다.
 - 앱 이미지에 agent 포함 — D5에서 기각된 방식.
+
+### L10. Evidence: 서비스 내부 계측 + 앱 밖 수집, Store는 Python·SQLite, Store POST는 별도 trace
+
+**결정**
+- 앱 안(`legacy/prince-mart/evidence/`, LEGACY_CHANGES L-I2): HTTP 요청 1건·Kafka 레코드 처리 1건마다 Evidence 1건.
+  응답, DB 접근(StatementInspector, (동작·테이블·횟수) + 원문), Feign 호출 순서, 발행 이벤트, 예외 class, 처리 시간(참고 지표).
+  replayRequestId는 `X-Replay-Request-Id` 또는 baggage에서 읽는다(OTel API 없이 헤더 문자열 파싱).
+- 앱 밖(`deploy/compose/tools/collect.py`): run 뒤 스택별 WireMock journal을 baggage로 묶어 `kind=external`, Kafka 토픽을 처음부터 읽어
+  `kind=event`로 같은 키에 넣는다.
+- Evidence Store v0(`evidence-store/`): Python 표준 라이브러리 + SQLite 파일. 두 스택이 공유하고 호스트 8099.
+  v10.1 §11-2(Store 저장소 파일 vs 경량 DB)가 미결이라 **임시 선택**이다. 엔드포인트와 export 형식이 같으면 바꿔도 비교 엔진은 영향이 없다.
+- **Store POST는 억제하지 않고 비즈니스 trace와 분리한다.** 요청 스레드는 큐에 넣기만 하고 전용 스레드가 보낸다.
+  OTel agent는 큐를 거친 작업에 context를 잇지 않으므로 POST는 별도 trace가 된다. 분석(Observed edge)은 replayRequestId가 찍힌
+  서버 span이 있는 trace만 쓰고, 안전장치로 목적지가 evidence-store인 span을 버린다. `X-Evidence-Internal: true`는 그대로 붙인다.
+- 스키마는 [evidence-schema-v0.md](evidence-schema-v0.md)에 고정한다. 키 `(runId, replayRequestId, stack)` + service·kind·seq.
+
+**근거**
+- k8s + Istio에서는 앱에서 억제해도 Store POST의 Envoy span이 남는다(나가는 sidecar, Store sidecar). 앱 억제(`InstrumentationUtil.suppressInstrumentation`,
+  OTel internal API)에 기대면 compose와 k8s 결과가 달라지고 분석 단계 필터링은 어차피 필요하다. 분리 방식은 두 환경에서 같은 결과(별도 trace)이고
+  Envoy span도 그 별도 trace에 붙는다. 헤더가 아니라 replayRequestId·목적지로 거르므로 팀원 Telemetry에 customTags가 필요 없다.
+- 공통 코드를 복사본으로 두되 원본 하나 + `sync.sh --check`로 같은 바이트를 보장한다. Jackson을 쓰지 않아 Boot 3/4 차이가 Evidence에 섞이지 않는다.
+- 외부 호출을 앱 Feign 기록과 WireMock journal 둘로 보는 이유: Feign 기록은 내부 서비스 호출까지 포함한 호출 순서, journal은 Feign이 아닌
+  호출(가짜 PG RestClient)까지 포함한 외부 의존성의 실제 수신 내용이다.
+
+**실측(Step 6-5~6-7)** — nginx 경유 체인(쿠폰 주문, verify, 조회, 취소, 재취소), 요청마다 양쪽 Evidence 기대 건수까지 대기
+- 요청별 Evidence 건수 legacy = new: R000001 5건(order place, coupon validate, coupon use, B1 역조회, payment process), R000002 2건(verify + consume),
+  나머지 1건. 앱 Evidence 전부 `X-Evidence-Internal` 포함. `collect.py`: 외부 호출 14건·이벤트 1건, baggage 없는 호출 0건.
+- 요청 하나가 replayRequestId로 order·coupon·payment·WireMock·Kafka에 걸쳐 묶이고 legacy/new가 같은 구성으로 짝지어진다(Step 6 완료 기준).
+- Error Path: B1 coupon `/use` 404 = `ResourceNotFoundException`, B6 재취소 404 = `IllegalStateException`.
+- 완료 대기 시간: 요청당 약 5~135ms(verify는 consumer 처리 포함 134ms).
+- Store POST trace 분리: 최근 3분간 비즈니스 trace 20개, Store POST trace 40개(모두 span 1개), 겹침 0.
+- 계측 전후 시나리오 26/26, 응답·DB·외부 호출 동일. 세 서비스 복사본 동일(`sync.sh --check`).
+
+**대안**
+- `opentelemetry-api` + suppressInstrumentation — 위 이유로 배제.
+- Collector filter processor로 Store span 제거 — core Collector 이미지에 없고(contrib 필요), 팀원 구성과 달라진다.
+- 서비스별로 계측 코드를 따로 작성 — 어긋날 수 있다.
