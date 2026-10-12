@@ -46,8 +46,12 @@ public class EvidenceAutoConfiguration {
 
     @Bean
     public EvidenceSender evidenceSender(@Value("${EVIDENCE_STORE_URL}") String storeUrl,
-                                         @Value("${EVIDENCE_SPILL_DIR:/var/evidence/spill}") String spillDir) {
-        return new EvidenceSender(storeUrl, Path.of(spillDir));
+                                         @Value("${EVIDENCE_SPILL_DIR:/var/evidence/spill}") String spillDir,
+                                         @Value("${EVIDENCE_DELAY_MS:0}") long delayMs) {
+        if (delayMs > 0) {
+            log.warn("EVIDENCE_DELAY_MS={} — 검증용 지연이 켜져 있다", delayMs);
+        }
+        return new EvidenceSender(storeUrl, Path.of(spillDir), delayMs);
     }
 
     @Bean

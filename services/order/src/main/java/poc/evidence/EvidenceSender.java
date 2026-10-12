@@ -33,6 +33,8 @@ import java.util.regex.Pattern;
  *       {@code <spillDir>/<runId>/<replayRequestId>-<stack>.json}에 Store로 보낼 바이트 그대로 쓴다.
  *       spill마저 실패할 때만 EVIDENCE_LOST 로그(마지막 수단)
  *   <li>종료: 웹 서버가 요청을 다 처리하고 멈춘 뒤(낮은 phase) 최대 10초 drain, 남은 것은 spill
+ *   <li>EVIDENCE_DELAY_MS(기본 0): 첫 POST를 그만큼 늦게 예약한다. k6 완료 폴링이 실제로 기다리는지 보는 검증용이며
+ *       평소에는 어떤 overlay에도 설정하지 않는다
  * </ul>
  *
  * <p>executor는 바이트만 다룬다. ReplayContext 같은 요청 스레드 상태는 넘겨받지 않는다.
@@ -52,6 +54,7 @@ public class EvidenceSender implements SmartLifecycle {
 
     private final URI endpoint;
     private final Path spillDir;
+    private final long delayMs;
     private final HttpClient client = HttpClient.newBuilder().connectTimeout(CONNECT_TIMEOUT).build();
     private final Semaphore permits = new Semaphore(MAX_PENDING);
     /** 아직 Store에도 spill에도 가지 않은 건. 종료 시 drain 시간을 넘기면 여기 남은 것을 spill한다. */
@@ -63,9 +66,10 @@ public class EvidenceSender implements SmartLifecycle {
     });
     private volatile boolean running;
 
-    public EvidenceSender(String storeUrl, Path spillDir) {
+    public EvidenceSender(String storeUrl, Path spillDir, long delayMs) {
         this.endpoint = URI.create(storeUrl.replaceAll("/+$", "") + "/evidence");
         this.spillDir = spillDir;
+        this.delayMs = delayMs;
     }
 
     /** 요청 스레드에서 호출한다. 대기 건수 상한이면 그 자리에서 spill한다(블로킹 POST는 하지 않음). */
@@ -77,7 +81,11 @@ public class EvidenceSender implements SmartLifecycle {
         }
         pending.add(payload);
         try {
-            executor.execute(new Attempt(payload, 0));
+            if (delayMs > 0) {
+                executor.schedule(new Attempt(payload, 0), delayMs, TimeUnit.MILLISECONDS);
+            } else {
+                executor.execute(new Attempt(payload, 0));
+            }
         } catch (RejectedExecutionException e) {
             done(payload, "sender stopped");
         }
