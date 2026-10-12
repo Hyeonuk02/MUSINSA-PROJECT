@@ -2,6 +2,7 @@
 """corpus 검증 — schema.json(구조) + 구조로 표현하기 어려운 규칙.
 
 사용: .venv/bin/python corpus/validate.py [corpus/corpus-v1.json]
+      .venv/bin/python corpus/validate.py --self-test
 의존: corpus/requirements.txt (jsonschema)
 
 검사 규칙
@@ -17,6 +18,9 @@
 
 expectMissing의 의미는 이 스크립트에만 있다. k6와 engine은 무시한다.
 종료 코드: 0 = 통과, 1 = 위반, 2 = 사용법/파일 오류
+
+--self-test: 회귀 방지. corpus-v1.json은 통과해야 하고, tests/invalid/<태그>-<케이스>.json은
+  모두 위반이어야 하며 위반 목록에 [<태그>] 규칙이 있어야 한다(엉뚱한 규칙에 걸려 통과한 척 하는 것 방지).
 """
 import json
 import re
@@ -148,7 +152,32 @@ def validate(corpus, schema):
     return errors, stats
 
 
+def self_test(schema):
+    results = []
+    valid = HERE / "corpus-v1.json"
+    errors, _ = validate(json.loads(valid.read_text(encoding="utf-8")), schema)
+    results.append((valid.name, "PASS 기대", not errors, errors[:1]))
+
+    fixtures = sorted((HERE / "tests" / "invalid").glob("*.json"))
+    for path in fixtures:
+        tag = path.stem.split("-", 1)[0]
+        errors, _ = validate(json.loads(path.read_text(encoding="utf-8")), schema)
+        ok = any(e.startswith(f"[{tag}]") for e in errors)
+        results.append((f"invalid/{path.name}", f"[{tag}] 위반 기대", ok, errors[:1]))
+
+    for name, expect, ok, first in results:
+        print(f"  {'ok  ' if ok else 'FAIL'} {name:55} {expect}" + (f"  -> {first[0]}" if first else ""))
+    failed = [r for r in results if not r[2]]
+    print(f"self-test: {len(results) - len(failed)}/{len(results)} ok ({len(fixtures)} invalid fixtures)")
+    if not fixtures:
+        print("FAIL: tests/invalid에 fixture 없음")
+        return 1
+    return 1 if failed else 0
+
+
 def main(argv):
+    if argv[1:] == ["--self-test"]:
+        return self_test(json.loads((HERE / "schema.json").read_text(encoding="utf-8")))
     corpus_path = Path(argv[1]) if len(argv) > 1 else HERE / "corpus-v1.json"
     try:
         corpus = json.loads(corpus_path.read_text(encoding="utf-8"))

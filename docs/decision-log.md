@@ -334,3 +334,18 @@ graceful shutdown + flush 훅.
 실측은 [isolation-proof.md](isolation-proof.md) "스택 간 DB 격리".
 
 스택 간 DB 격리는 설정이 아니라 NetworkPolicy **ingress**(`base/mysql-networkpolicy.yaml`, DB pod ← 같은 ns 소유 서비스 3306만)로 보장한다 — 1.5(D6)는 new의 egress만 다뤄 legacy → mysql.new가 열려 있었음(실측 후 막음).
+
+### D12. 검증 파이프라인 언어 경계 — 앱 밖은 Python (2026-10-12)
+
+**결정**
+앱 안(Evidence 필터·ReplayContext·StatementInspector·이후 Kafka 인터셉터)은 앱 언어(Java),
+앱 밖(Evidence Store·corpus 도구·엔진)은 Python. 2.3 Evidence Store는 이에 따라 Python(FastAPI)으로 확정.
+호스트 실행 환경은 레포 루트 `.venv` 하나(engine 의존성이 생기면 `corpus/requirements.txt`를 루트 `requirements.txt`로 합침).
+
+**근거**
+- 오프라인 파일(`runs/` JSON) 비교 작업이라 스크립트 형태가 맞다
+- 판정 규칙을 반복 실행하며 찾아가는 작업이다
+- 엔진이 앱 코드를 import할 수 없게 하여 `docs/evidence-schema-v0.json`만이 계약이 되도록 강제한다
+
+**재검토 조건**
+엔진이 상주 서비스가 되어야 하는 상황이 오면 재검토.
