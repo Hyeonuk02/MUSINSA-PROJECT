@@ -155,6 +155,12 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
   - `callTree`는 Phase 3에서 채움. Phase 2에서는 항상 `null` — 필드 자리만 예약
   - 외부 호출/이벤트 필드는 v0에 없음 — Phase 3에서 추가(`schemaVersion` 올림)
 
+구현 시 확정 (2.3)
+- 게이트웨이 표면은 두 개뿐: `/_evidence/` → Store(rewrite `/`, mirror 없음), `/api/` → legacy + mirror new 100%. 그 외 경로는 게이트웨이 404(`NR`). 미러 대상은 선언된 표면이어야 하고, 실험 밖 요청이 조용히 legacy로 들어가는 것보다 404로 드러나는 게 낫다. 확인: `/api/orders/by-key/…` 미러됨(new 로그 1줄), `/_evidence/count` 200, `/foo` 404
+- Store: 본문은 해석 없이 그대로 저장·반환, 키 누락·쿼리 파라미터 누락은 400, 중복 키는 append 후 last-wins(count는 키 수, export는 키당 1건, `(replayRequestId, stack)` 순). 메모리 인덱스라 replicas 1·워커 1
+- Evidence JSON v0 해석: `response.body`는 32KB 초과 시 `null`(bodyHash 유지) / 요청 본문이 없으면 `bodyHash`는 빈 바이트열의 sha256 / 최상위 `additionalProperties: false`(필드 추가는 schemaVersion 올림)
+- 베이스 이미지 digest는 고정하지 않음. run-meta에 빌드된 Store 이미지 digest를 기록(2.6)
+
 끝난 기준
 - 클러스터 안에서 `curl` POST → exists 200 → count 정확 → export로 JSON 확보
 - 호스트에서 `http://localhost/_evidence/count?runId=x` 응답(200) 및 **미러되지 않음**(new 쪽 로그에 `/_evidence` 요청 없음)
@@ -254,6 +260,7 @@ for i in 1..N:
   - request: method / path / query / 지정 헤더 / bodyHash 일치
   - 출력: 항목별 PASS(n/n), Undelivered 목록, 실패 시 requestId와 필드
   - `dbAccess`는 여기서 비교하지 않음(요청 동일성만)
+  - 메모: `response.body`가 `null`(32KB 초과)이면 `bodyHash`만 비교 (응답을 비교하는 2.8 `diff_v0.py`에도 동일 적용)
 
 끝난 기준
 - 2.6의 run 3개 모두 전건 PASS, Undelivered 0
