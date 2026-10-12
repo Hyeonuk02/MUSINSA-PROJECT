@@ -61,3 +61,16 @@ Coupon/Payment 실서비스, Kafka, 이벤트·외부 호출 Evidence(DB Evidenc
 - 중요한 설계 결정이 필요하면 임의로 정하지 말고 질문한다.
 - 단계마다 "phase2.x: ..." 형식으로 커밋한다.
 - 단계별 세부 작업과 완료 기준은 @docs/phase2-plan.md 를 따른다. 전체 설계는 docs/architecture.md, Phase 1 실측 교훈은 docs/phase1-result.md 를 참고한다. 문서들이 CLAUDE.md와 다르면 문서가 우선한다.
+
+## 단계 완료 보고 규칙
+- 단계가 끝나면 콘솔에 긴 결과를 출력하지 말고 `docs/reports/phase<N>.<step>.md`를 작성하고 커밋한 뒤 `git push origin hyeonuk-dev` 한다. 콘솔에는 보고서 경로, 전체 PASS/FAIL 한 줄, "결정 필요" 항목 개수만 출력한다.
+- 보고서 절 순서(고정):
+  0. 결정 필요 사항 — 내 답이 있어야 진행되는 것. 없으면 "없음".
+  1. 단계 목표와 끝난 기준별 PASS/FAIL — PASS에는 반드시 근거 수치와 근거 파일 경로.
+  2. 변경 파일과 커밋 해시.
+  3. 실행 명령과 주요 출력 — 길면 요약하고 전문은 `docs/reports/logs/<보고서명>-<항목>.txt`로 저장 후 경로.
+  4. Legacy/New 비교 결과와 수치 — 표.
+  5. 지시와 다르게 구현한 것과 이유.
+  6. 발견한 문제·해결·남은 한계.
+- 다음 단계는 내 승인 후에만 시작한다.
+- 문서 수정 범위: `docs/phase*-plan.md`의 기존 문장은 수정 금지, "구현 시 확정" 절 추가는 허용. `docs/architecture.md`는 지시 없이 수정 금지. 문서에 없는 설계 결정은 임의로 하지 말고 0절에 질문으로 올린다.
