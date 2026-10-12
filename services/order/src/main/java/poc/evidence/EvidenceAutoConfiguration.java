@@ -20,8 +20,9 @@ import java.util.List;
  * <p>설정은 env로만 받는다. legacy/new는 같은 이미지이고 overlay env만 다르다.
  * <ul>
  *   <li>EVIDENCE_STORE_URL — 없으면 수집기 전체를 등록하지 않는다(로컬 실행용)
- *   <li>EVIDENCE_STACK / EVIDENCE_SERVICE / EVIDENCE_VERSION — STORE_URL이 있는데 비어 있으면 기동 실패
- *   <li>request-log.headers(REQUEST_LOG_HEADERS) — Evidence에 남길 요청·응답 헤더 목록
+ *   <li>EVIDENCE_STACK / EVIDENCE_SERVICE / EVIDENCE_VERSION / EVIDENCE_HEADERS — STORE_URL이 있는데 비어 있으면 기동 실패
+ *   <li>EVIDENCE_HEADERS — Evidence에 남길 요청·응답 헤더 목록. 디버깅 로그용 REQUEST_LOG_HEADERS와 분리한다
+ *       (x-request-id·Host 같은 실행 시점 값은 로그에는 필요하지만 Evidence에는 판정 잡음)
  * </ul>
  */
 @AutoConfiguration
@@ -52,9 +53,9 @@ public class EvidenceAutoConfiguration {
             @Value("${EVIDENCE_STACK:}") String stack,
             @Value("${EVIDENCE_SERVICE:}") String service,
             @Value("${EVIDENCE_VERSION:}") String version,
-            @Value("${request-log.headers:Content-Type}") List<String> headerNames) {
-        if (stack.isBlank() || service.isBlank() || version.isBlank()) {
-            throw new IllegalStateException("EVIDENCE_STORE_URL이 있으면 EVIDENCE_STACK/SERVICE/VERSION이 모두 필요하다");
+            @Value("${EVIDENCE_HEADERS:}") List<String> headerNames) {
+        if (stack.isBlank() || service.isBlank() || version.isBlank() || headerNames.isEmpty()) {
+            throw new IllegalStateException("EVIDENCE_STORE_URL이 있으면 EVIDENCE_STACK/SERVICE/VERSION/HEADERS가 모두 필요하다");
         }
         log.info("EVIDENCE_ENABLED stack={} service={} version={} headers={}", stack, service, version, headerNames);
         FilterRegistrationBean<EvidenceFilter> registration =

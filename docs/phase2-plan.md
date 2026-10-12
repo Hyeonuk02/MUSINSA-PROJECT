@@ -150,7 +150,7 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
   "capturedAt": "2026-...Z"
 }
 ```
-  - `request.headers`·`response.headers`는 **지정 목록만**(REQUEST_LOG_HEADERS 재사용). `response.body`는 32KB 상한, 초과 시 hash만
+  - `request.headers`·`response.headers`는 **지정 목록만**(`EVIDENCE_HEADERS`, 2.4(b)). `response.body`는 32KB 상한, 초과 시 hash만
   - `dbAccess.statements[].sql`은 Hibernate가 JDBC로 보내기 직전의 문자열(바인딩 전, 값은 `?`). **가공·파싱·분류 없음**. 상한: 문장당 2,048자(초과분 잘라내고 `truncated: true`), 요청당 200건(초과 시 이후 문장 버리고 `truncated: true`)
   - `callTree`는 Phase 3에서 채움. Phase 2에서는 항상 `null` — 필드 자리만 예약
   - 외부 호출/이벤트 필드는 v0에 없음 — Phase 3에서 추가(`schemaVersion` 올림)
@@ -178,9 +178,13 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
 
 **(b) Request/Response 캡처**
 - Phase 0 `RequestLogFilter`를 확장(또는 별도 `EvidenceFilter`): `ContentCachingRequestWrapper/ResponseWrapper`로 request/response 캡처 → `chain.doFilter` 완료(응답 커밋) 후 **비동기**(작은 executor)로 Store에 POST
+  - 구현(2.4a): 요청 본문은 `ContentCachingRequestWrapper` 대신 필터가 **전체를 먼저 읽는다**(`BufferedBodyRequest`) — `request.bodyHash`는 앱이 읽은 부분이 아니라 "받은 바이트"의 해시여야 하기 때문. 응답은 `ContentCachingResponseWrapper`
 - 헤더: `X-Evidence-Internal: true`. `stack`·`service`·`version`은 env(`EVIDENCE_STACK=legacy|new`, `EVIDENCE_SERVICE=order`, `EVIDENCE_VERSION`)
-- Evidence POST용 HTTP 클라이언트는 **`java.net.http.HttpClient`**로 하고 OTel agent에서 그 계측만 끔(`OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED=false`) → 앱 span에 Evidence POST가 안 섞임. 비즈니스 외부 호출(WireMock)은 `RestClient`라 계속 계측됨. Envoy outbound span은 남으니 Phase 3에서 destination이 `evidence-store`인 span은 traceTopology에서 제외
-- `REQUEST_LOG_HEADERS`에 `X-Replay-Request-Id, X-Run-Id, X-Session-Id, Idempotency-Key, Content-Type`
+- Evidence POST용 HTTP 클라이언트는 **`java.net.http.HttpClient`**로 하고 OTel agent에서 그 계측만 끔(`OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED=false`) → 앱 span에 Evidence POST가 안 섞임. 비즈니스 외부 호출(WireMock)은 `RestClient`라 계속 계측됨. Evidence POST는 요청 trace에 섞이지 않고 단일 span의 별도 trace로 남는다(traceparent 미전파, 2.4a 실측). Phase 3 traceTopology는 destination=`evidence-store`인 trace를 방어적으로 제외
+- 헤더 목록은 용도별로 분리한다
+  - `EVIDENCE_HEADERS` = `X-Replay-Request-Id, X-Run-Id, X-Session-Id, Idempotency-Key, Content-Type` — EvidenceFilter는 이것만 본다. `x-request-id`·`Host`는 넣지 않는다(실행 시점 값, 판정 잡음)
+  - `REQUEST_LOG_HEADERS` = Phase 1 목록(`x-request-id, Host, X-Phase1-Smoke-Id`, `Content-Type, Idempotency-Key`) + 재생 헤더 3개 — RequestLogFilter 디버깅 로그용. `x-request-id`로 Envoy 액세스 로그·Jaeger와 맞춰 본다
+- 예외 경로(2.4a): `chain.doFilter` 예외 시 Evidence 없음 → k6 degraded·2.7 Undelivered로 드러남. Phase 3에서 schema v1 `error` 필드와 fault catalog '미처리 예외' 항목으로 처리
 
 **(c) DB 접근 — `EvidenceStatementInspector`**
 - `implements org.hibernate.resource.jdbc.spi.StatementInspector`. `inspect(sql)`: `ReplayContext`에 id가 있으면 현재 요청 버퍼에 `{seq, sql}` append, 없으면 무시(부팅·스키마 검증 쿼리). 항상 `sql`을 **그대로 반환**
@@ -190,6 +194,7 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
 
 **(d) 전송 큐 — 유실 금지**
 - 비동기 POST 실패 시 재시도 3회. 큐 상한 도달 또는 재시도 소진 시 **버리지 않는다** — 로컬 파일 `/var/evidence/spill/<runId>/<replayRequestId>-<stack>.json`로 spill
+- spill 위치는 **hostPath**(kind 노드 `/var/evidence/spill`, `DirectoryOrCreate`)를 order pod의 `/var/evidence/spill`에 마운트. emptyDir은 pod 교체(rollout restart) 시 사라져 "Store 또는 spill에 존재"가 성립하지 않는다. 파일명에 stack이 있어 두 스택이 같은 노드를 써도 충돌 없음. 운영이면 PVC. kind 노드 1개 전제(여러 노드면 회수가 어긋남)
 - run script의 flush barrier가 spill 파일까지 회수한 뒤 기대 건수를 센다(2.6)
 
 **(e) graceful shutdown**
@@ -204,7 +209,7 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
 - Ingress로 헤더 붙여 요청 1건 → Store에 legacy·new Evidence 각 1건, 같은 replayRequestId, `request.bodyHash` 동일
 - `POST /api/orders` Evidence의 `dbAccess.statements`에 INSERT 포함, `GET by-key`는 SELECT만. 앱 기동 시 스키마 검증 쿼리는 어떤 요청의 `dbAccess`에도 없음
 - `callTree`는 `null`
-- Jaeger에서 해당 trace의 **앱 span에는 Evidence POST client span이 없음**, Envoy outbound span에만 `evidence-store` 보임
+- Jaeger에서 해당 trace의 **앱 span에는 Evidence POST client span이 없음**, Envoy outbound span에만 `evidence-store` 보임 (실측: 그 Envoy span은 요청 trace가 아니라 단일 span의 별도 trace)
 - 응답 시간이 Evidence POST와 무관(POST 실패시켜도 응답 정상)
 - Store를 내려둔 채 요청 → spill 파일 생성 → Store 올리고 회수 스크립트 실행 → Store에 도착
 - 요청 직후 `rollout restart` → 마지막 요청의 Evidence가 Store 또는 spill에 존재
@@ -234,6 +239,7 @@ for i in 1..N:
            proxy 인증서(default, Cert Chain) VALID CERT / NOT AFTER 확인
            → 만료, 또는 istioctl 실패·pod 없음 등으로 정상 확인 불가면 run을 시작하지 않고 중단(fail-closed)
            → 자동 복구(rollout restart 등) 없음 — 사람이 복구 후 재실행
+           Store 준비 확인: 게이트웨이 경유 /_evidence/count 200 (Store rollout 직후 endpoint 반영 전 503으로 Evidence가 유실된 2.4a 실측)
   reset:   kubectl rollout restart deployment/mysql -n legacy
            kubectl rollout restart deployment/mysql -n new          (kubectl은 -n을 하나만 받음 — 네임스페이스별로 따로)
            kubectl rollout status  deployment/mysql -n legacy
@@ -245,7 +251,7 @@ for i in 1..N:
   export:  /_evidence/export?runId&stack=legacy → runs/<runId>/legacy.json, new → runs/<runId>/new.json, k6-summary.json, run-meta.json(corpus 버전, 이미지 digest, 고정 시각, VUS)
 ```
 - preflight 근거: 호스트 sleep 후 워크로드 인증서 만료로 메시 전체 503 UC가 난 실측(`docs/isolation-proof.md` "관찰")
-- barrier(spill 회수)는 **반드시 다음 iteration의 reset 전**에 끝나야 한다(spill이 emptyDir이면 pod 재시작 시 사라짐)
+- barrier(spill 회수)는 **반드시 다음 iteration의 reset 전**에 끝나야 한다(spill은 hostPath라 pod 재시작에도 남지만, run 경계를 지키기 위해 다음 run 전에 회수)
 - `runs/`는 `.gitignore`(결과는 docs에 요약만)
 
 끝난 기준
@@ -305,7 +311,7 @@ docs/                    evidence-schema-v0.json, phase2-result.md, isolation-pr
 - `response.body` 저장 상한(32KB 기본)과 초과 정책
 - 완료 폴링 타임아웃(10초 기본)·flush barrier 타임아웃(30초 기본)
 - degraded 세션 처리: 남은 요청 건너뜀(기본) vs run 전체 중단
-- spill 디렉터리 위치(emptyDir 기본 + "barrier가 reset 전" 순서 보장 vs hostPath)
+- ~~spill 디렉터리 위치~~ → hostPath(kind 노드 `/var/evidence/spill`)로 확정 (2.4(d))
 - `terminationGracePeriodSeconds`·shutdown 타임아웃 값(30s/20s 기본)
 - ~~WireMock 응답의 결정론적 transactionId 생성 방식~~ → 2.1에서 `tx-{Idempotency-Key}`로 확정
 - 2.8에서 diff 집합이 다를 때 VU=1로 내릴지, 원인이 유실이면 폴링 타임아웃만 늘릴지

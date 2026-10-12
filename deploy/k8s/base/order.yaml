@@ -42,7 +42,7 @@ spec:
             - until nc -z mysql 3306; do echo "waiting for mysql:3306"; sleep 2; done
       containers:
         - name: order
-          image: order-app:phase2-4a
+          image: order-app:phase2-4a1
           # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
           imagePullPolicy: IfNotPresent
           ports:
@@ -56,10 +56,14 @@ spec:
             - name: DB_PASSWORD
               value: poc
             - name: REQUEST_LOG_HEADERS
-              # RequestLogFilter 로그와 Evidence(request/response.headers)에 남길 헤더 목록
-              # (application.yml의 request-log.headers를 덮어쓴다). Phase 2.4부터 재생 헤더 + 비교 대상만.
-              # Phase 1의 x-request-id(Envoy 생성 값)·X-Phase1-Smoke-Id·Host는 뺐다 — 실행마다 바뀌거나
-              # 스모크 전용이라 Evidence 비교에 잡음이 된다.
+              # RequestLogFilter 디버깅 로그용 헤더 목록(application.yml의 request-log.headers를 덮어쓴다).
+              # x-request-id는 Envoy가 붙인다 — Envoy 액세스 로그·Jaeger와 맞춰 보는 키다.
+              # X-Phase1-Smoke-Id·Host는 1.6 미러 스모크용(헤더 복사, -shadow 접미사 확인).
+              # Phase 2.4: 재생 헤더 3개를 추가.
+              value: Content-Type,Idempotency-Key,x-request-id,X-Phase1-Smoke-Id,Host,X-Replay-Request-Id,X-Run-Id,X-Session-Id
+            - name: EVIDENCE_HEADERS
+              # Phase 2.4: Evidence(request/response.headers)에 남길 헤더. 로그용 목록과 분리한다.
+              # x-request-id·Host는 넣지 않는다 — 실행 시점 값이라 판정 잡음이 된다.
               value: X-Replay-Request-Id,X-Run-Id,X-Session-Id,Idempotency-Key,Content-Type
             - name: JAVA_TOOL_OPTIONS
               # JVM이 시작할 때 "Picked up JAVA_TOOL_OPTIONS: ..."를 stderr에 찍는다.
