@@ -1,0 +1,13 @@
+{
+  "request": {
+    "method": "POST",
+    "urlPath": "/gateway/charge",
+    "headers": { "Idempotency-Key": { "matches": ".+" } }
+  },
+  "response": {
+    "status": 200,
+    "headers": { "Content-Type": "application/json" },
+    "body": "{\"transactionId\":\"tx-{{request.headers.Idempotency-Key}}\",\"status\":\"APPROVED\"}",
+    "transformers": ["response-template"]
+  }
+}

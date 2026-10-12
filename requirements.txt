@@ -1,0 +1,4 @@
+# 호스트 실행 도구(corpus/validate.py, engine/*) 의존성. 레포 루트 .venv 하나에 설치한다:
+#   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
+# evidence-store는 컨테이너 이미지라 evidence-store/requirements.txt를 따로 쓴다.
+jsonschema==4.25.1

@@ -1,0 +1,36 @@
+# Phase 1.5 - 격리 검증용 curl pod 두 개 (new 네임스페이스)
+#
+# 두 실패의 "서명"을 분리하기 위해 sidecar가 있는 것과 없는 것을 따로 둔다.
+#   isolation-injected     : sidecar 있음 -> REGISTRY_ONLY guardrail이 거부 (BlackHoleCluster)
+#   isolation-uninjected   : sidecar 없음 -> NetworkPolicy가 거부 (TCP 타임아웃)
+#
+# Order 앱 이미지에는 curl이 없고, 앱 컨테이너에 exec하는 것도 피한다.
+#   kubectl apply -f deploy/k8s/tools/curl-isolation-new.yaml
+apiVersion: v1
+kind: Pod
+metadata:
+  name: isolation-injected
+  namespace: new
+  labels:
+    app: isolation-injected
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: isolation-uninjected
+  namespace: new
+  labels:
+    app: isolation-uninjected
+  annotations:
+    # new는 istio-injection=enabled이므로 명시적으로 꺼야 sidecar가 붙지 않는다.
+    sidecar.istio.io/inject: "false"
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      command: ["sleep", "infinity"]

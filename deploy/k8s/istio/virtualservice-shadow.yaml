@@ -1,0 +1,50 @@
+# Phase 1.6 - Shadow 미러링 / Phase 2.3 - Evidence Store 진입 경로
+#
+# Istio는 http 라우트를 위에서부터 순서대로 매칭한다. 순서가 곧 의미다.
+#   1. /_evidence/  -> verify/evidence-store (mirror 없음). 호스트의 k6·run script가 쓰는 경로.
+#                      prefix가 겹치지 않지만 순서 의미를 고정하려고 mirror 라우트보다 앞에 둔다.
+#   2. /api/        -> legacy route + new mirror
+#
+# 게이트웨이 표면은 위 두 개뿐이다. 그 외 경로는 매칭되는 라우트가 없어 게이트웨이가 404를 낸다.
+# 미러 대상은 선언된 표면이어야 하고, 실험 밖 요청이 조용히 legacy로 들어가는 것보다 404로 드러나는 게 낫다.
+#
+# 미러는 fire-and-forget이다. new의 응답은 버려지고 클라이언트는 legacy 응답만 받는다.
+# 미러 요청의 Host에는 접미사가 붙지 않는다(Istio 1.31 기본값, decision-log D8).
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: order-shadow
+  namespace: istio-system
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - order-gateway
+  http:
+    - name: evidence-store
+      match:
+        - uri:
+            prefix: /_evidence/
+      rewrite:
+        uri: /
+      route:
+        - destination:
+            host: evidence-store.verify.svc.cluster.local
+            port:
+              number: 8080
+    - name: order-shadow
+      match:
+        - uri:
+            prefix: /api/
+      route:
+        - destination:
+            host: order.legacy.svc.cluster.local
+            port:
+              number: 8080
+      mirror:
+        host: order.new.svc.cluster.local
+        port:
+          number: 8080
+      mirrorPercentage:
+        # 모든 요청을 미러한다.
+        value: 100.0

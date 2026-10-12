@@ -1,0 +1,138 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evidence-schema-v0.json",
+  "title": "Evidence JSON v0",
+  "description": "요청 1건 × 스택 1개의 실행 Evidence. Phase 2 종료 시점의 export 형식이자 Phase 3 엔진의 입력 계약이다. 키는 (runId, replayRequestId, stack). Evidence Store는 이 스키마를 검증하지 않고 본문을 그대로 저장·반환한다 — 형식의 소유자는 이 파일이다. 외부 호출·이벤트 필드는 v0에 없으며 Phase 3에서 schemaVersion을 올려 추가한다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "runId", "replayRequestId", "sessionId", "stack", "service", "version",
+               "request", "response", "dbAccess", "callTree", "timing", "capturedAt"],
+  "properties": {
+    "schemaVersion": { "const": "v0" },
+    "runId": {
+      "description": "run 식별자. k6가 X-Run-Id로 보낸다. Store 디렉터리 이름으로 쓰이므로 안전한 문자만.",
+      "type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$"
+    },
+    "replayRequestId": {
+      "description": "corpus 요청 id. k6가 X-Replay-Request-Id로 보내고 Envoy mirror가 복사한다.",
+      "type": "string", "pattern": "^R[0-9]{6}$"
+    },
+    "sessionId": { "description": "corpus 세션 id. X-Session-Id.", "type": "string", "pattern": "^S[0-9]{3}$" },
+    "stack": { "enum": ["legacy", "new"] },
+    "service": { "description": "Phase 2는 order뿐.", "type": "string", "minLength": 1 },
+    "version": { "description": "env EVIDENCE_VERSION. 배포된 앱 버전 표식.", "type": "string", "minLength": 1 },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["method", "path", "query", "headers", "bodyHash"],
+      "properties": {
+        "method": { "type": "string", "pattern": "^[A-Z]+$" },
+        "path": { "type": "string", "pattern": "^/" },
+        "query": { "description": "원문 query string. 없으면 빈 문자열.", "type": "string" },
+        "headers": { "$ref": "#/$defs/headers" },
+        "bodyHash": { "$ref": "#/$defs/sha256" }
+      }
+    },
+    "response": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["status", "headers", "bodyHash", "body"],
+      "properties": {
+        "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+        "headers": { "$ref": "#/$defs/headers" },
+        "bodyHash": { "$ref": "#/$defs/sha256" },
+        "body": {
+          "description": "응답 본문 원문(UTF-8 문자열). 32KB 초과 시 null이고 bodyHash만 남는다.",
+          "type": ["string", "null"],
+          "maxLength": 32768
+        }
+      }
+    },
+    "dbAccess": {
+      "description": "요청 스레드에서 Hibernate StatementInspector가 본 SQL 원문. 가공·파싱·분류 없음.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["statements", "truncated"],
+      "properties": {
+        "statements": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["seq", "sql"],
+            "properties": {
+              "seq": { "description": "요청 내 1부터의 순번.", "type": "integer", "minimum": 1 },
+              "sql": {
+                "description": "Hibernate가 JDBC로 보내기 직전의 문자열(바인딩 전, 값은 ?). 2,048자 초과분은 잘린다.",
+                "type": "string", "maxLength": 2048
+              }
+            }
+          }
+        },
+        "truncated": { "description": "문장 잘림(2,048자) 또는 요청당 200건 초과로 버린 문장이 있으면 true.", "type": "boolean" }
+      }
+    },
+    "callTree": { "description": "Phase 3에서 채운다. v0에서는 항상 null — 자리만 예약.", "type": "null" },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["arrivedAt", "completedAt", "arrivedNano", "completedNano"],
+      "properties": {
+        "arrivedAt": { "type": "string", "format": "date-time" },
+        "completedAt": { "type": "string", "format": "date-time" },
+        "arrivedNano": { "description": "System.nanoTime(). 같은 pod 안에서만 비교 가능.", "type": "integer" },
+        "completedNano": { "type": "integer" }
+      }
+    },
+    "capturedAt": { "type": "string", "format": "date-time" }
+  },
+  "$defs": {
+    "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "headers": {
+      "description": "지정 목록(REQUEST_LOG_HEADERS)에 있는 헤더만. 이름은 소문자.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z0-9-]+$" },
+      "additionalProperties": { "type": "string" }
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "v0",
+      "runId": "run-20261001-1",
+      "replayRequestId": "R000003",
+      "sessionId": "S001",
+      "stack": "new",
+      "service": "order",
+      "version": "legacy-eq",
+      "request": {
+        "method": "POST",
+        "path": "/api/orders/ok-R000001/pay",
+        "query": "",
+        "headers": { "content-type": "application/json", "idempotency-key": "idem-R000003" },
+        "bodyHash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "response": {
+        "status": 200,
+        "headers": { "content-type": "application/json" },
+        "bodyHash": "sha256:4ada09846cd279c1b799435794d41a7bc54b364a527c45580d56de2a28b68ecf",
+        "body": "{\"id\":1,\"orderKey\":\"ok-R000001\",\"status\":\"PAID\",\"transactionId\":\"tx-idem-R000003\"}"
+      },
+      "dbAccess": {
+        "statements": [
+          { "seq": 1, "sql": "select o1_0.id,o1_0.order_key,o1_0.status from orders o1_0 where o1_0.order_key=?" },
+          { "seq": 2, "sql": "insert into payments (amount,order_id,transaction_id,id) values (?,?,?,?)" }
+        ],
+        "truncated": false
+      },
+      "callTree": null,
+      "timing": {
+        "arrivedAt": "2026-10-01T00:00:00.000Z",
+        "completedAt": "2026-10-01T00:00:00.042Z",
+        "arrivedNano": 0,
+        "completedNano": 42000000
+      },
+      "capturedAt": "2026-10-01T00:00:00.043Z"
+    }
+  ]
+}

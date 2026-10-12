@@ -1,0 +1,58 @@
+# Phase 1.5 - new 네임스페이스의 실제 격리 경계
+#
+# Istio REGISTRY_ONLY는 sidecar를 통과하는 트래픽만 본다. sidecar가 없거나
+# 우회하면 그대로 나간다. 그래서 경계는 Kubernetes NetworkPolicy로 만든다.
+# (kindnetd가 NetworkPolicy를 실제로 적용하는 것은 1.1 스모크에서 확인했다.)
+#
+# podSelector: {} 이므로 new의 모든 pod에 적용된다.
+# Egress만 지정하면 Ingress는 제한하지 않는다 (kubelet probe, 미러 트래픽 수신 등).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+  namespace: new
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS. 이것을 막으면 외부 호출이 "이름을 못 찾음"으로 끝나서
+    # 네트워크가 막혔다는 증거가 약해진다. 이름은 풀리되 연결이 안 되는 상태로 둔다.
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # 같은 네임스페이스 (Order, MySQL, WireMock)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: new
+    # istiod xDS. 끊기면 sidecar가 설정을 못 받는다 (제어면).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - protocol: TCP
+          port: 15012
+    # OTel Collector. 끊기면 1.4의 trace가 사라진다 (관측면).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+      ports:
+        - protocol: TCP
+          port: 4317
+    # Phase 2 검증 컴포넌트
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: verify
