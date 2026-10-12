@@ -1,8 +1,10 @@
 // Phase 2.5 - corpus 재생 + New 완료 폴링
 //
 // 요청 내용(경로·본문·키·헤더)은 전부 corpus에서 온다. 이 스크립트에는 쓰지 않는다.
-// Date.now()·random을 쓰지 않는다 — 같은 corpus는 같은 요청 바이트를 만든다.
+// 요청 본문·헤더에 실행 시점 값(Date.now()·random)을 넣지 않는다 — 같은 corpus는 같은 요청 바이트를 만든다.
+// (대기 시간 측정에는 벽시계를 쓴다. 금지 규칙은 요청에 들어가는 값에 대한 것이다.)
 // 응답 상태코드로 run을 실패시키지 않는다(404·409도 정상 진행). 판정은 Evidence로 한다. check/threshold 없음.
+// 4xx는 corpus의 의도된 경로(없는 키 404, PAID 후 cancel 409)와 exists 폴링의 404라 http_req_failed에서 뺀다(200~499 정상).
 // corpus의 expectMissing은 corpus/validate.py 전용이라 무시한다.
 //
 // 요청마다 응답을 받은 뒤 Store에 New Evidence가 도착할 때까지(exists 200) 기다리고 다음 요청을 보낸다.
@@ -36,6 +38,8 @@ const HELPER_PREFIXES = ['sent_', 'newwait_', 'status_', 'skipped_', 'degraded_'
 
 const corpus = JSON.parse(open('../corpus/corpus-v1.json'));
 
+http.setResponseCallback(http.expectedStatuses({ min: 200, max: 499 }));
+
 // 요청 id별 helper metric (VU 간 결과 수집용)
 const m = {};
 for (const session of corpus.sessions) {
@@ -56,12 +60,15 @@ export const options = {
   },
 };
 
+// 응답 수신 직후부터 Store에서 New Evidence가 보일 때까지의 벽시계 시간(ms). 타임아웃이면 null.
+// k6 관점의 대기이며 폴링 해상도 100ms. 미러 지연 자체는 2.7에서 Evidence timing
+// (new.completedAt − legacy.completedAt)으로 계산한다.
 function waitForNew(requestId) {
   const url = `${EVIDENCE_URL}/exists?runId=${RUN_ID}&requestId=${requestId}&stack=new`;
-  let waitedMs = 0;
+  const started = Date.now();
   for (;;) {
     const res = http.get(url, { tags: { name: 'evidence_exists' } });
-    waitedMs += res.timings.duration;
+    const waitedMs = Date.now() - started;
     if (res.status === 200) {
       return waitedMs;
     }
@@ -69,7 +76,6 @@ function waitForNew(requestId) {
       return null;
     }
     sleep(POLL_INTERVAL_S);
-    waitedMs += POLL_INTERVAL_S * 1000;
   }
 }
 
@@ -157,6 +163,9 @@ export function handleSummary(data) {
     baseUrl: BASE_URL,
     evidenceUrl: EVIDENCE_URL,
     // sent: 보낸 요청 id. 세션 안은 보낸 순서, 세션 사이는 corpus 순서(VUS>1이면 세션들이 병렬로 진행된다)
+    // newWaitMs: 응답 수신 직후부터 Store exists(stack=new) 200까지의 벽시계 대기. k6 관점의 대기이며 폴링 해상도 100ms.
+    //   미러 지연 자체는 2.7에서 Evidence timing(new.completedAt − legacy.completedAt)으로 계산한다
+    newWaitMsNote: 'k6 관점의 대기(응답 수신 → exists 200, 벽시계), 폴링 해상도 100ms. 미러 지연 자체는 2.7에서 Evidence timing(new.completedAt − legacy.completedAt)으로 계산',
     sent,
     degraded,
     newWaitMs,

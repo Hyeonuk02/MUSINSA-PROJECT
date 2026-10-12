@@ -225,6 +225,13 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
 - 요청 본문에 실행 시점 값 없음(`Date.now()`·random 금지). `noConnectionReuse` 기본값
 - k6 summary를 `runs/<runId>/k6-summary.json`으로
 
+구현 시 확정 (2.5)
+- k6 VU는 메모리를 공유하지 않으므로 요청 id별 helper metric(`sent_/newwait_/status_/skipped_/degraded_<id>`)을 init에서 corpus로 만들고 `handleSummary`에서 `sent`·`degraded`·`newWaitMs`·`status`로 재구성(threshold 없음). **한계**: 요청 수가 수백 건이 되면 `--out json` + 태그 기반으로 전환 검토
+- `newWaitMs`는 응답 수신 → exists(stack=new) 200까지의 벽시계 시간(타임아웃 판정도 벽시계). k6 관점의 대기이며 폴링 해상도 100ms. 미러 지연 자체는 2.7에서 Evidence timing(new.completedAt − legacy.completedAt)으로 계산. "실행 시점 값 금지"는 요청 본문·헤더에 대한 규칙이지 측정에 대한 규칙이 아니다
+- `sent` 순서: 세션 안은 보낸 순서, 세션 사이는 corpus 순서. `status` 맵은 참고용(판정은 Evidence)
+- `http.expectedStatuses({min:200,max:499})` — corpus의 404·409와 exists 폴링 404를 `http_req_failed`에서 뺀다
+- order readiness = 없는 키 조회 404(legacy는 게이트웨이, new는 클러스터 안 직접). 2.6 run.sh도 같은 기준
+
 끝난 기준
 - VU=1로 corpus 전체 실행 → Store `count` legacy == new == 요청 수, degraded 세션 0
 - 폴링이 실제로 기다리는지: New의 Evidence POST에 인위적 지연(env로 1초) 넣고 실행 → k6 iteration 시간이 그만큼 늘어남을 확인 후 지연 제거
