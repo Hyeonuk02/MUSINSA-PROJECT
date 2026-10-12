@@ -1,5 +1,7 @@
 # Phase 2 상세 계획 — 단일 파이프라인 end-to-end
 
+> **상태: 완료(2026-10-12)** — 결과는 [phase2-result.md](phase2-result.md), VU 결정은 [decision-log D13](decision-log.md)
+>
 > v3 (2026-10-11): **DB Evidence(StatementInspector, SQL 원문)를 Phase 2에 포함**, Evidence JSON v0에 `dbAccess`·`callTree` 추가, Evidence 전송 큐 유실 금지(spill)·graceful shutdown, 2.8을 **A/A run**으로 명명, 2.3 전 스택 간 DB 네트워크 격리 실측 추가. 2.1 완료(구현 시 확정 사항 반영).
 > v2 (검토 반영): 2.8 canonical JSON 비교·비교 유지 필드 명확화·주장 완화, 2.1 WireMock 템플릿 문법 정정, 2.6 kubectl 명령 정정
 >
@@ -304,6 +306,10 @@ for i in 1..N:
   - **dbAccess**: 문장 **개수·순서**와 각 `sql`의 정규화 문자열 일치. 정규화 = 소문자화, 연속 공백을 1개로, Hibernate alias(`[a-z]+\d+_\d+`) → `_a_` 치환. 원문 그대로 비교 금지(alias 생성 순서가 바뀔 수 있음). **이 정규화는 이 스크립트에만 둔다 — 앱에 넣지 않는다**
   - 차이 나는 requestId 집합(response / dbAccess 구분)을 출력. 이건 Phase 3 Normalization의 자리표시자이지 엔진이 아님
 - `run.sh --iterations 3 --vus 3` → run 3개 → 각 run의 diff 집합 비교
+
+구현 시 확정 (2.8)
+- `engine/diff_v0.py`(입력 계약은 `engine/common.py` 공용). 키 이름이 정확히 `id`인 필드를 모든 깊이에서 제거, key 정렬, 배열 순서 유지, canonical 비교. body가 null이거나 JSON이 아니면 bodyHash. dbAccess는 개수·순서·truncated + sql 정규화(소문자·공백 축약·alias → `_a_`)
+- 결과: p26-1..3(VU=1)·p28-1..3(VU=3) 모두 diff ∅, 집합 동일. **VU 결정: 기본 VU=3, 진단용 VU=1** — [decision-log D13](decision-log.md), [phase2-result.md](phase2-result.md)
 
 끝난 기준
 - 세 run의 diff 집합이 **동일**(코드가 같으므로 공집합 기대). Undelivered 0, degraded 0. 결과는 "현재 corpus·세션 독립 조건에서 VU=3 반복 실행이 안정적"으로 기록(일반화 주장 금지)

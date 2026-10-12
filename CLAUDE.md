@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 전체 프로젝트 설계는 docs/architecture.md 를 기준으로 한다.
-현재는 Phase 2만 진행한다. Phase 1은 완료됐다 (tag phase1-done, docs/phase1-result.md).
+Phase 1은 완료됐다 (tag phase1-done, docs/phase1-result.md). Phase 2도 완료됐다 (docs/phase2-result.md).
 
 ## 프로젝트 방향
 
@@ -13,37 +13,23 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 
 목표는 사람이 직접 검토해야 하는 범위를 줄이는 것이다.
 
-## 현재 Phase: Phase 2 — 단일 파이프라인 end-to-end
+## Phase 2 — 단일 파이프라인 end-to-end: 완료 (2026-10-12)
 
-Phase 1 인프라 위에서 k6 → Istio 미러 → Legacy/New → Evidence 필터 → Evidence Store → export JSON을
-한 줄로 관통시킨다. 판정 엔진은 만들지 않는다.
-종료 시점의 Evidence JSON 형식이 Phase 3 엔진의 입력 계약이 된다.
+결과: docs/phase2-result.md. 계획: docs/phase2-plan.md. A/A(VU=1 ×3, VU=3 ×3) diff ∅.
+종료 시점의 Evidence JSON(runs/<runId>/{legacy,new,k6-summary,run-meta}.json)이 Phase 3 엔진의 입력 계약이다.
 
-### 2.1 Order API를 business key 기반으로 — ✅ 완료
-- POST /api/orders {orderKey}, GET /api/orders/by-key/{orderKey}, POST /api/orders/{orderKey}/pay (Idempotency-Key), cancel
-- WireMock 결제 스텁을 legacy/new 양쪽에 (deploy/k8s/base/wiremock.yaml 공유, transactionId = tx-{Idempotency-Key})
-
-### 2.2 corpus v1
-- 독립 세션 3개, 각 세션은 생성→조회→결제→조회, 에러 경로 포함. JSON + 스키마 검증
-
-### 2.3 전 — 스택 간 DB 네트워크 격리 실측
-- new(비주입·주입) → mysql.legacy, legacy → mysql.new 3306 연결 실패 확인 → isolation-proof.md "스택 간 DB 격리"
-
-### 2.3 Evidence Store v0 + Evidence JSON v0
-- verify 네임스페이스, POST/exists/count/export. 포트명 http-evidence
-- Gateway에 /_evidence/ 라우트(mirror 없음, /api 라우트보다 앞)
-- Evidence JSON v0에 dbAccess {statements[{seq, sql}], truncated}, callTree(null 예약) 포함
-
-### 2.4 Order 앱 Evidence 필터 + ReplayContext + StatementInspector
-- request/response 캡처 → 응답 커밋 후 비동기 POST, X-Evidence-Internal: true
-- Evidence POST 클라이언트는 java.net.http.HttpClient + 해당 계측만 off
-- ReplayContext(ThreadLocal) + EvidenceStatementInspector가 요청 스레드의 SQL 원문 기록
-- 전송 큐 유실 금지(spill), graceful shutdown + flush 훅
-
-### 2.5 k6 VU=1 + 요청당 New 완료 폴링
-### 2.6 run script — S0 리셋 → k6 → flush barrier(spill 회수 포함, 다음 reset 전) → export
-### 2.7 동일성·pairing 검증 (전건 대조, dbAccess 제외)
-### 2.8 A/A run — VU=3 × 3회 반복 → Response·dbAccess diff 집합 동일 확인. 실패 시 VU=1
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| 2.1 | business key Order API + WireMock 결제 스텁 양쪽 | 완료 |
+| 2.2 | corpus v1 (세션 3·요청 14·에러 경로 2) + schema·validate.py | 완료 |
+| 2.3 전 | 스택 간 DB 네트워크 격리 실측 + mysql ingress NetworkPolicy | 완료 |
+| 2.3 | Evidence Store v0 + Evidence JSON v0, 게이트웨이 표면 /api/·/_evidence/ | 완료 |
+| 2.4a | ReplayContext, EvidenceFilter, StatementInspector (poc.evidence) | 완료 |
+| 2.4b | 전송 큐 유실 금지(재시도·spill), graceful shutdown, spill-recover | 완료 |
+| 2.5 | k6 corpus 재생 + New 완료 폴링 | 완료 |
+| 2.6 | run.sh — preflight·reset·barrier·export | 완료 |
+| 2.7 | verify_sameness — pairing·request 동일성 | 완료 |
+| 2.8 | diff_v0 + A/A run VU=3 | 완료 |
 
 ## 확정 사항
 
@@ -56,6 +42,7 @@ Phase 1 인프라 위에서 k6 → Istio 미러 → Legacy/New → Evidence 필�
 - flush barrier: Store count(+spill 회수분) == 기대 건수 확인 후 export·리셋
 - Legacy/New 앱 코드 동일. 고정 시각 유지. S0 리셋 = MySQL rollout restart
 - legacy/new의 검증 대상 서비스 pod(order, 이후 coupon)는 sidecar 주입 필수 (MySQL server-first + PERMISSIVE mTLS 제약, docs/isolation-proof.md "관찰"). probe/tooling/verify pod에는 적용하지 않음
+- A/A 표준 조건은 VU=3, 진단용 VU=1 (decision-log D13). diff가 나오면 같은 corpus를 VU=1로 재실행해 동시성 잡음과 실제 차이를 분리
 - Phase 1 교훈 적용: Service 포트명 접두사(http-/grpc-), 멀티아치 이미지 로드 절차, 런타임 다운로드 금지, new는 default-deny egress(verify 허용됨)
 
 ## 하지 말 것
