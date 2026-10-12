@@ -1,12 +1,12 @@
 #!/usr/bin/env bash
 # Phase 2.4b - Evidence spill 회수
 #
-# order pod가 Store로 보내지 못한 Evidence는 /var/evidence/spill/<runId>/<replayRequestId>-<stack>.json에
-# Store로 보낼 바이트 그대로 남는다(hostPath, 노드 1개 전제). 이 스크립트는 그 파일을 읽어
+# order pod가 Store로 보내지 못한 Evidence는 (pod 안) /var/evidence/spill/<runId>/<replayRequestId>-<stack>.json에
+# Store로 보낼 바이트 그대로 남는다(스택별 hostPath: 노드 /var/evidence/spill/<stack>, 노드 1개 전제). 이 스크립트는 그 파일을 읽어
 # 게이트웨이 경유 /_evidence/evidence로 POST하고, 200이면 pod에서 지운다.
 # 멱등: Store는 같은 키를 덮어쓴다. 2.6 run.sh의 flush barrier가 호출한다.
 #
-# hostPath를 legacy/new pod가 함께 보므로 각 스택 pod는 자기 stack 파일(*-<stack>.json)만 처리한다.
+# 각 스택 pod는 자기 hostPath만 보지만, 방어적으로 자기 stack 파일(*-<stack>.json)만 처리한다.
 #
 # 사용: k6/spill-recover.sh --run-id <runId>
 # env:  EVIDENCE_URL (기본 http://localhost/_evidence)

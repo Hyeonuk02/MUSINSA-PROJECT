@@ -328,6 +328,8 @@ ingress:
 
 **통과**: 교차 스택 세 경우 모두 연결 실패, 대조군 정상.
 
+spill 디렉터리도 스택별 hostPath로 분리(`/var/evidence/spill/legacy`·`/var/evidence/spill/new`, Phase 2.4b), 공유 자원 없음.
+
 ## 관찰
 
 격리 판정과는 무관하지만 측정 중 드러난 것. 운영 절차·확정 사항에 반영했다.

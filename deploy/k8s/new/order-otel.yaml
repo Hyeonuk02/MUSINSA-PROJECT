@@ -28,3 +28,9 @@ spec:
             # 비즈니스 외부 호출(RestClient → WireMock)은 계속 계측된다.
             - name: OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED
               value: "false"
+      volumes:
+        # Phase 2.4b: spill 노드 경로를 스택별로 분리(컨테이너 안 경로는 /var/evidence/spill 그대로)
+        - name: evidence-spill
+          hostPath:
+            path: /var/evidence/spill/new
+            type: DirectoryOrCreate

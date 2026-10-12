@@ -194,12 +194,13 @@ Phase 1.3a는 데이터 독립성(new 리셋 시 legacy 불변)만 확인했다.
 
 **(d) 전송 큐 — 유실 금지**
 - 비동기 POST 실패 시 재시도 3회. 큐 상한 도달 또는 재시도 소진 시 **버리지 않는다** — 로컬 파일 `/var/evidence/spill/<runId>/<replayRequestId>-<stack>.json`로 spill
-- spill 위치는 **hostPath**(kind 노드 `/var/evidence/spill`, `DirectoryOrCreate`)를 order pod의 `/var/evidence/spill`에 마운트. emptyDir은 pod 교체(rollout restart) 시 사라져 "Store 또는 spill에 존재"가 성립하지 않는다. 파일명에 stack이 있어 두 스택이 같은 노드를 써도 충돌 없음. 운영이면 PVC. kind 노드 1개 전제(여러 노드면 회수가 어긋남)
+- spill 위치는 **스택별 hostPath**(kind 노드 `/var/evidence/spill/legacy`·`/var/evidence/spill/new`, `DirectoryOrCreate`)를 order pod의 `/var/evidence/spill`에 마운트(컨테이너 경로는 동일, overlay가 노드 경로만 덮어씀). emptyDir은 pod 교체(rollout restart) 시 사라져 "Store 또는 spill에 존재"가 성립하지 않는다. 두 스택은 노드 디렉터리도 공유하지 않는다. 운영이면 PVC. kind 노드 1개 전제(여러 노드면 회수가 어긋남)
 - run script의 flush barrier가 spill 파일까지 회수한 뒤 기대 건수를 센다(2.6)
 
 **(e) graceful shutdown**
 - `server.shutdown=graceful`, `spring.lifecycle.timeout-per-shutdown-phase=20s`
 - 종료 훅에서 Evidence 큐 flush(미전송분은 spill)
+- 구현(2.4b): 웹 서버 graceful shutdown 이후 최대 10초 drain. 이미 큐·예약에 있던 건은 계속 처리하되, shutdown 이후 실패한 건의 다음 재시도는 받지 않고 즉시 spill한다 — 종료는 마감이 있는 작업이고 spill은 유실이 아니라 회수 경로다
 - k8s `terminationGracePeriodSeconds: 30` (앱 타임아웃보다 길게)
 - 근거: S0 리셋이 `rollout restart`라 매 run마다 pod가 종료됨 → 마지막 요청들의 Evidence가 큐에 남은 채 죽을 수 있음
 
@@ -311,7 +312,7 @@ docs/                    evidence-schema-v0.json, phase2-result.md, isolation-pr
 - `response.body` 저장 상한(32KB 기본)과 초과 정책
 - 완료 폴링 타임아웃(10초 기본)·flush barrier 타임아웃(30초 기본)
 - degraded 세션 처리: 남은 요청 건너뜀(기본) vs run 전체 중단
-- ~~spill 디렉터리 위치~~ → hostPath(kind 노드 `/var/evidence/spill`)로 확정 (2.4(d))
+- ~~spill 디렉터리 위치~~ → 스택별 hostPath(kind 노드 `/var/evidence/spill/<stack>`)로 확정 (2.4(d))
 - `terminationGracePeriodSeconds`·shutdown 타임아웃 값(30s/20s 기본)
 - ~~WireMock 응답의 결정론적 transactionId 생성 방식~~ → 2.1에서 `tx-{Idempotency-Key}`로 확정
 - 2.8에서 diff 집합이 다를 때 VU=1로 내릴지, 원인이 유실이면 폴링 타임아웃만 늘릴지

@@ -111,11 +111,13 @@ spec:
         - name: otel-agent
           emptyDir: {}
         # Phase 2.4: Evidence 전송 실패분(spill). pod가 교체(rollout restart)돼도 남아야 회수할 수 있어
-        # emptyDir이 아니라 노드 hostPath다. 파일명에 stack이 있어 legacy/new가 같은 노드 디렉터리를 써도 충돌 없음.
+        # emptyDir이 아니라 노드 hostPath다. 노드 경로는 overlay가 스택별로 덮어쓴다
+        # (legacy → /var/evidence/spill/legacy, new → /var/evidence/spill/new) — 두 스택이 노드 디렉터리도 공유하지 않는다.
+        # 컨테이너 안 경로는 둘 다 /var/evidence/spill. base 값은 overlay 없이 배포될 때의 자리표시자.
         # kind 노드 1개 전제(노드가 여럿이면 pod가 다른 노드에 떠 회수가 어긋난다). 운영이면 PVC.
         - name: evidence-spill
           hostPath:
-            path: /var/evidence/spill
+            path: /var/evidence/spill/unset
             type: DirectoryOrCreate
 ---
 apiVersion: v1
