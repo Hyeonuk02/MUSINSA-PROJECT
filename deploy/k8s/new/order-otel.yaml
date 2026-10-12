@@ -1,4 +1,4 @@
-# Phase 1.4 - new 스택의 OTel 식별자.
+# Phase 1.4 - new 스택의 OTel 식별자. / Phase 2.4 - new 스택의 Evidence 설정.
 # agent artifact는 legacy/new가 동일하고(digest 고정), 구분은 이 두 값으로만 한다.
 apiVersion: apps/v1
 kind: Deployment
@@ -14,3 +14,17 @@ spec:
               value: order-new
             - name: OTEL_RESOURCE_ATTRIBUTES
               value: service.namespace=new
+            # Phase 2.4: Evidence 수집기 설정 (poc.evidence, env로만 받는다)
+            - name: EVIDENCE_STORE_URL
+              value: http://evidence-store.verify.svc.cluster.local:8080
+            - name: EVIDENCE_STACK
+              value: new
+            - name: EVIDENCE_SERVICE
+              value: order
+            - name: EVIDENCE_VERSION
+              # 배포된 앱 버전 표식. Phase 2는 legacy/new 코드가 같아 new는 "legacy-eq"(A/A).
+              value: legacy-eq
+            # Evidence POST는 java.net.http.HttpClient — 그 계측만 꺼서 앱 span에 섞이지 않게 한다.
+            # 비즈니스 외부 호출(RestClient → WireMock)은 계속 계측된다.
+            - name: OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED
+              value: "false"
