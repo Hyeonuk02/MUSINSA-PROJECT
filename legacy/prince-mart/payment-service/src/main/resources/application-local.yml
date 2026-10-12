@@ -48,3 +48,16 @@ spring.kafka:
   bootstrap-servers: ${KAFKA_BOOTSTRAP_SERVERS}
 app.kafka:
   payment-events-topic: payment-events
+
+# [LEGACY_CHANGES L-I2] Evidence 계측(com.pm.evidence, 자동 구성). Store 주소와 스택 이름은 env로 받는다.
+evidence:
+  enabled: ${EVIDENCE_ENABLED:true}
+  store-url: ${EVIDENCE_STORE_URL:}
+  stack: ${EVIDENCE_STACK:}
+  service: payment
+  headers: Content-Type,X-User-Id,X-Replay-Request-Id,X-Run-Id,X-Session-Id,baggage,Host,Idempotency-Key
+# DB 접근: Hibernate가 준비하는 SQL을 요청 단위로 기록한다(SQL은 바꾸지 않음).
+spring.jpa.properties.hibernate.session_factory.statement_inspector: com.pm.evidence.EvidenceStatementInspector
+# 발행 이벤트: 요청 처리 중 보낸 Kafka 레코드를 Evidence에 기록한다(레코드는 바꾸지 않음).
+spring.kafka.producer.properties:
+  "[interceptor.classes]": com.pm.evidence.kafka.EvidenceProducerInterceptor

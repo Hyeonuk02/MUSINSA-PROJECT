@@ -96,6 +96,32 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
   코드에서 호출되지 않는다. 비즈니스 로직은 건드리지 않고 이 성질을 문서화한다(docs/legacy-decision-log.md L5).
 - `Refund`는 upstream 코드에 생성 경로가 없다(엔티티와 리포지토리만 있음). 교체만 하고 실행 확인 대상에서 뺀다.
 
+### L-I2. Evidence 계측 (`com.pm.evidence`)
+
+- 이유: 요청 1건의 응답·DB 접근·나가는 호출·이벤트·예외·처리 시간을 replayRequestId로 남겨 legacy/new를 비교한다(v10.1 §5).
+  비즈니스 결과는 바꾸지 않는다(실측: 계측 전후 시나리오 26항목의 응답·DB·외부 호출 동일).
+- 원본: `legacy/prince-mart/evidence/{core,kafka}/` 한 곳. `evidence/sync.sh`가 서비스에 같은 바이트로 복사하고
+  `--check`로 확인한다. 서비스마다 Docker 빌드 컨텍스트가 따로라 공유 모듈 대신 복사본을 둔다.
+  - core(`com.pm.evidence`) → order, coupon, payment
+  - kafka(`com.pm.evidence.kafka`) → order, payment (coupon은 Kafka를 쓰지 않는다)
+- 신규 파일(서비스 코드는 수정하지 않음, Spring Boot 자동 구성으로 붙는다)
+  - `src/main/java/com/pm/evidence/*.java` (11개), `com/pm/evidence/kafka/*.java` (3개, order·payment)
+  - `src/main/resources/META-INF/spring/org.springframework.boot.autoconfigure.AutoConfiguration.imports`
+- 구성 요소
+  - `EvidenceFilter`(HTTP), `EvidenceRecordInterceptor`(Kafka consume): 요청 1건 = Evidence 1건, replayRequestId가 없으면 기록하지 않음
+  - `EvidenceStatementInspector`: Hibernate SQL을 (동작, 테이블, 횟수)로 요약, 원문은 참고용
+  - `EvidenceFeignCapability`: Feign 호출 순서·method·논리 URL·status
+  - `EvidenceProducerInterceptor`: 발행한 Kafka 레코드
+  - `EvidenceErrorRecorder`: 예외 class (기록만 하고 null 반환 → 기존 GlobalExceptionHandler가 그대로 처리)
+  - `EvidenceSender`: 응답 후 큐 → 전용 스레드가 Store로 POST(`X-Evidence-Internal: true`). Store POST는 비즈니스 trace와 분리된다
+  - `Json`: 의존성 없는 직렬화(서비스마다 Jackson 버전이 달라 Evidence 표기가 달라지지 않게)
+- 설정(`application-local.yml`): `evidence.*`(enabled, store-url, stack, service, headers),
+  `spring.jpa.properties.hibernate.session_factory.statement_inspector`,
+  payment만 `spring.kafka.producer.properties[interceptor.classes]`
+- Boot 3(payment)·Boot 4(order, coupon)에서 위치가 같은 Spring 코어 API만 쓴다(Filter 빈은 `Ordered`로 자동 등록,
+  Boot 4에서 패키지가 바뀐 `FilterRegistrationBean` 등은 쓰지 않음). OTel API에 의존하지 않는다.
+- 스키마: [`docs/evidence-schema-v0.md`](../../docs/evidence-schema-v0.md)
+
 ---
 
 ## F — 기능 패치

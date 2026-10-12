@@ -1,0 +1,2 @@
+com.pm.evidence.EvidenceAutoConfiguration
+com.pm.evidence.kafka.EvidenceKafkaAutoConfiguration

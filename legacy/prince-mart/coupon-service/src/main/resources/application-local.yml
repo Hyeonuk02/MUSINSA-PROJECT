@@ -33,3 +33,13 @@ eureka:
 # [LEGACY_CHANGES L-I1] 시각 고정. 비어 있으면 시스템 시각(UTC). config/ClockConfig 참조.
 app:
   fixed-clock: ${APP_FIXED_CLOCK:}
+
+# [LEGACY_CHANGES L-I2] Evidence 계측(com.pm.evidence, 자동 구성). Store 주소와 스택 이름은 env로 받는다.
+evidence:
+  enabled: ${EVIDENCE_ENABLED:true}
+  store-url: ${EVIDENCE_STORE_URL:}
+  stack: ${EVIDENCE_STACK:}
+  service: coupon
+  headers: Content-Type,X-User-Id,X-Replay-Request-Id,X-Run-Id,X-Session-Id,baggage,Host,Idempotency-Key
+# DB 접근: Hibernate가 준비하는 SQL을 요청 단위로 기록한다(SQL은 바꾸지 않음).
+spring.jpa.properties.hibernate.session_factory.statement_inspector: com.pm.evidence.EvidenceStatementInspector
