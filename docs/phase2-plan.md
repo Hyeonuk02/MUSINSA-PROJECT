@@ -267,6 +267,7 @@ for i in 1..N:
 - order readiness = 없는 키 조회(`/api/orders/by-key/ok-readiness-check`) 404. legacy는 게이트웨이, new는 `new/isolation-injected`에서 클러스터 안 직접
 - WireMock 3.13.1에는 `POST /__admin/requests/reset`이 없다(404) → request journal 비우기는 `DELETE /__admin/requests`. 게이트웨이를 거치지 않고 tooling pod(`legacy/mesh-check`, `new/isolation-injected`)에서 kubectl exec
 - barrier 기대 건수 = `k6-summary.json`의 `sent` 길이. `sent`에는 실제로 보낸 요청만 있고 degraded 세션의 건너뛴 요청은 들어가지 않으므로 "발송 건수 − 건너뛴 건수"와 같다(두 번 빼지 않는다). 미달 시 누락 id = sent − Store export, export만 하고 exit 1
+- 복구 절차: preflight가 인증서 만료로 막히면 `kubectl rollout restart deployment/istio-ingressgateway -n istio-system`(order pod도 만료면 같은 방식으로 `deployment/order -n legacy|new`) 후 재실행. 자동 복구는 run.sh에 넣지 않는다
 - run-meta 이미지 식별자는 노드 containerd의 `imageRef`(이미지 config digest, `crictl ps`)와 매니페스트의 image 문자열. 레지스트리 manifest digest가 아니다(로컬 빌드 이미지는 kind load로만 존재)
 
 끝난 기준
