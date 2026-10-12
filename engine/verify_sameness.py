@@ -28,11 +28,9 @@ import statistics
 import sys
 from pathlib import Path
 
-from jsonschema import Draft202012Validator, FormatChecker
+from jsonschema import Draft202012Validator
 
-ROOT = Path(__file__).resolve().parent.parent
-SCHEMA = ROOT / "docs" / "evidence-schema-v0.json"
-STACKS = ("legacy", "new")
+from common import STACKS, contract_violations, load_run, load_validator
 # deploy/k8s/base/order.yaml의 EVIDENCE_HEADERS와 같은 목록(Evidence에는 소문자 키로 남는다).
 # 엔진은 앱·매니페스트를 import하지 않는다 — 계약은 이 목록과 evidence-schema-v0.json이다.
 EVIDENCE_HEADERS = ("x-replay-request-id", "x-run-id", "x-session-id", "idempotency-key", "content-type")
@@ -87,10 +85,8 @@ def stats_ms(values: list[float]) -> str:
 
 def verify(run_dir: Path, validator: Draft202012Validator) -> RunReport:
     report = RunReport(run_dir)
-    run_id = run_dir.name
     try:
-        summary = json.loads((run_dir / "k6-summary.json").read_text(encoding="utf-8"))
-        records = {s: json.loads((run_dir / f"{s}.json").read_text(encoding="utf-8")) for s in STACKS}
+        summary, records = load_run(run_dir)
     except (OSError, json.JSONDecodeError) as e:
         report.failed = True
         report.lines.append(f"  FAIL  입력 파일을 읽을 수 없다: {e}")
@@ -98,17 +94,7 @@ def verify(run_dir: Path, validator: Draft202012Validator) -> RunReport:
 
     # 1. 입력 계약
     total = sum(len(v) for v in records.values())
-    bad = []
-    for stack, recs in records.items():
-        for i, rec in enumerate(recs):
-            errors = [e.message for e in validator.iter_errors(rec)]
-            if not errors:
-                if rec["runId"] != run_id:
-                    errors.append(f"runId={rec['runId']} (run 디렉터리 {run_id})")
-                if rec["stack"] != stack:
-                    errors.append(f"stack={rec['stack']} ({stack}.json)")
-            if errors:
-                bad.append(f"{stack}.json[{i}] {rec.get('replayRequestId', '?')}: {errors[0]}")
+    bad = contract_violations(run_dir, records, validator)
     report.check("입력 계약 (schema·runId·stack)", total - len(bad), total, bad[:10])
     if bad:
         report.lines.append("        입력 계약 위반 — 이후 검사를 하지 않는다")
@@ -173,7 +159,7 @@ def main(argv: list[str]) -> int:
     args = parser.parse_args(argv)
 
     try:
-        validator = Draft202012Validator(json.loads(SCHEMA.read_text(encoding="utf-8")), format_checker=FormatChecker())
+        validator = load_validator()
     except (OSError, json.JSONDecodeError) as e:
         print(f"ERROR: schema를 읽을 수 없다: {e}", file=sys.stderr)
         return 2
