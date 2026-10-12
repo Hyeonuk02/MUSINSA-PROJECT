@@ -252,7 +252,7 @@ for i in 1..N:
            kubectl rollout restart deployment/mysql -n new          (kubectl은 -n을 하나만 받음 — 네임스페이스별로 따로)
            kubectl rollout status  deployment/mysql -n legacy
            kubectl rollout status  deployment/mysql -n new
-           → order readiness 대기(양쪽) → WireMock __admin/requests/reset 양쪽
+           → order readiness 대기(양쪽) → WireMock request journal 비움 양쪽(DELETE /__admin/requests)
   k6:      RUN_ID=runId VUS=V k6 run k6/run.js
   barrier: (1) 양쪽 order pod의 spill 디렉터리에 runId 파일이 있으면 Store로 재전송 후 삭제
            (2) /_evidence/count?runId&stack=legacy 와 new 가 기대 건수(= 발송 건수 − degraded 세션의 건너뛴 건수)와 같아질 때까지 폴링(최대 30초). 미달 시 누락 requestId 목록 출력 후 중단
@@ -261,6 +261,13 @@ for i in 1..N:
 - preflight 근거: 호스트 sleep 후 워크로드 인증서 만료로 메시 전체 503 UC가 난 실측(`docs/isolation-proof.md` "관찰")
 - barrier(spill 회수)는 **반드시 다음 iteration의 reset 전**에 끝나야 한다(spill은 hostPath라 pod 재시작에도 남지만, run 경계를 지키기 위해 다음 run 전에 회수)
 - `runs/`는 `.gitignore`(결과는 docs에 요약만)
+
+구현 시 확정 (2.6)
+- preflight(루프 전 1회, 실패 시 exit 1·자동 복구 없음): `kubectl get nodes` / `istioctl proxy-config secret`으로 ingressgateway·order legacy·order new의 default 인증서 `VALID CERT=true`·`NOT AFTER > 지금`(istioctl 없음·해석 불가도 실패, fail-closed) / 게이트웨이 `/_evidence/count?runId=preflight` 200 / `corpus/validate.py`
+- order readiness = 없는 키 조회(`/api/orders/by-key/ok-readiness-check`) 404. legacy는 게이트웨이, new는 `new/isolation-injected`에서 클러스터 안 직접
+- WireMock 3.13.1에는 `POST /__admin/requests/reset`이 없다(404) → request journal 비우기는 `DELETE /__admin/requests`. 게이트웨이를 거치지 않고 tooling pod(`legacy/mesh-check`, `new/isolation-injected`)에서 kubectl exec
+- barrier 기대 건수 = `k6-summary.json`의 `sent` 길이. `sent`에는 실제로 보낸 요청만 있고 degraded 세션의 건너뛴 요청은 들어가지 않으므로 "발송 건수 − 건너뛴 건수"와 같다(두 번 빼지 않는다). 미달 시 누락 id = sent − Store export, export만 하고 exit 1
+- run-meta 이미지 식별자는 노드 containerd의 `imageRef`(이미지 config digest, `crictl ps`)와 매니페스트의 image 문자열. 레지스트리 manifest digest가 아니다(로컬 빌드 이미지는 kind load로만 존재)
 
 끝난 기준
 - `--iterations 3 --vus 1` 실행 → run 3개, 각각 legacy.json/new.json, 누락 0, run-meta 기록
