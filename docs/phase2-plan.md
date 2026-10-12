@@ -294,7 +294,7 @@ docs/                    evidence-schema-v0.json, phase2-result.md, isolation-pr
 
 ## 추가 결정 필요 (구현 중 정하지 말고 질문)
 
-- Evidence Store 구현 언어 — 기본 Python(FastAPI). Java로 통일하고 싶으면 그때 결정
+- ~~Evidence Store 구현 언어~~ → Python(FastAPI)으로 확정 (decision-log D12: 앱 밖은 Python)
 - `response.body` 저장 상한(32KB 기본)과 초과 정책
 - 완료 폴링 타임아웃(10초 기본)·flush barrier 타임아웃(30초 기본)
 - degraded 세션 처리: 남은 요청 건너뜀(기본) vs run 전체 중단

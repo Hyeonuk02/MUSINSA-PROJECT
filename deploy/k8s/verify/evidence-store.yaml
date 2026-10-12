@@ -1,0 +1,68 @@
+# Phase 2.3 - Evidence Store v0
+#
+# verify 네임스페이스는 istio-injection=disabled (Phase 1 결정).
+# 검증 대상 서비스가 아니므로 sidecar 주입 필수 규칙(CLAUDE.md) 대상이 아니다.
+# 저장은 emptyDir — pod가 재시작돼도 컨테이너 재시작이면 남지만 pod 재생성이면 사라진다.
+# Phase 2는 run마다 export로 로컬에 회수하므로 충분하다.
+#
+# 접근 경로
+#   클러스터 안: http://evidence-store.verify.svc.cluster.local:8080/...
+#   호스트:      http://localhost/_evidence/...  (Gateway VirtualService, mirror 없음)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: evidence-store
+  namespace: verify
+  labels:
+    app: evidence-store
+spec:
+  replicas: 1   # 인덱스가 프로세스 메모리에 있다 — 1개 고정
+  strategy:
+    type: Recreate
+  selector:
+    matchLabels:
+      app: evidence-store
+  template:
+    metadata:
+      labels:
+        app: evidence-store
+      annotations:
+        sidecar.istio.io/inject: "false"
+    spec:
+      containers:
+        - name: evidence-store
+          image: evidence-store:phase2
+          # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: http-evidence
+              containerPort: 8080
+          env:
+            - name: EVIDENCE_DATA_DIR
+              value: /data
+          readinessProbe:
+            tcpSocket:
+              port: 8080
+            periodSeconds: 5
+          volumeMounts:
+            - name: data
+              mountPath: /data
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: evidence-store
+  namespace: verify
+  labels:
+    app: evidence-store
+spec:
+  selector:
+    app: evidence-store
+  ports:
+    # Istio는 포트 이름 접두사로 프로토콜을 판별한다 (Phase 1 교훈). http- 필수.
+    - name: http-evidence
+      port: 8080
+      targetPort: 8080
