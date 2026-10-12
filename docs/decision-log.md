@@ -363,3 +363,23 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 
 **단서**
 현재 corpus(세션 3개, 세션 간 상태 공유 없음) 조건에서의 결과이며 일반화하지 않는다.
+
+### D14. Call Graph는 동적 수집·합성으로 한다 — 별도 도구 없음 (2026-10-12)
+
+결정
+- 정적 Call Graph 도구는 범위에서 뺀다. 동적 Call Graph = Legacy A/A run의 Evidence `callTree`를 합친 "엔드포인트 → 거친 클래스·메서드" 맵.
+- 수집: Spring AOP `@Around`, 포인트컷 `poc.order..*` 빈(컨트롤러·서비스·리포지토리·클라이언트), `poc.evidence` 제외. 기록 단위는 빈 메서드(seq, depth, class, method, threw), 요청당 상한 500노드, 초과 시 truncated. Evidence 스키마 v1 `callTree`. 서비스 간 간선은 존재 = Envoy access log·span, 요청 귀속 = 재생 헤더 전파·OTel Baggage, 미귀속은 따로 집계.
+- 판정 단위는 클래스: git diff로 바뀐 .java → FQCN → 맵에서 그 클래스를 거친 엔드포인트 = 영향 API. 맵에 없는 변경 클래스는 원인 불문 "미관측"으로 취급: 정적 참조 폐포(참조·implements/extends, 깊이 ≤ 3)가 맵의 클래스에 닿으면 그 엔드포인트로 확장, 닿지 못하거나 모호하면 전역 영향. 비클래스 변경(설정·SQL·빌드)과 삭제·개명 클래스는 전역 영향. 검증 레이어 변경은 제외. 모르면 포함(fail-closed). 산출물에 미관측 변경 클래스 수·전역 영향 발동 여부 기록.
+- callTree는 pre-order + depth. 캡처는 ThreadLocal 스택(진입 push, finally pop, catch에서 threw)으로 depth를 보장하고, 엔진은 `depth[i] ≤ depth[i−1]+1` 불변식을 입력 계약으로 검사.
+- 운용: 기본 Tag 모드(전체 미러 + impactScope 태그). Filter 모드는 평가 arm B2로만 쓴다. 지표는 셋으로 가른다: 결함 탐지율(결함 카탈로그 기준, 관측 독립, 주 지표) / Observed-diff Recall(전체 미러의 관측 diff 기준) / 재생 수 감소율. corpus 커버리지는 맥락 지표.
+- Phase 3 = callTree 기록(스키마 v1), Phase 4 = 합성·diff 대조·Tag/Filter·평가. 세부: docs/call-graph.md
+
+근거
+- 현업 APM은 agent 계측(Pinpoint), 학계는 AspectJ 프로브(Kieker), 영향 분석은 클래스 단위 동적 의존성(Ekstazi)으로 충분하다는 선례. Spring AOP는 빈 경계만 보지만 클래스 단위 판정에는 영향 없고, 비-빈 클래스는 정적 참조로 보정.
+- 정적 분석의 DI/AOP/리플렉션 unsoundness 보정 비용 대비, 이미 돌리는 run에서 실제 경로가 공짜로 나온다.
+
+한계
+- 맵은 corpus가 실행한 경로만 안다. corpus 밖 API는 "정보 없음"이며 Tag 모드에서는 전부 미러된다.
+- 수집 범위(AOP = 빈만, OTel = 계측 라이브러리만, Envoy = 메시 경유 호출만)는 docs/call-graph.md 3절에 명시.
+- Observed-diff Recall은 관측된 차이에 대한 지표이며 미실행 경로는 분모에 없다. 관측 독립 지표는 결함 탐지율뿐.
+- 교수님 확인 필요: "Call Graph"를 동적 수집·합성으로 해석해도 되는지.

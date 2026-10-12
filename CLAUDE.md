@@ -43,6 +43,7 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 - Legacy/New 앱 코드 동일. 고정 시각 유지. S0 리셋 = MySQL rollout restart
 - legacy/new의 검증 대상 서비스 pod(order, 이후 coupon)는 sidecar 주입 필수 (MySQL server-first + PERMISSIVE mTLS 제약, docs/isolation-proof.md "관찰"). probe/tooling/verify pod에는 적용하지 않음
 - A/A 표준 조건은 VU=3, 진단용 VU=1 (decision-log D13). diff가 나오면 같은 corpus를 VU=1로 재실행해 동시성 잡음과 실제 차이를 분리
+- Call Graph는 동적 수집·합성(D14). Phase 3에서 callTree 기록, Phase 4에서 합성·영향 API 선정
 - Phase 1 교훈 적용: Service 포트명 접두사(http-/grpc-), 멀티아치 이미지 로드 절차, 런타임 다운로드 금지, new는 default-deny egress(verify 허용됨)
 
 ## 하지 말 것
