@@ -59,4 +59,15 @@ public class CouponService {
         }
         return Outcome.of(Kind.ALREADY_USED);
     }
+
+    /**
+     * Phase 3.3: 결제된 주문의 쿠폰 확정(order.paid 소비). USED이고 그 주문이 쓴 쿠폰이면 SETTLED(flush에서 UPDATE).
+     * 이미 SETTLED이거나 다른 상태·다른 주문이면 바꾸지 않는다(멱등, 소비 Evidence의 dbAccess에는 SELECT만).
+     */
+    @Transactional
+    public void settle(String couponKey, String orderKey) {
+        couponRepository.findByCouponKey(couponKey)
+                .filter(c -> Coupon.USED.equals(c.getStatus()) && orderKey.equals(c.getUsedByOrderKey()))
+                .ifPresent(Coupon::settle);
+    }
 }

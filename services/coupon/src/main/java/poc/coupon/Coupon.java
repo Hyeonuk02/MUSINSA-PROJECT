@@ -60,6 +60,11 @@ public class Coupon {
         this.usedAt = Instant.now(clock);
     }
 
+    /** Phase 3.3: 결제 확정(order.paid 소비). */
+    public void settle() {
+        this.status = SETTLED;
+    }
+
     public String getCouponKey() { return couponKey; }
     public long getDiscountAmount() { return discountAmount; }
     public String getStatus() { return status; }

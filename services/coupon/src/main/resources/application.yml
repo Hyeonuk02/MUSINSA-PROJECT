@@ -17,6 +17,28 @@ spring:
     properties:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
+  kafka:
+    # Phase 3.3: order.paid 소비(+ DLQ 발행). 같은 ns의 브로커(kafka:9092).
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: coupon-settlement
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        # 브로커 재시작(S0) 뒤 run.sh가 토픽을 만들면 빨리 알아채도록(기본 5분)
+        metadata.max.age.ms: 2000
+    producer:
+      # DLQ 발행
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 0
+      properties:
+        enable.idempotence: false
+        delivery.timeout.ms: 5000
+        request.timeout.ms: 4000
+        max.block.ms: 5000
   lifecycle:
     timeout-per-shutdown-phase: 20s
 

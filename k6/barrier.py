@@ -6,7 +6,8 @@
 
   1단계  기대 = k6-summary.json의 sent 각각의 진입 홉 "0" + corpus에서 그 요청에 선언된 settle 홉
          → 양쪽 스택에 모두 도착할 때까지 최대 30초
-  2단계  폐포 = 도착한 Evidence의 externalCalls[].childHopPath(host가 관측 서비스일 때만) + events.published[].childHopPath
+  2단계  폐포 = 도착한 Evidence의 externalCalls[].childHopPath(host가 관측 서비스일 때만)
+         + events.published[].childHopPath(topic이 관측 토픽일 때만 — order.paid.dlq처럼 소비자가 없는 토픽은 Evidence가 없다)
          → 새로 늘어난 기대가 도착할 때까지 최대 10초. 새로 도착한 Evidence가 또 자식을 선언하면 반복
          settle에 없는 추가 호출(F9의 0.h2처럼 한쪽에만 생긴 호출)의 Evidence도 export 전에 들어오게 하기 위함
   WireMock 같은 외부 대상(host가 관측 서비스가 아님)은 Evidence를 남기지 않으므로 폐포에 넣지 않는다.
@@ -15,7 +16,7 @@
 결과는 <run 디렉터리>/barrier.json (스택별 기대 집합·도착 수).
 
 사용: barrier.py --run-dir runs/<runId> --corpus corpus/corpus-v2.json --evidence-url http://localhost/_evidence
-             --observed-hosts order,coupon
+             --observed-hosts order,coupon --observed-topics order.paid
 """
 import argparse
 import json
@@ -35,7 +36,7 @@ def export(evidence_url: str, run_id: str, stack: str) -> list[dict]:
         return json.load(r)
 
 
-def keys_and_children(records: list[dict], observed: set[str]) -> tuple[set, set]:
+def keys_and_children(records: list[dict], observed: set[str], topics: set[str]) -> tuple[set, set]:
     present, children = set(), set()
     for rec in records:
         rid = rec["replayRequestId"]
@@ -44,7 +45,8 @@ def keys_and_children(records: list[dict], observed: set[str]) -> tuple[set, set
             if call["host"] in observed:
                 children.add((rid, call["childHopPath"]))
         for pub in rec.get("events", {}).get("published", []):
-            children.add((rid, pub["childHopPath"]))
+            if pub["topic"] in topics:
+                children.add((rid, pub["childHopPath"]))
     return present, children
 
 
@@ -54,22 +56,30 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--corpus", required=True, type=Path)
     ap.add_argument("--evidence-url", required=True)
     ap.add_argument("--observed-hosts", required=True)
+    ap.add_argument("--observed-topics", required=True)
     args = ap.parse_args(argv)
     run_id = args.run_dir.name
     observed = {h.strip() for h in args.observed_hosts.split(",") if h.strip()}
+    topics = {t.strip() for t in args.observed_topics.split(",") if t.strip()}
 
     sent = json.loads((args.run_dir / "k6-summary.json").read_text(encoding="utf-8"))["sent"]
     settle = {r["id"]: [s["hop"] for s in r.get("settle", [])]
               for s in json.loads(args.corpus.read_text(encoding="utf-8"))["sessions"] for r in s["requests"]}
     base = {(rid, "0") for rid in sent} | {(rid, hop) for rid in sent for hop in settle.get(rid, [])}
     expected = {stack: set(base) for stack in STACKS}
-    print(f"  1단계 기대: 스택당 {len(base)} (진입 {len(sent)} + settle {len(base) - len(sent)})")
+    kinds = {}
+    for s in json.loads(args.corpus.read_text(encoding="utf-8"))["sessions"]:
+        for r in s["requests"]:
+            if r["id"] in sent:
+                for x in r.get("settle", []):
+                    kinds[x["origin"]] = kinds.get(x["origin"], 0) + 1
+    print(f"  1단계 기대: 스택당 {len(base)} (진입 {len(sent)} + settle {len(base) - len(sent)} {kinds})")
 
     def wait(deadline_s: float, phase: str) -> dict[str, set]:
         """기대가 모두 도착하거나 deadline까지. 반환: 스택별 (present, children)."""
         end = time.monotonic() + deadline_s
         while True:
-            state = {stack: keys_and_children(export(args.evidence_url, run_id, stack), observed) for stack in STACKS}
+            state = {stack: keys_and_children(export(args.evidence_url, run_id, stack), observed, topics) for stack in STACKS}
             missing = {stack: expected[stack] - state[stack][0] for stack in STACKS}
             if not any(missing.values()) or time.monotonic() >= end:
                 return state, missing
@@ -93,6 +103,7 @@ def main(argv: list[str]) -> int:
     result = {
         "runId": run_id,
         "observedHosts": sorted(observed),
+        "observedTopics": sorted(topics),
         "closureRounds": rounds,
         "stacks": {stack: {
             "expected": len(expected[stack]),

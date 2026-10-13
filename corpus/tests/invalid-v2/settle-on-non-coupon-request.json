@@ -39,6 +39,11 @@
               "hop": "0.h1",
               "service": "coupon",
               "origin": "http"
+            },
+            {
+              "hop": "0.e1",
+              "service": "coupon",
+              "origin": "kafka"
             }
           ]
         },
@@ -86,7 +91,14 @@
           "path": "/api/orders/ok-R000005/pay",
           "headers": {
             "Idempotency-Key": "idem-R000007"
-          }
+          },
+          "settle": [
+            {
+              "hop": "0.e1",
+              "service": "coupon",
+              "origin": "kafka"
+            }
+          ]
         },
         {
           "id": "R000008",
@@ -136,7 +148,14 @@
           "path": "/api/orders/ok-R000010/pay",
           "headers": {
             "Idempotency-Key": "idem-R000012"
-          }
+          },
+          "settle": [
+            {
+              "hop": "0.e1",
+              "service": "coupon",
+              "origin": "kafka"
+            }
+          ]
         },
         {
           "id": "R000013",
@@ -291,7 +310,14 @@
           "path": "/api/orders/ok-R000027/pay",
           "headers": {
             "Idempotency-Key": "idem-R000029"
-          }
+          },
+          "settle": [
+            {
+              "hop": "0.e1",
+              "service": "coupon",
+              "origin": "kafka"
+            }
+          ]
         },
         {
           "id": "R000030",
@@ -344,7 +370,14 @@
           "path": "/api/orders/ok-R000032/pay",
           "headers": {
             "Idempotency-Key": "idem-R000033"
-          }
+          },
+          "settle": [
+            {
+              "hop": "0.e1",
+              "service": "coupon",
+              "origin": "kafka"
+            }
+          ]
         },
         {
           "id": "R000034",
@@ -453,7 +486,14 @@
           "path": "/api/orders/ok-R000040/pay",
           "headers": {
             "Idempotency-Key": "idem-slow-R000041"
-          }
+          },
+          "settle": [
+            {
+              "hop": "0.e1",
+              "service": "coupon",
+              "origin": "kafka"
+            }
+          ]
         },
         {
           "id": "R000042",
@@ -511,7 +551,14 @@
           "path": "/api/orders/ok-R000044/pay",
           "headers": {
             "Idempotency-Key": "idem-R000045"
-          }
+          },
+          "settle": [
+            {
+              "hop": "0.e1",
+              "service": "coupon",
+              "origin": "kafka"
+            }
+          ]
         },
         {
           "id": "R000046",

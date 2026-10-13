@@ -15,6 +15,9 @@ resources:
   - coupon-mysql.yaml
   - coupon-mysql-networkpolicy.yaml
   - coupon-networkpolicy.yaml
+  # Phase 3.3 - Kafka(스택별 1브로커)
+  - kafka.yaml
+  - kafka-networkpolicy.yaml
 
 configMapGenerator:
   - name: mysql-initdb

@@ -8,15 +8,10 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.web.filter.OncePerRequestFilter;
 import org.springframework.web.util.ContentCachingResponseWrapper;
-import tools.jackson.databind.json.JsonMapper;
 
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
 import java.time.Instant;
 import java.util.Collections;
-import java.util.HexFormat;
 import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
@@ -42,27 +37,15 @@ public class EvidenceFilter extends OncePerRequestFilter {
     static final String RUN_ID_HEADER = "X-Run-Id";
     static final String SESSION_ID_HEADER = "X-Session-Id";
     static final String HOP_PATH_HEADER = "X-Replay-Hop-Path";
-    static final int MAX_RESPONSE_BODY_BYTES = 32 * 1024;
 
     private static final Logger log = LoggerFactory.getLogger(EvidenceFilter.class);
 
-    private final EvidenceSender sender;
-    private final String stack;
-    private final String service;
-    private final String version;
+    private final EvidenceWriter writer;
     private final List<String> headerNames;
-    private final List<String> appPackages;
-    /** 패키지 안 고정 설정 매퍼. 앱의 매퍼 빈을 쓰지 않는다 — 앱 쪽 모듈 등록(예: Kotlin)이 Evidence 바이트를 바꾸지 않게. */
-    private final JsonMapper jsonMapper = JsonMapper.builder().build();
 
-    public EvidenceFilter(EvidenceSender sender, String stack, String service, String version, List<String> headerNames,
-                          List<String> appPackages) {
-        this.sender = sender;
-        this.stack = stack;
-        this.service = service;
-        this.version = version;
+    EvidenceFilter(EvidenceWriter writer, List<String> headerNames) {
+        this.writer = writer;
         this.headerNames = List.copyOf(headerNames);
-        this.appPackages = List.copyOf(appPackages);
     }
 
     @Override
@@ -109,16 +92,15 @@ public class EvidenceFilter extends OncePerRequestFilter {
             response.flushBuffer();  // 응답을 먼저 커밋하고, Evidence 조립·enqueue는 그 뒤
             responsePart.put("status", status);
             responsePart.put("headers", responseHeaders);
-            responsePart.put("bodyHash", sha256(responseBody));
-            responsePart.put("body", responseBody.length <= MAX_RESPONSE_BODY_BYTES
-                    ? new String(responseBody, StandardCharsets.UTF_8) : null);
+            responsePart.put("bodyHash", EvidenceWriter.sha256(responseBody));
+            responsePart.put("body", EvidenceWriter.bodyOrNull(responseBody));
         } else {
             // 응답은 컨테이너의 에러 처리로 넘어간다. 상태코드는 아직 정해지지 않았다
             responsePart.put("status", 0);
             responsePart.put("headers", Map.of());
-            responsePart.put("bodyHash", sha256(new byte[0]));
+            responsePart.put("bodyHash", EvidenceWriter.sha256(new byte[0]));
             responsePart.put("body", "");
-            error = describe(failure);
+            error = writer.describe(failure);
         }
 
         Map<String, Object> requestPart = new LinkedHashMap<>();
@@ -126,37 +108,10 @@ public class EvidenceFilter extends OncePerRequestFilter {
         requestPart.put("path", request.getRequestURI());
         requestPart.put("query", request.getQueryString() == null ? "" : request.getQueryString());
         requestPart.put("headers", selectedRequestHeaders(request));
-        requestPart.put("bodyHash", sha256(requestBody));
+        requestPart.put("bodyHash", EvidenceWriter.sha256(requestBody));
 
-        Map<String, Object> timing = new LinkedHashMap<>();
-        timing.put("arrivedAt", arrivedAt.toString());
-        timing.put("completedAt", completedAt.toString());
-        timing.put("arrivedNano", arrivedNano);
-        timing.put("completedNano", completedNano);
-
-        Map<String, Object> evidence = new LinkedHashMap<>();
-        evidence.put("schemaVersion", "v1");
-        evidence.put("runId", runId);
-        evidence.put("replayRequestId", replayRequestId);
-        evidence.put("hopPath", hopPath);
-        evidence.put("sessionId", sessionId);
-        evidence.put("stack", stack);
-        evidence.put("service", service);
-        evidence.put("origin", "http");
-        evidence.put("version", version);
-        evidence.put("request", requestPart);
-        evidence.put("response", responsePart);
-        evidence.put("event", null);
-        evidence.put("dbAccess", captured.dbAccess());
-        evidence.put("externalCalls", captured.externalCalls());
-        evidence.put("events", captured.events());
-        evidence.put("transactions", captured.transactions());
-        evidence.put("callTree", captured.callTree());
-        evidence.put("error", error);
-        evidence.put("timing", timing);
-        evidence.put("capturedAt", Instant.now().toString());
-
-        sender.enqueue(runId, replayRequestId, hopPath, stack, jsonMapper.writeValueAsBytes(evidence));
+        writer.emit(new EvidenceWriter.Ids(runId, replayRequestId, sessionId, hopPath), "http", requestPart, responsePart,
+                null, null, captured, error, arrivedAt, arrivedNano, completedAt, completedNano);
 
         if (failure instanceof IOException e) {
             throw e;
@@ -167,30 +122,6 @@ public class EvidenceFilter extends OncePerRequestFilter {
         } else if (failure instanceof Error e) {
             throw e;
         }
-    }
-
-    /** 예외의 원인 타입과 발생 위치. ServletException 래핑은 벗긴다. where = 앱 패키지 안 첫 스택 프레임의 class.method. */
-    private Map<String, Object> describe(Throwable failure) {
-        Throwable root = failure;
-        while (root instanceof ServletException && root.getCause() != null) {
-            root = root.getCause();
-        }
-        String where = null;
-        for (StackTraceElement frame : root.getStackTrace()) {
-            String cls = frame.getClassName();
-            if (appPackages.stream().anyMatch(p -> cls.startsWith(p + "."))) {
-                where = cls + "." + frame.getMethodName();
-                break;
-            }
-        }
-        if (where == null && root.getStackTrace().length > 0) {
-            StackTraceElement top = root.getStackTrace()[0];
-            where = top.getClassName() + "." + top.getMethodName();
-        }
-        Map<String, Object> error = new LinkedHashMap<>();
-        error.put("type", root.getClass().getName());
-        error.put("where", where);
-        return error;
     }
 
     private Map<String, String> selectedRequestHeaders(HttpServletRequest request) {
@@ -216,14 +147,6 @@ public class EvidenceFilter extends OncePerRequestFilter {
             }
         }
         return headers;
-    }
-
-    static String sha256(byte[] bytes) {
-        try {
-            return "sha256:" + HexFormat.of().formatHex(MessageDigest.getInstance("SHA-256").digest(bytes));
-        } catch (NoSuchAlgorithmException e) {
-            throw new IllegalStateException(e);
-        }
     }
 
     private static boolean isBlank(String value) {

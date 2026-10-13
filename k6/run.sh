@@ -23,6 +23,10 @@ EVIDENCE_URL="${EVIDENCE_URL:-http://localhost/_evidence}"
 CORPUS=corpus/corpus-v2.json
 # 관측 서비스 호스트 — externalCalls.childHopPath를 barrier 폐포에 넣는 대상(WireMock 등 외부는 Evidence를 남기지 않음)
 OBSERVED_HOSTS="${OBSERVED_HOSTS:-order,coupon}"
+# 관측 토픽 — events.published.childHopPath를 폐포에 넣는 대상(소비자가 있는 토픽만. order.paid.dlq는 소비자 없음)
+OBSERVED_TOPICS="${OBSERVED_TOPICS:-order.paid}"
+KAFKA_TOPICS="order.paid order.paid.dlq"
+KAFKA_BIN=/opt/kafka/bin
 READINESS_PATH=/api/orders/by-key/ok-readiness-check   # corpus에 없는 키 — 404면 order가 DB를 조회할 수 있는 상태
 COUPON_READINESS_PATH=/api/coupons/by-key/ck-readiness-check
 READY_TIMEOUT_S=180
@@ -60,7 +64,7 @@ preflight() {
 
   command -v istioctl >/dev/null || fail "preflight: istioctl 없음 — 인증서를 확인할 수 없다(fail-closed)"
   local target ns sel pod table verdict
-  for target in "istio-system istio=ingressgateway" "legacy app=order" "new app=order" "legacy app=coupon" "new app=coupon"; do
+  for target in "istio-system istio=ingressgateway" "legacy app=order" "new app=order" "legacy app=coupon" "new app=coupon" "legacy app=kafka" "new app=kafka"; do
     ns="${target%% *}"; sel="${target#* }"
     pod=$(pick_pod "$ns" "$sel")
     [[ -n "$pod" ]] || fail "preflight: $ns/$sel Running pod 없음"
@@ -112,6 +116,23 @@ new_coupon_ready() {
   [[ "$(kubectl exec -n new isolation-injected -c curl -- curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
         "http://coupon.new.svc.cluster.local:8080$COUPON_READINESS_PATH" 2>/dev/null)" == 404 ]]
 }
+kafka_exec() {  # ns command...
+  local ns="$1" pod; shift
+  pod=$(pick_pod "$ns" app=kafka)
+  [[ -n "$pod" ]] || return 1
+  kubectl exec -n "$ns" "$pod" -c kafka -- "$@"
+}
+kafka_ready() { kafka_exec "$1" "$KAFKA_BIN/kafka-topics.sh" --bootstrap-server localhost:9092 --list >/dev/null 2>&1; }
+# Coupon 컨슈머 그룹이 order.paid partition을 할당받았는지(CONSUMER-ID가 "-"가 아님)
+coupon_assigned() {
+  kafka_exec "$1" "$KAFKA_BIN/kafka-consumer-groups.sh" --bootstrap-server localhost:9092 \
+      --describe --group coupon-settlement 2>/dev/null \
+    | awk '$1=="coupon-settlement" && $2=="order.paid" && $7!="-" && $7!="" {found=1} END {exit !found}'
+}
+legacy_kafka_ready() { kafka_ready legacy; }
+new_kafka_ready() { kafka_ready new; }
+legacy_coupon_assigned() { coupon_assigned legacy; }
+new_coupon_assigned() { coupon_assigned new; }
 wiremock_reset() {  # ns tooling-pod
   local code
   code=$(kubectl exec -n "$1" "$2" -c curl -- curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
@@ -120,19 +141,32 @@ wiremock_reset() {  # ns tooling-pod
 }
 
 reset_s0() {
-  log "reset: MySQL·Coupon MySQL rollout restart (S0)"
-  local db ns
-  for db in mysql coupon-mysql; do
+  log "reset: MySQL·Coupon MySQL·Kafka rollout restart (S0)"
+  local db ns topic
+  for db in mysql coupon-mysql kafka; do
     for ns in legacy new; do kubectl rollout restart "deployment/$db" -n "$ns" >/dev/null; done
   done
-  for db in mysql coupon-mysql; do
+  for db in mysql coupon-mysql kafka; do
     for ns in legacy new; do kubectl rollout status "deployment/$db" -n "$ns" --timeout="${READY_TIMEOUT_S}s" >/dev/null; done
   done
+  # Kafka: 브로커 준비 → 토픽 생성(auto.create 꺼짐, 앱의 KafkaAdmin에 기대지 않는다) → Coupon 컨슈머 할당 확인
+  wait_until "$READY_TIMEOUT_S" "reset: legacy kafka 브로커" legacy_kafka_ready
+  wait_until "$READY_TIMEOUT_S" "reset: new kafka 브로커" new_kafka_ready
+  for ns in legacy new; do
+    for topic in $KAFKA_TOPICS; do
+      kafka_exec "$ns" "$KAFKA_BIN/kafka-topics.sh" --bootstrap-server localhost:9092 --create --if-not-exists \
+        --topic "$topic" --partitions 1 --replication-factor 1 >/dev/null || fail "reset: $ns 토픽 $topic 생성 실패"
+    done
+  done
+  log "  kafka legacy/new: 토픽 $KAFKA_TOPICS (partition 1)"
   wait_until "$READY_TIMEOUT_S" "reset: legacy order readiness" legacy_order_ready
   wait_until "$READY_TIMEOUT_S" "reset: new order readiness" new_order_ready
   wait_until "$READY_TIMEOUT_S" "reset: legacy coupon readiness" legacy_coupon_ready
   wait_until "$READY_TIMEOUT_S" "reset: new coupon readiness" new_coupon_ready
   log "  order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)"
+  wait_until "$READY_TIMEOUT_S" "reset: legacy coupon 컨슈머 할당" legacy_coupon_assigned
+  wait_until "$READY_TIMEOUT_S" "reset: new coupon 컨슈머 할당" new_coupon_assigned
+  log "  kafka legacy/new: coupon-settlement 그룹이 order.paid partition 할당받음"
   wiremock_reset legacy mesh-check
   wiremock_reset new isolation-injected
   log "  wiremock legacy/new: DELETE /__admin/requests 200"
@@ -151,9 +185,9 @@ export_run() {  # runId dir
 barrier() {  # runId dir
   log "barrier: spill 회수"
   k6/spill-recover.sh --run-id "$1" | sed 's/^/  /' || fail "barrier: spill-recover 실패"
-  log "barrier: 기대 집합(corpus settle + 자식 홉 폐포, 관측 호스트 $OBSERVED_HOSTS)"
+  log "barrier: 기대 집합(corpus settle + 자식 홉 폐포, 관측 호스트 $OBSERVED_HOSTS, 관측 토픽 $OBSERVED_TOPICS)"
   if ! "$PY" k6/barrier.py --run-dir "$2" --corpus "$CORPUS" --evidence-url "$EVIDENCE_URL" \
-        --observed-hosts "$OBSERVED_HOSTS" | sed 's/^/  /'; then
+        --observed-hosts "$OBSERVED_HOSTS" --observed-topics "$OBSERVED_TOPICS" | sed 's/^/  /'; then
     export_run "$1" "$2"
     fail "barrier 미달 — export만 하고 중단한다(다음 iteration 진행 안 함): runs/$1"
   fi
@@ -183,7 +217,7 @@ export_wiremock() {  # dir
   log "export: wiremock journal legacy $("$PY" -c "import json;print(len(json.load(open('$1/wiremock-legacy.json'))['requests']))")건, new $("$PY" -c "import json;print(len(json.load(open('$1/wiremock-new.json'))['requests']))")건"
 }
 
-write_meta() {  # runId dir started finished
+write_meta() {  # runId dir started finished resetSeconds
   local fixed_legacy fixed_new
   fixed_legacy=$(kubectl get deploy order -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].env[?(@.name=="APP_FIXED_CLOCK")].value}')
   fixed_new=$(kubectl get deploy order -n new -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].env[?(@.name=="APP_FIXED_CLOCK")].value}')
@@ -197,6 +231,9 @@ write_meta() {  # runId dir started finished
   COUPON_LEGACY_TAG="$(kubectl get deploy coupon -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="coupon")].image}')" \
   COUPON_NEW_TAG="$(kubectl get deploy coupon -n new -o jsonpath='{.spec.template.spec.containers[?(@.name=="coupon")].image}')" \
   COUPON_LEGACY_REF="$(container_image legacy coupon)" COUPON_NEW_REF="$(container_image new coupon)" \
+  KAFKA_TAG="$(kubectl get deploy kafka -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="kafka")].image}')" \
+  KAFKA_LEGACY_REF="$(container_image legacy kafka)" KAFKA_NEW_REF="$(container_image new kafka)" \
+  RESET_SECONDS="$5" \
   WM_TAG="$(kubectl get deploy wiremock -n legacy -o jsonpath='{.spec.template.spec.containers[0].image}')" \
   WM_LEGACY_REF="$(container_image legacy wiremock)" WM_NEW_REF="$(container_image new wiremock)" \
   GIT_REV="$(git rev-parse HEAD)" GIT_DIRTY="$([[ -n "$(git status --porcelain)" ]] && echo true || echo false)" \
@@ -215,11 +252,13 @@ meta = {
                   "new": {"image": e["ORDER_NEW_TAG"], "imageRef": e["ORDER_NEW_REF"]}},
         "coupon": {"legacy": {"image": e["COUPON_LEGACY_TAG"], "imageRef": e["COUPON_LEGACY_REF"]},
                    "new": {"image": e["COUPON_NEW_TAG"], "imageRef": e["COUPON_NEW_REF"]}},
+        "kafka": {"image": e["KAFKA_TAG"], "imageRef": {"legacy": e["KAFKA_LEGACY_REF"], "new": e["KAFKA_NEW_REF"]}},
         "evidenceStore": {"image": e["STORE_TAG"], "imageRef": e["STORE_REF"]},
         "wiremock": {"image": e["WM_TAG"], "imageRef": {"legacy": e["WM_LEGACY_REF"], "new": e["WM_NEW_REF"]}},
     },
     "appFixedClock": {"legacy": e["FIXED_LEGACY"], "new": e["FIXED_NEW"]},
     "vus": int(e["VUS"]),
+    "resetSeconds": int(e["RESET_SECONDS"]),
     "git": {"rev": e["GIT_REV"], "dirty": e["GIT_DIRTY"] == "true"},
     "k6Version": e["K6_VERSION"],
     "istioVersion": e["ISTIO_VERSION"],
@@ -240,7 +279,10 @@ for ((i = 1; i <= ITERATIONS; i++)); do
   mkdir -p "$dir"
   started=$(date -u +%Y-%m-%dT%H:%M:%SZ)
   log "===== iteration $i/$ITERATIONS runId=$run_id vus=$VUS"
+  reset_start=$SECONDS
   reset_s0
+  reset_seconds=$((SECONDS - reset_start))
+  log "  reset 소요 ${reset_seconds}s"
   log "k6: RUN_ID=$run_id VUS=$VUS k6 run k6/run.js"
   RUN_ID="$run_id" VUS="$VUS" CORPUS="$(basename "$CORPUS")" BASE_URL="$BASE_URL" EVIDENCE_URL="$EVIDENCE_URL" \
     k6 run --quiet k6/run.js | sed 's/^/  /'
@@ -249,6 +291,6 @@ for ((i = 1; i <= ITERATIONS; i++)); do
   export_run "$run_id" "$dir"
   k6/dbstate-export.sh --run-id "$run_id" | sed 's/^/  /' || fail "export: dbstate 실패"
   export_wiremock "$dir"
-  write_meta "$run_id" "$dir" "$started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
+  write_meta "$run_id" "$dir" "$started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)" "$reset_seconds"
 done
 log "done: $ITERATIONS run(s) — runs/$BASE-1 .. runs/$BASE-$ITERATIONS"

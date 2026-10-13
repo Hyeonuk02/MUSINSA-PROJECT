@@ -88,10 +88,13 @@ def stats_ms(values: list[float]) -> str:
     return f"min={min(values):.1f} median={statistics.median(values):.1f} max={max(values):.1f} (n={len(values)})"
 
 
+OBSERVED_TOPICS: set[str] = {"order.paid"}
+
+
 def declared_children(rec: dict, observed: set[str]) -> set[str]:
-    """이 Evidence가 만든(만들었어야 할) 관측 대상 자식 홉."""
+    """이 Evidence가 만든(만들었어야 할) 관측 대상 자식 홉 — 관측 호스트로 나간 호출, 관측 토픽(소비자가 있는 토픽) 발행."""
     hops = {c["childHopPath"] for c in rec.get("externalCalls", []) if c["host"] in observed}
-    hops |= {p["childHopPath"] for p in rec.get("events", {}).get("published", [])}
+    hops |= {p["childHopPath"] for p in rec.get("events", {}).get("published", []) if p["topic"] in OBSERVED_TOPICS}
     return hops
 
 
@@ -198,6 +201,8 @@ def main(argv: list[str]) -> int:
     parser.add_argument("--run", action="append", required=True, type=Path, help="runs/<runId> (여러 번 가능)")
     parser.add_argument("--observed-hosts", default="order,coupon",
                         help="관측 서비스 호스트(쉼표). 이 호스트로 나간 호출의 childHopPath만 내부 Evidence로 기대한다")
+    parser.add_argument("--observed-topics", default="order.paid",
+                        help="관측 토픽(쉼표, 소비자가 있는 토픽). 이 토픽 발행의 childHopPath만 내부 Evidence로 기대한다")
     args = parser.parse_args(argv)
 
     try:
@@ -207,6 +212,8 @@ def main(argv: list[str]) -> int:
         return 2
 
     results = []
+    OBSERVED_TOPICS.clear()
+    OBSERVED_TOPICS.update(t.strip() for t in args.observed_topics.split(",") if t.strip())
     for run_dir in args.run:
         if not run_dir.is_dir():
             print(f"ERROR: run 디렉터리가 없다: {run_dir}", file=sys.stderr)

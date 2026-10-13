@@ -2,6 +2,7 @@ package poc.order;
 
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.ApplicationEventPublisher;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.client.RestClientException;
@@ -23,13 +24,15 @@ public class OrderService {
     private final OrderRepository orderRepository;
     private final PaymentGatewayClient paymentGateway;
     private final CouponClient couponClient;
+    private final ApplicationEventPublisher events;
     private final Clock clock;
 
     public OrderService(OrderRepository orderRepository, PaymentGatewayClient paymentGateway,
-                        CouponClient couponClient, Clock clock) {
+                        CouponClient couponClient, ApplicationEventPublisher events, Clock clock) {
         this.orderRepository = orderRepository;
         this.paymentGateway = paymentGateway;
         this.couponClient = couponClient;
+        this.events = events;
         this.clock = clock;
     }
 
@@ -110,6 +113,8 @@ public class OrderService {
                     return Outcome.of(Kind.PAYMENT_FAILED);
                 }
                 order.markPaid(transactionId, idempotencyKey);
+                // Phase 3.3: 처음 PAID가 될 때만. 같은 Idempotency-Key 재결제(위 PAID 분기)는 발행하지 않는다.
+                events.publishEvent(new OrderPaid(orderKey, order.getAmount(), order.getCouponKey()));
                 return new Outcome(Kind.OK, OrderView.from(order));
             }
         }

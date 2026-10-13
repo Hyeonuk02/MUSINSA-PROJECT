@@ -23,7 +23,9 @@ v2 (corpus-v2, Phase 3.2) — schema-v2.json + 아래 규칙
   4. 참조 키(path의 orderKey·couponKey, 주문 body의 couponKey, use body의 orderKey)는 같은 세션에서 앞서 생성된 것만.
      예외: expectMissing(그 키는 corpus 어디서도 생성되지 않아야 함), use body의 외부 주문 키 ok-ext-<자기 id>
   5. 결제 Idempotency-Key = idem-<id> 또는 idem-slow-<id>(F7 지연 세션 예약). <id>는 같은 세션의 결제 요청 id(자기 자신 또는 앞선 결제 — 멱등 재결제)
-  6. settle: 쿠폰 주문 생성은 settle에 {hop 0.h1, service coupon, origin http}가 있어야 한다. 그 외 요청에 settle 금지(3.3에서 이벤트 홉 추가 예정)
+  6. settle: 쿠폰 주문 생성은 settle에 {hop 0.h1, service coupon, origin http}가 있어야 한다.
+     결제(Phase 3.3): 같은 세션에서 그 주문의 첫 /pay는 settle에 {hop 0.e1, service coupon, origin kafka}가 있어야 하고(처음 PAID → order.paid 소비),
+     두 번째 이후 /pay에는 0.e1 금지(재결제는 발행 없음). 그 외 요청에 settle 금지
   7. 흐름 유형(flow)마다 learn·eval 세션이 각각 1개 이상
   8. 실행 시점 값 없음
 
@@ -174,6 +176,7 @@ V2_ROUTES = [
 ]
 BODY_KINDS = {"order.create", "coupon.issue", "coupon.use"}
 COUPON_SETTLE = {"hop": "0.h1", "service": "coupon", "origin": "http"}
+PAID_SETTLE = {"hop": "0.e1", "service": "coupon", "origin": "kafka"}
 
 
 def validate_v2(corpus, schema):
@@ -204,7 +207,7 @@ def validate_v2(corpus, schema):
             errors.append(f"[id] 세션 id 중복: {sid}")
         seen_s.add(sid)
         splits.setdefault(s["flow"], set()).add(s["split"])
-        made, pays = set(), set()
+        made, pays, paid_keys = set(), set(), set()
         for r in s["requests"]:
             rid, where = r["id"], f"{sid}/{r['id']}"
             stats["requests"] += 1
@@ -246,8 +249,17 @@ def validate_v2(corpus, schema):
                     errors.append(f"[orderKey] {where}: 외부 주문 키 {order_key}는 같은 세션의 요청 id에서 나와야 함")
             else:
                 refs.append(key)
-            if r.get("settle") and not (kind == "order.create" and "couponKey" in (body or {})):
-                errors.append(f"[settle] {where}: settle은 쿠폰 주문 생성에만(현재 단계)")
+            if kind == "order.pay":
+                has_paid_settle = PAID_SETTLE in r.get("settle", [])
+                if key not in paid_keys and not has_paid_settle:
+                    errors.append(f"[settle] {where}: 주문 {key}의 첫 /pay는 settle에 {PAID_SETTLE}가 필요")
+                if key in paid_keys and has_paid_settle:
+                    errors.append(f"[settle] {where}: 주문 {key}의 두 번째 이후 /pay에는 settle 0.e1 금지(재결제는 발행 없음)")
+                paid_keys.add(key)
+                if any(x != PAID_SETTLE for x in r.get("settle", [])):
+                    errors.append(f"[settle] {where}: 결제 settle은 {PAID_SETTLE}만")
+            elif r.get("settle") and not (kind == "order.create" and "couponKey" in (body or {})):
+                errors.append(f"[settle] {where}: settle은 쿠폰 주문 생성과 첫 결제에만")
             if r.get("settle"):
                 stats["settle"] += len(r["settle"])
             if kind == "order.pay":

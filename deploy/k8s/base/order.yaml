@@ -44,7 +44,7 @@ spec:
             - until nc -z mysql 3306; do echo "waiting for mysql:3306"; sleep 2; done
       containers:
         - name: order
-          image: order-app:phase3.2-base
+          image: order-app:phase3.3-base
           # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
           imagePullPolicy: IfNotPresent
           ports:
@@ -99,6 +99,9 @@ spec:
             - name: COUPON_URL
               # Phase 3.2: 같은 네임스페이스의 Coupon(직접 호출, 게이트웨이를 거치지 않으므로 미러 없음).
               value: http://coupon:8080
+            - name: KAFKA_BOOTSTRAP
+              # Phase 3.3: 같은 네임스페이스의 브로커
+              value: kafka:9092
             - name: APP_FIXED_CLOCK
               # legacy/new 모두 같은 값. 시각 차이가 Evidence 비교에 섞이지 않게 한다.
               value: "2026-09-01T00:00:00Z"

@@ -24,6 +24,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  kafka:
+    # Phase 3.3: order.paid 발행. 같은 ns의 브로커(kafka:9092). 재시도 없음 — 발행 실패는 ack failed로 드러난다.
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 0
+      properties:
+        enable.idempotence: false        # retries=0과 충돌
+        delivery.timeout.ms: 5000
+        request.timeout.ms: 4000
+        linger.ms: 0
+        max.block.ms: 5000               # 메타데이터를 못 받으면 send() 자체가 5초 안에 실패
+
 server:
   port: 8080
   # Phase 2.4: 진행 중 요청을 끝내고 멈춘다. 그 뒤 EvidenceSender가 큐를 drain(최대 10초)하고 남은 건 spill.

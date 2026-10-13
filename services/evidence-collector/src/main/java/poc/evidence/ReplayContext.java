@@ -5,6 +5,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.Future;
 
 /**
  * 요청 스레드에 묶인 재생 컨텍스트와 그 홉(hop)의 Evidence 버퍼.
@@ -27,6 +28,7 @@ public final class ReplayContext {
     static final int MAX_STATEMENTS = 200;
     static final int MAX_SQL_LENGTH = 2048;
     static final int MAX_CALL_NODES = 500;
+    static final int MAX_PAYLOAD_BYTES = 32 * 1024;
 
     private static final ThreadLocal<ReplayContext> CURRENT = new ThreadLocal<>();
 
@@ -39,9 +41,13 @@ public final class ReplayContext {
     private final List<Map<String, Object>> statements = new ArrayList<>();
     private boolean statementsTruncated;
     private final List<Map<String, Object>> externalCalls = new ArrayList<>();
-    private final List<Map<String, Object>> published = new ArrayList<>();
+    private final List<PublishEntry> published = new ArrayList<>();
     private final List<Map<String, Object>> transactions = new ArrayList<>();
     private int httpChildren;
+    private int eventChildren;
+
+    /** 직전 발행 기록 — ProducerInterceptor.onSend가 남기고 KafkaTemplate send advisor가 future를 붙인다(같은 호출 스레드). */
+    private static final ThreadLocal<PublishEntry> LAST_PUBLISH = new ThreadLocal<>();
 
     private final List<Map<String, Object>> callNodes = new ArrayList<>();
     private int callSeq;
@@ -89,6 +95,73 @@ public final class ReplayContext {
     /** 이 홉에서 나가는 다음 HTTP 호출의 hopPath. */
     String nextHttpChildHop() {
         return hopPath + ".h" + (++httpChildren);
+    }
+
+    /** 이 홉에서 나가는 다음 이벤트 발행의 hopPath(그 이벤트의 소비 홉). */
+    String nextEventChildHop() {
+        return hopPath + ".e" + (++eventChildren);
+    }
+
+    /**
+     * 이벤트 발행 1건(ProducerInterceptor.onSend, 호출 스레드). seq는 발행 시점의 타임라인 번호.
+     * ack는 여기서 정하지 않는다 — Evidence를 닫을 때(호출 스레드) 붙은 future의 상태로 정한다.
+     */
+    PublishEntry recordPublish(String topic, String key, byte[] payload, String childHopPath) {
+        PublishEntry entry = new PublishEntry(nextSeq(), topic, key, payload, childHopPath);
+        published.add(entry);
+        LAST_PUBLISH.set(entry);
+        return entry;
+    }
+
+    static void clearLastPublish() {
+        LAST_PUBLISH.remove();
+    }
+
+    static PublishEntry takeLastPublish() {
+        PublishEntry entry = LAST_PUBLISH.get();
+        LAST_PUBLISH.remove();
+        return entry;
+    }
+
+    /** 발행 기록. future는 KafkaTemplate.send가 돌려준 것(없으면 ack failed). */
+    static final class PublishEntry {
+        final int seq;
+        final String topic;
+        final String key;
+        final byte[] payload;
+        final String childHopPath;
+        volatile Future<?> future;
+
+        PublishEntry(int seq, String topic, String key, byte[] payload, String childHopPath) {
+            this.seq = seq;
+            this.topic = topic;
+            this.key = key;
+            this.payload = payload;
+            this.childHopPath = childHopPath;
+        }
+
+        /** 호출 스레드에서 Evidence를 닫을 때. 앱이 get()으로 기다린 뒤라면 future는 이미 끝나 있다. */
+        Map<String, Object> toEvidence() {
+            boolean ok = false;
+            Future<?> f = future;
+            if (f != null && f.isDone() && !f.isCancelled()) {
+                try {
+                    f.get();  // 이미 끝난 future — 즉시 돌아온다
+                    ok = true;
+                } catch (Exception e) {
+                    ok = false;
+                }
+            }
+            Map<String, Object> m = new LinkedHashMap<>();
+            m.put("seq", seq);
+            m.put("topic", topic);
+            m.put("key", key);
+            m.put("payloadHash", EvidenceWriter.sha256(payload));
+            m.put("payload", payload.length <= MAX_PAYLOAD_BYTES ? new String(payload, java.nio.charset.StandardCharsets.UTF_8) : null);
+            m.put("ack", ok ? "ok" : "failed");
+            m.put("childHopPath", childHopPath);
+            return m;
+        }
     }
 
     /** SQL 원문을 순서대로 기록한다. 가공하지 않는다. 상한을 넘으면 자르거나 버리고 truncated를 켠다. */
@@ -153,11 +226,12 @@ public final class ReplayContext {
     /** 버퍼를 닫고 스레드에서 떼어낸다. 반환값은 Evidence의 v1 사이드이펙트 필드들. */
     Captured close() {
         CURRENT.remove();
+        LAST_PUBLISH.remove();
         Map<String, Object> dbAccess = new LinkedHashMap<>();
         dbAccess.put("statements", List.copyOf(statements));
         dbAccess.put("truncated", statementsTruncated);
         Map<String, Object> events = new LinkedHashMap<>();
-        events.put("published", List.copyOf(published));
+        events.put("published", published.stream().map(PublishEntry::toEvidence).toList());
         Map<String, Object> callTree = new LinkedHashMap<>();
         callTree.put("nodes", List.copyOf(callNodes));
         callTree.put("truncated", callTreeTruncated);

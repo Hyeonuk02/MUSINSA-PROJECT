@@ -46,7 +46,7 @@ class ReplayPropagatingInterceptor implements ClientHttpRequestInterceptor {
         call.put("method", request.getMethod().name());
         call.put("host", request.getURI().getHost());
         call.put("path", request.getURI().getRawPath());
-        call.put("requestBodyHash", EvidenceFilter.sha256(body));
+        call.put("requestBodyHash", EvidenceWriter.sha256(body));
         try {
             ClientHttpResponse response = execution.execute(request, body);
             byte[] responseBody;
@@ -54,13 +54,13 @@ class ReplayPropagatingInterceptor implements ClientHttpRequestInterceptor {
                 responseBody = in.readAllBytes();
             }
             call.put("status", response.getStatusCode().value());
-            call.put("responseBodyHash", EvidenceFilter.sha256(responseBody));
+            call.put("responseBodyHash", EvidenceWriter.sha256(responseBody));
             call.put("childHopPath", childHop);
             context.recordExternalCall(call);
             return new BufferedResponse(response, responseBody);
         } catch (IOException e) {
             call.put("status", 0);
-            call.put("responseBodyHash", EvidenceFilter.sha256(new byte[0]));
+            call.put("responseBodyHash", EvidenceWriter.sha256(new byte[0]));
             call.put("childHopPath", childHop);
             context.recordExternalCall(call);
             throw e;

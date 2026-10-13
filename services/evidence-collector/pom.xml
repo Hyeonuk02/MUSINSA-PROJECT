@@ -31,6 +31,12 @@
             <artifactId>spring-boot-starter-webmvc</artifactId>
             <scope>provided</scope>
         </dependency>
+        <!-- Phase 3.3: Kafka 수집(ProducerInterceptor·RecordInterceptor·KafkaTemplate 래핑) — Kafka가 있는 서비스에서만 활성(@ConditionalOnClass) -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+            <scope>provided</scope>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>

@@ -2,7 +2,7 @@
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "$id": "evidence-schema-v1.json",
   "title": "Evidence JSON v1",
-  "description": "요청 1건의 한 홉(hop) × 스택 1개의 실행 Evidence. Phase 3 엔진의 입력 계약. 키는 (runId, replayRequestId, stack, hopPath)이고 service·origin은 필드다(D15). SQL·외부 호출·이벤트 발행·트랜잭션 단계는 하나의 seq 카운터를 공유하는 타임라인이다(D16) — 각 배열 안의 seq는 연속이 아니다. callTree는 별도 카운터. Evidence Store는 이 스키마를 검증하지 않고 본문을 그대로 저장·반환한다.",
+  "description": "요청 1건의 한 홉(hop) × 스택 1개의 실행 Evidence. Phase 3 엔진의 입력 계약. 키는 (runId, replayRequestId, stack, hopPath)이고 service·origin은 필드다(D15). SQL·외부 호출·이벤트 발행·트랜잭션 단계는 하나의 seq 카운터를 공유하는 타임라인이다(D16) — 각 배열 안의 seq는 연속이 아니다. callTree는 별도 카운터. Evidence Store는 이 스키마를 검증하지 않고 본문을 그대로 저장·반환한다. Phase 3.3 추가(strict 유지, 추가만): events.published[].payload, event.payload, consumeOutcome(origin=kafka일 때 필수).",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -158,7 +158,8 @@
           "required": [
             "topic",
             "key",
-            "payloadHash"
+            "payloadHash",
+            "payload"
           ],
           "properties": {
             "topic": {
@@ -173,9 +174,24 @@
             },
             "payloadHash": {
               "$ref": "#/$defs/sha256"
+            },
+            "payload": {
+              "description": "UTF-8 원문. 32KB 초과 시 null(payloadHash 유지) — response.body와 같은 상한. 3.4 엔진이 차이를 분류할 수 있도록(Phase 3.3).",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 32768
             }
           }
         }
+      ]
+    },
+    "consumeOutcome": {
+      "description": "origin=kafka일 때 소비 결과(RecordInterceptor success → ok, failure → failed). origin=http면 필드 없음(Phase 3.3 추가).",
+      "enum": [
+        "ok",
+        "failed"
       ]
     },
     "dbAccess": {
@@ -282,6 +298,7 @@
               "topic",
               "key",
               "payloadHash",
+              "payload",
               "ack",
               "childHopPath"
             ],
@@ -301,6 +318,14 @@
               },
               "payloadHash": {
                 "$ref": "#/$defs/sha256"
+              },
+              "payload": {
+                "description": "UTF-8 원문. 32KB 초과 시 null(payloadHash 유지) — response.body와 같은 상한. 3.4 엔진이 차이를 분류할 수 있도록(Phase 3.3).",
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 32768
               },
               "ack": {
                 "enum": [
@@ -509,6 +534,11 @@
           "event": {
             "type": "null"
           }
+        },
+        "not": {
+          "required": [
+            "consumeOutcome"
+          ]
         }
       }
     },
@@ -531,7 +561,10 @@
           "event": {
             "type": "object"
           }
-        }
+        },
+        "required": [
+          "consumeOutcome"
+        ]
       }
     }
   ],

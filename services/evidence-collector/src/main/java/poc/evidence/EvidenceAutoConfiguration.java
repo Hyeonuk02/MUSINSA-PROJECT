@@ -9,15 +9,19 @@ import org.springframework.boot.autoconfigure.AutoConfiguration;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnClass;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.hibernate.autoconfigure.HibernatePropertiesCustomizer;
+import org.springframework.boot.kafka.autoconfigure.DefaultKafkaProducerFactoryCustomizer;
 import org.springframework.boot.restclient.RestClientCustomizer;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.core.Ordered;
+import org.springframework.kafka.core.KafkaTemplate;
+import org.springframework.kafka.listener.RecordInterceptor;
 import org.springframework.transaction.TransactionExecutionListener;
 
 import java.nio.file.Path;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -98,7 +102,7 @@ public class EvidenceAutoConfiguration {
     }
 
     @Bean
-    public FilterRegistrationBean<EvidenceFilter> evidenceFilterRegistration(
+    public EvidenceWriter evidenceWriter(
             EvidenceSender sender,
             @Value("${EVIDENCE_STACK:}") String stack,
             @Value("${EVIDENCE_SERVICE:}") String service,
@@ -111,11 +115,50 @@ public class EvidenceAutoConfiguration {
         }
         log.info("EVIDENCE_ENABLED stack={} service={} version={} headers={} packages={} callTree=[{}]",
                 stack, service, version, headerNames, packages, callTreeExpression(packages));
+        return new EvidenceWriter(sender, stack, service, version, packages);
+    }
+
+    @Bean
+    public FilterRegistrationBean<EvidenceFilter> evidenceFilterRegistration(
+            EvidenceWriter writer, @Value("${EVIDENCE_HEADERS:}") List<String> headerNames) {
         FilterRegistrationBean<EvidenceFilter> registration =
-                new FilterRegistrationBean<>(new EvidenceFilter(sender, stack, service, version, headerNames, packages));
+                new FilterRegistrationBean<>(new EvidenceFilter(writer, headerNames));
         registration.setOrder(Ordered.HIGHEST_PRECEDENCE);
         registration.addUrlPatterns("/*");
         return registration;
+    }
+
+    /**
+     * Kafka 발행·소비 수집(Phase 3.3). Kafka가 있는 서비스에만 붙는다.
+     * <ul>
+     *   <li>producer 설정 {@code interceptor.classes}에 {@link EvidenceProducerInterceptor} — 재생 헤더 전파·발행 기록
+     *   <li>{@code KafkaTemplate.send*()} advisor — 발행 기록에 future를 붙여 ack를 호출 스레드에서 정한다
+     *   <li>{@link RecordInterceptor} 빈 — Boot가 리스너 컨테이너에 붙인다. 소비 홉 Evidence
+     * </ul>
+     */
+    @Configuration(proxyBeanMethods = false)
+    @ConditionalOnClass(KafkaTemplate.class)
+    static class KafkaEvidence {
+
+        @Bean
+        DefaultKafkaProducerFactoryCustomizer evidenceProducerInterceptorCustomizer() {
+            return factory -> factory.updateConfigs(
+                    Map.of("interceptor.classes", EvidenceProducerInterceptor.class.getName()));
+        }
+
+        @Bean
+        static Advisor evidenceKafkaSendAdvisor() {
+            AspectJExpressionPointcutAdvisor advisor = new AspectJExpressionPointcutAdvisor();
+            advisor.setExpression("execution(java.util.concurrent.CompletableFuture "
+                    + "org.springframework.kafka.core.KafkaTemplate+.send*(..))");
+            advisor.setAdvice(new KafkaTemplateSendAdvice());
+            return advisor;
+        }
+
+        @Bean
+        RecordInterceptor<Object, Object> evidenceRecordInterceptor(EvidenceWriter writer) {
+            return new KafkaEvidenceInterceptor(writer);
+        }
     }
 
     /** 외부 호출 전파·기록. RestClient 자동 구성(spring-boot-restclient)이 있는 서비스에만 붙는다. */
