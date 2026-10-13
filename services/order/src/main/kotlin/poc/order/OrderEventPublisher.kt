@@ -3,8 +3,7 @@ package poc.order
 import org.slf4j.LoggerFactory
 import org.springframework.kafka.core.KafkaTemplate
 import org.springframework.stereotype.Component
-import org.springframework.transaction.event.TransactionPhase
-import org.springframework.transaction.event.TransactionalEventListener
+import org.springframework.context.event.EventListener
 import tools.jackson.databind.json.JsonMapper
 import java.util.concurrent.TimeUnit
 
@@ -23,7 +22,7 @@ class OrderEventPublisher(
     private val jsonMapper: JsonMapper,
 ) {
 
-    @TransactionalEventListener(phase = TransactionPhase.AFTER_COMMIT)
+    @EventListener
     fun onOrderPaid(event: OrderPaid) {
         val payload = jsonMapper.writeValueAsString(event)
         try {
