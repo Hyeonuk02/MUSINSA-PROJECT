@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - Legacy 고정: `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`. 엔진 `engine-v1.1`
-- 진행 상태: base 게이트 재확인 PASS → **v1.1 PASS** → v1.2 진행 중 (단계마다 이 문서에 절을 추가한다)
+- 진행 상태: base 게이트 재확인 PASS → **v1.1 PASS** → **v1.2 PASS** → v1.3 진행 중 (단계마다 이 문서에 절을 추가한다)
 - 누적 결과 표: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -46,6 +46,26 @@ v1.1 해석: Java record `ChargeRequest`를 Kotlin data class로 바꿔도 Boot 
 | new order (v1.1) | **134.23 MB** | **28,516** |
 | legacy / new coupon | 124.78 / 124.66 MB | 26,341 / 26,326 |
 
+### 1.2 v1.2 — Order·OrderItem 엔티티 + OrderRepository (Kotlin)
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| commit 1 · 이미지 1 | PASS | `fc6e6e2`, `order-app:phase3.5-v1.2`. 변경 클래스 3(`Order`, `OrderItem`, `OrderRepository`) — 7 files, +172 −176 |
+| `poc.evidence` 수정 0줄 | PASS | `git diff 98c9356 -- services/evidence-collector` 0줄 |
+| 3 run, Undelivered 0, degraded 0 | PASS | `p35-v1.2-1..3` run.sh exit 0, verify 3/3 PASS, `dirty: false`(rev `fc6e6e2`), images.order legacy=phase3.3-base / new=phase3.5-v1.2 |
+| 모든 diff가 4분류로 설명됨 | PASS (diff 0) | C `{SAME: 58}` ×3, B0·B1 DIFF 0 ×3, dbstate OK. `logs/phase3.5-v1.2-verdict.txt` |
+| learn 리뷰 · 규칙 | 해당 없음 | learn Uncertain 유형 0 → 라벨 0, 규칙 0 |
+
+전환 내용(D17 준수): data class 아님, `class X protected constructor()` + no-arg(jpa), all-open으로 클래스·메서드 open(`javap`: `public class poc.order.Order`, getter non-final), JPA 애노테이션은 필드에(필드 접근 — Java와 같음), nullable 컬럼(`transaction_id`·`idempotency_key`·`coupon_key`)만 `String?`, 나머지는 `lateinit`/기본값 + `protected set`, `OneToMany(cascade = ALL, orphanRemoval = true)`·`@OrderBy("lineNo ASC")` 그대로, 상수는 `companion object const val`(Java `switch case Order.PAID`가 그대로 컴파일), `OrderItem`의 id·order는 Java처럼 getter 없는 private. Boolean 프로퍼티 없음. `OrderRepository`는 Java 호출부를 위해 `Optional` 반환 유지.
+
+v1.2 해석: SQL 원문(B0)까지 같다 — Hibernate가 매핑 메타데이터에서 SQL을 만들고 필드 접근·컬럼·연관 설정이 같으면 클래스가 Kotlin이어도 문장이 같다. lazy `items` 로딩(`select … from order_items … order by line_no`) 횟수·위치도 같아 dbRead 축 차이 0 — all-open을 처음부터 넣은 효과(빠뜨렸다면 final 엔티티로 프록시가 깨질 수 있는 구간).
+
+| (p35-v1.2 뒤) | Metaspace 사용 | 클래스 |
+|---|---|---|
+| legacy order | 128.18 MB | 26,717 |
+| new order (v1.2) | **134.90 MB** | **28,764** |
+| legacy / new coupon | 125.59 / 125.67 MB | 26,345 / 26,330 |
+
 ## 2. 변경 파일·커밋
 
 | 커밋 | 내용 |
@@ -55,7 +75,10 @@ v1.1 해석: Java record `ChargeRequest`를 Kotlin data class로 바꿔도 Boot 
 | `3fe2d58` phase3.5-v1.1: 중단 보고 | (이전 판 보고서 — 이 문서로 대체) |
 | `d1b283e` phase3.5: Metaspace 상한 256m·limits 1Gi (base 공통) | `deploy/k8s/base/{order,coupon}.yaml`, `docs/phase3-plan.md`(D-2 아래 한 줄 + 3.5 구현 시 확정) |
 | `47d7191` phase3.5: run.sh preflight — Store에 같은 runId Evidence가 있으면 중단 | `k6/run.sh` |
-| (이 커밋) phase3.5-v1.1: 결과·규칙·보고서 | 이 문서, `docs/phase3-result.md`, `docs/reports/logs/phase3.5-*`, `docs/phase3-plan.md`(구현 시 확정 추가) |
+| `71c8f04` phase3.5-v1.1: 결과·규칙·보고서 | 이 문서, `docs/phase3-result.md`, `docs/reports/logs/phase3.5-*`, `docs/phase3-plan.md`(구현 시 확정 추가) |
+
+| `fc6e6e2` phase3.5-v1.2: Order·OrderItem 엔티티와 OrderRepository를 Kotlin으로 | `Order.java`·`OrderItem.java`·`OrderRepository.java` → `.kt`, new overlay `phase3.5-v1.2` |
+| (이 커밋) phase3.5-v1.2: 결과·규칙·보고서 | 이 문서, `docs/phase3-result.md`, `docs/reports/logs/phase3.5-v1.2-*` |
 
 ## 3. 실행 명령·주요 출력
 
@@ -70,6 +93,11 @@ verify_sameness ×3 → PASS; verdict.py --arm C|B0|B1 ×3 → {SAME: 58}
 kubectl apply -k deploy/k8s/new                              → order phase3.5-v1.1
 k6/run.sh --run-id p35-v1.1 --iterations 3 --vus 3          → exit 0
 verify_sameness ×3 → PASS; verdict C|B0|B1 ×3 → {SAME: 58}; review.py list --split learn → 유형 0
+
+# v1.2 (단계마다 같은 절차)
+docker build -f services/order/Dockerfile -t order-app:phase3.5-v1.2 services/ → docker save → kind load image-archive
+kubectl apply -k deploy/k8s/new; k6/run.sh --run-id p35-v1.2 --iterations 3 --vus 3   → exit 0
+verify ×3 PASS; verdict C|B0|B1 ×3 → {SAME: 58}; review list → 유형 0
 ```
 
 ## 4. Legacy/New 비교
@@ -78,6 +106,7 @@ verify_sameness ×3 → PASS; verdict C|B0|B1 ×3 → {SAME: 58}; review.py list
 |---|---|---|---|---|---|---|---|
 | base(A/A) | p35-base-1..3 | 58/0/0/0 ×3 | 0 | 0 | 0 | 0 | 일치 |
 | v1.1 | p35-v1.1-1..3 | 58/0/0/0 ×3 | 0 | 0 | 0 | 0 | 일치 |
+| v1.2 | p35-v1.2-1..3 | 58/0/0/0 ×3 | 0 | 0 | 0 | 0 | 일치 |
 
 ## 5. 지시와 다르게 구현한 것
 
@@ -90,5 +119,6 @@ verify_sameness ×3 → PASS; verdict C|B0|B1 ×3 → {SAME: 58}; review.py list
 
 - **환경 결함(Metaspace OOM)을 파이프라인이 잡아낸 사례** — `runs/p35-v1.1-oom-1`(첫 v1.1 run, 사다리 표 제외). New Order가 Metaspace 128m 상한에서 `OutOfMemoryError`(28건, 첫 지점은 지연 생성되는 Kafka producer 클래스 로딩). 파이프라인에는 **degraded 7세션 · `ack: failed` 3건 · 5xx 9건**으로 드러났고, barrier 미달로 run.sh가 export만 하고 멈춰 **판정에 들어가면 안 되는 run을 판정 전에 걸러냈다**. 측정해 보니 legacy(Java)도 128m의 99%(125.85 MB)라 Kotlin 런타임 몇 MB에 넘쳤다. → D-5 (A) 256m·limits 1Gi. 로그 `logs/phase3.5-v1.1-oom-{run,verify,applog}.txt`
 - **runId 재사용 사고** — `runs/p35-v1.1-stale-1`(두 번째 v1.1 시도, 사다리 표 제외). OOM run 디렉터리를 옮긴 뒤 같은 runId(`p35-v1.1`)로 재실행했는데, Store에 OOM run의 Evidence 100건이 남아 있었다. k6 완료 폴링(`exists`)이 이전 Evidence를 보고 New가 R000001 생성을 끝내기 전에(New 완료 15:47:31.00, New R000002 도착 15:47:30.39) 다음 요청을 보내 New 쪽 조회·결제가 404 → 발행 없음 → 소비 Evidence 없음 → degraded 4·barrier 미달로 다시 걸러졌다. 엔진·Kotlin과 무관한 운영 실수. 해결: run.sh preflight에 "Store에 같은 runId Evidence 0건" 검사 추가(자동 삭제 없음), 그 Store run은 `DELETE /runs/p35-v1.1-1`(로컬 export는 보존)로 정리 후 재실행. 검사 동작 확인 `logs/phase3.5-preflight-runid.txt`(100건 있음 → exit 1). 로그 `logs/phase3.5-v1.1-stale-{run,verify}.txt`
+- **v1.2 잠재 차이(관측 안 됨)**: Java는 `addItem(sku=null)`이 INSERT에서 실패(→ `DataIntegrityViolationException` → 컨트롤러 409)했을 것이고, Kotlin은 non-null 파라미터 검사로 먼저 NPE(→ 500)가 난다. `sku` 컬럼이 `nullable = false`라 지시("nullable 컬럼만 `?`")대로 non-null로 옮겼다. corpus에 sku 없는 항목이 없어 이번 run에서는 나타나지 않는다 — 입력 검증 경로의 차이는 corpus가 덮는 범위까지만 보인다는 한계의 예
 - 두 실패 run 모두 Evidence 안의 runId가 `p35-v1.1-1`이라 디렉터리 이름과 달라 엔진 입력 계약 대상이 아니다(보존용)
 - **측정 도구**: Metaspace는 `jdk-tools:phase3.5`(로컬 빌드 JDK 이미지, kind 로드) ephemeral container로 대상 컨테이너 `/tmp/jdk`에 JDK를 복사한 뒤 `jcmd`. pod 스펙에 ephemeral container 기록이 남는다(재배포 시 사라짐). 측정은 run이 끝난 뒤에만
