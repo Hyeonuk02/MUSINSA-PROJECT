@@ -1,0 +1,23 @@
+id: learned-9a82df6b99b4
+scope: request
+verdict: improvement
+reason: JOIN FETCH로 조회 통합, 쓰기 집합·응답 동일 — fault/F5(1597c73) OrderRepository.findWithItemsByOrderKey(@Query
+  join fetch o.items)·OrderService.getByKey
+provenance:
+  author: Hyeonuk02
+  date: '2026-10-14'
+  runId: p36-F5-1
+  split: learn
+  sessions:
+  - S008
+  uid: 9a82df6b99b4
+match:
+  endpoint: order.get
+  diffKind: dbRead.fingerprintReplaced
+  from:
+  - select\ t\.id,t\.amount,t\.coupon_key,t\.created_at,t\.discount_amount,t\.idempotency_key,t\.order_key,t\.status,t\.transaction_id\
+    from\ orders\ t\ where\ t\.order_key=\?
+  to:
+  - select\ t\.id,t\.amount,t\.coupon_key,t\.created_at,t\.discount_amount,t\.idempotency_key,t\.order_id,t\.id,t\.line_no,t\.price,t\.qty,t\.sku,t\.order_key,t\.status,t\.transaction_id\
+    from\ orders\ t\ join\ order_items\ t\ on\ t\.id=t\.order_id\ where\ t\.order_key=\?\
+    order\ by\ t\.line_no

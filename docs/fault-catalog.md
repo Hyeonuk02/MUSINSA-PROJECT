@@ -12,7 +12,7 @@
 | F2 | `fault/F2` `a131294` | `Order`(+1 −2, cascade 제거) | 진짜 결함 | 주문 생성 9·조회(있음) 10·결제 8 = 27 pair CV + dbstate | 27/27 CV ×3 ✔, dbstate 위반(order_items 10 vs 0), 정상 경로 오탐 0 | writeSet(생성 9), 응답 items(조회·결제 18), dbstate | B0 ✔ / B1 ✔ / C ✔ |
 | F3 | `fault/F3` `12482f0` | `OrderEventPublisher`(애노테이션 1줄) | 진짜 결함 | 첫 결제 7 pair CV | 7/7 CV ×3 ✔, 오탐 0 | 타임라인 publish.seq(3) < COMMIT_BEGIN.seq(5) — 그 밖 축은 전부 같음 | B0 ✔ / B1 ✘ / C ✔ |
 | F4 | `fault/F4` `f83e211` | `OrderService`(애노테이션 1줄 noRollbackFor) | 진짜 결함 | R000037·R000038 CV + dbstate | 2/2 CV ×3 ✔, dbstate 위반(orders 8→9, order_items 10→11), 오탐 0 | R000037 transactions outcome(ROLLED_BACK → COMMITTED, writeSet은 같음), R000038 응답 404→200, dbstate | B0 ✔ / B1 △(R000038만) / C ✔ |
-| F5 | | | 정상 리팩터링 | 조회 13 pair UNC → learn 라벨 후 IMP | | dbRead 횟수·fingerprint, callTree | |
+| F5 | `fault/F5` `1597c73` | `OrderRepository`(+5), `OrderService`(1줄) | 정상 리팩터링 | 조회 13 pair UNC → learn 라벨 후 IMP | 13/13 UNC ×3 ✔ → learn 3유형 라벨(규칙 3) → 13/13 IMP ×3 ✔(eval 8 포함), 오탐 0 | dbRead 횟수 2→1·fingerprint(404 조회), callTree(findWithItemsByOrderKey) | B0 ✔ / B1 ✔(DIFF만) / C ✔(분류) |
 | F6 | | | 승인된 개선 | 생성 8·조회 10·결제 8 = 26 pair IMP(사전 규칙) | | response.addedFields itemCount | |
 | F7 | | | 설정 변경 결함 | R000041·R000042 CV + dbstate | | 응답 status, externalCalls status, 발행 없음(hop), 다음 GET 값, dbstate | |
 | F8 | | | 성능 계약 | 조회(있음) 10 pair: 기본 UNC / maxSelects 선언 CV | | dbRead 횟수, callTree | |
@@ -41,3 +41,8 @@
 
 변경(`fault/F4`): `OrderService.create`에 `noRollbackFor = [CouponClient.CouponFailure::class]`. USED 쿠폰으로 주문하면 400 `COUPON_ALREADY_USED`는 그대로지만 주문·항목 INSERT가 커밋된다.
 실제(`p36-F4-1..3`): R000037은 응답·SQL·쓰기 집합이 같고 transactions outcome만 다르다 → CV. R000038(같은 주문 조회)은 404 → 200 → CV. dbstate orders·order_items +1. 사전 기대의 "writeSet"은 해당 없음(양쪽 모두 INSERT 실행 — 차이는 롤백 여부) — 기대 판정(CV)은 일치.
+
+## F5 — 조회 JOIN FETCH (정상 리팩터링)
+
+변경(`fault/F5`): `OrderRepository.findWithItemsByOrderKey`(`select o from Order o join fetch o.items where o.orderKey = :orderKey`) 추가, `OrderService.getByKey`가 사용. 조회 SELECT 2개(orders + 지연 로딩 order_items)가 1개로, 응답·쓰기 집합 동일.
+실제: 라벨 전 조회 13 pair Uncertain(learn 5 / eval 8), 축은 dbRead(countDelta 2→1, 404 조회는 fingerprintReplaced)·callTree. learn 3유형을 improvement로 라벨 → 같은 run 재판정 13 pair 모두 Improvement — **eval Uncertain 8 → 0**.

@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5부터 진행 중
+- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6부터 진행 중
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -87,3 +87,17 @@
 | B0 / B1 / C | ✔ / △ / ✔ | B0 DIFF 2/2. **B1 DIFF 1/2** — R000038(다음 조회 404→200)만 보이고 R000037은 못 본다(응답 400·SQL 문장이 같고 차이는 트랜잭션 결과뿐). C CV 2/2 |
 
 해석: 결함이 일어난 요청(R000037)은 응답·SQL이 같아 **트랜잭션 outcome 축으로만** 잡히고, 결과는 다음 요청(R000038)의 응답과 dbstate로 번진다. 쓰기 집합은 같다(INSERT는 양쪽 다 실행됐고 롤백 여부만 다름) — writeSet이 아니라 transactions 축이 필요한 이유. 로그 `logs/phase3.6-F4-*.txt`
+
+### 1.5 F5 — 주문 조회 JOIN FETCH 1쿼리 (정상 리팩터링) + 첫 learn 리뷰
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브랜치·커밋 1·이미지 | PASS | `fault/F5` = `1597c73`, `order-app:phase3.6-F5`. 2 files(클래스 2): `OrderRepository.kt` +5(`@Query("select o from Order o join fetch o.items where o.orderKey = :orderKey") findWithItemsByOrderKey`), `OrderService.kt` 1줄(`getByKey`가 그것을 사용). 커밋 전 스모크: HQL 유효, 항목 순서 유지(`order by line_no`), 404 경로 정상 |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS, settleTimeouts 0, `dirty: false`(rev `9a6774f`), new=phase3.6-F5 |
+| target 조회 13 pair UNCERTAIN(라벨 전) | PASS | 13/13 ×3(learn 5: R2·R4·R28·R30·R38 / eval 8: R6·R9·R11·R14·R34·R42·R46·R48). CV 0(F0 제외), 정상 경로 오탐 0 |
+| learn 리뷰 | 3 유형 라벨 | `review.py list --split learn`(p36-F5-1): `5da05fdb147f` dbRead.countDelta 2→1(4건), `989c110b103e` callTree.sequenceReplaced findByOrderKey→findWithItemsByOrderKey(5건), `9a82df6b99b4` dbRead.fingerprintReplaced(404 조회 R38 — 단건 select → join select, 1건). 세 유형 모두 원인이 F5 코드 diff에서 짚힘 → `--as improvement`, reason "JOIN FETCH로 조회 통합, 쓰기 집합·응답 동일 — fault/F5(1597c73) …". 규칙 3개 `engine/rules/learned/{5da05fdb147f,989c110b103e,9a82df6b99b4}.yaml`(provenance: author Hyeonuk02, 2026-10-14, runId p36-F5-1, split learn, sessions S001·S006 / S001·S006·S008 / S008) |
+| 재판정(라벨 후, 같은 run) | PASS | 3 run 모두 IMPROVEMENT 13(learn 5 + **eval 8**) + SAME 46 + CV 1(F0). 기대 `afterLearnLabels` 13/13 일치. 라벨 전 판정은 `runs/p36-F5-*/verdict-prelabel.json`에 보존 |
+| **eval Uncertain 규칙 전→후** | **8 → 0** | learn 세션(5 pair)에서 만든 규칙 3개가 eval 세션 8 pair(404 조회 R11·R48 포함)의 Uncertain을 모두 Improvement로 — 3.7 Rule 재사용 효과의 첫 데이터 |
+| B0 / B1 / C | ✔ / ✔ / ✔(분류) | target 13 중 B0 DIFF 13, B1 DIFF 13(SQL 횟수·fingerprint는 B1 축), C는 DIFF를 UNC → (리뷰 후) IMP로 분류 |
+
+해석: B1도 "다르다"까지는 보지만 결함(CV)인지 개선인지 가르지 못한다. C는 기능 계약 축(응답·쓰기 집합·트랜잭션·이벤트)이 같고 실행 특성 축만 다르다는 것을 근거로 Uncertain으로 올리고, 사람이 learn 5 pair를 본 결과가 eval 8 pair로 재사용됐다. 로그 `logs/phase3.6-F5-*.txt`(리뷰 `logs/phase3.6-F5-review.txt`)

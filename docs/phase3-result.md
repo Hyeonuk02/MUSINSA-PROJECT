@@ -31,3 +31,4 @@ Phase 4 입력(스코핑): 단계별 commit = 위 표 commit 열, 이미지 = `o
 | F2 | `fault/F2` `a131294` | phase3.6-F2 | `runs/p36-F2-1..3` | `Order` | 27 pair CV + dbstate | 27/27 CV, dbstate 위반 | ✔ | 0 | 0/0 | 0 | 0→0 | B0 ✔ / B1 ✔ / C ✔ |
 | F3 | `fault/F3` `12482f0` | phase3.6-F3 | `runs/p36-F3-1..3` | `OrderEventPublisher` | 첫 결제 7 pair CV | 7/7 CV | ✔ | 0 | 0/0 | 0 | 0→0 | B0 ✔ / B1 ✘ / C ✔ |
 | F4 | `fault/F4` `f83e211` | phase3.6-F4 | `runs/p36-F4-1..3` | `OrderService` | R000037·R000038 CV + dbstate | 2/2 CV, dbstate 위반 | ✔ | 0 | 0/0 | 0 | 0→0 | B0 ✔ / B1 △(1/2) / C ✔ |
+| F5 | `fault/F5` `1597c73` | phase3.6-F5 | `runs/p36-F5-1..3` | `OrderRepository`, `OrderService` | 조회 13 UNC → 라벨 후 IMP | 13/13 UNC → 13/13 IMP | ✔(분류) | 0 | 5/8 → 0/0 | 3 (learned, learn 세션) | **8→0** | B0 ✔ / B1 ✔(DIFF) / C ✔ |
