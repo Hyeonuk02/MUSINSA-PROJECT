@@ -1,0 +1,31 @@
+# Kotlin 혼합 빌드 시험 (scratchpad, Boot 4.1.1 parent, kotlin-maven-plugin + allopen(spring)·noarg(jpa))
+$ mvn -q -B compile → exit 0
+$ javap poc.order.PaymentGatewayClient → public class (final 아님 = all-open 적용)
+$ javap poc.order.Order → public poc.order.Order(); (no-arg 생성자 생성 = kotlin-jpa 적용)
+Java 클래스 OrderService가 Kotlin PaymentGatewayClient·Order를 참조해 컴파일됨(혼합 빌드)
+
+--- pom.xml (핵심)
+  <build>
+    <plugins>
+      <plugin>
+        <groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-maven-plugin</artifactId>
+        <configuration>
+          <jvmTarget>17</jvmTarget>
+          <compilerPlugins><plugin>spring</plugin><plugin>jpa</plugin></compilerPlugins>
+        </configuration>
+        <dependencies><dependency><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-maven-allopen</artifactId><version>${kotlin.version}</version></dependency>
+                      <dependency><groupId>org.jetbrains.kotlin</groupId><artifactId>kotlin-maven-noarg</artifactId><version>${kotlin.version}</version></dependency></dependencies>
+        <executions>
+          <execution><id>compile</id><phase>process-sources</phase><goals><goal>compile</goal></goals>
+            <configuration><sourceDirs><sourceDir>src/main/kotlin</sourceDir><sourceDir>src/main/java</sourceDir></sourceDirs></configuration></execution>
+        </executions>
+      </plugin>
+      <plugin>
+        <groupId>org.apache.maven.plugins</groupId><artifactId>maven-compiler-plugin</artifactId>
+        <executions>
+          <execution><id>default-compile</id><phase>none</phase></execution>
+          <execution><id>java-compile</id><phase>compile</phase><goals><goal>compile</goal></goals></execution>
+        </executions>
+      </plugin>
+    </plugins>
+  </build>

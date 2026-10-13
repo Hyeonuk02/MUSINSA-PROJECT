@@ -38,7 +38,7 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 
 | 단계 | 내용 | 상태 |
 |---|---|---|
-| 3.0 | 사전 점검 — 버전·자원·ObjectMapper, Phase 2 잔여 | 진행 중 |
+| 3.0 | 사전 점검 — 버전·자원·ObjectMapper, Phase 2 잔여 | 완료(결정 대기 2건: 스택 전제·메모리) — docs/reports/phase3.0.md |
 | 3.1 | Evidence v1 — 타임라인·callTree·외부 호출·트랜잭션·error·최종 DB 상태 | |
 | 3.2 | Coupon 서비스 + Store v1 키 + corpus v2 | |
 | 3.3 | Kafka — 이벤트 축 | |
