@@ -1,0 +1,49 @@
+{
+  "tables": {
+    "coupons": {
+      "columns": [
+        "coupon_key",
+        "discount_amount",
+        "status",
+        "used_by_order_key"
+      ],
+      "count": 6,
+      "sha256": "sha256:5361319e8568f5518cb2d6bda52f1b31f5a1e28d005e01b9cfc6c2697950b397",
+      "sum": {
+        "discount_amount": 60000
+      }
+    },
+    "order_items": {
+      "columns": [
+        "order_key",
+        "line_no",
+        "sku",
+        "qty",
+        "price"
+      ],
+      "count": 10,
+      "sha256": "sha256:dbeff278b78dd45b0b8b737d647a8128ada103a3d6e5fe687c019ecb8416c75d",
+      "sum": {
+        "price": 59500,
+        "qty": 15
+      }
+    },
+    "orders": {
+      "columns": [
+        "order_key",
+        "status",
+        "amount",
+        "coupon_key",
+        "discount_amount",
+        "transaction_id",
+        "idempotency_key"
+      ],
+      "count": 8,
+      "sha256": "sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b",
+      "sum": {
+        "amount": 61500,
+        "discount_amount": 56500
+      }
+    }
+  }
+}

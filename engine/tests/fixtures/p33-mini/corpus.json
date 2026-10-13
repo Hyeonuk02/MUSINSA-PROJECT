@@ -1,0 +1,251 @@
+{
+ "version": "corpus-v2",
+ "sessions": [
+  {
+   "id": "S001",
+   "user": "userA",
+   "flow": "order",
+   "split": "learn",
+   "requests": [
+    {
+     "id": "R000001",
+     "method": "POST",
+     "path": "/api/orders",
+     "body": {
+      "orderKey": "ok-R000001",
+      "items": [
+       {
+        "sku": "A-1",
+        "qty": 1,
+        "price": 10000
+       }
+      ]
+     }
+    },
+    {
+     "id": "R000002",
+     "method": "GET",
+     "path": "/api/orders/by-key/ok-R000001"
+    },
+    {
+     "id": "R000003",
+     "method": "POST",
+     "path": "/api/orders/ok-R000001/pay",
+     "headers": {
+      "Idempotency-Key": "idem-R000003"
+     },
+     "settle": [
+      {
+       "hop": "0.e1",
+       "service": "coupon",
+       "origin": "kafka"
+      }
+     ]
+    },
+    {
+     "id": "R000004",
+     "method": "GET",
+     "path": "/api/orders/by-key/ok-R000001"
+    }
+   ]
+  },
+  {
+   "id": "S006",
+   "user": "userF",
+   "flow": "order-coupon",
+   "split": "learn",
+   "requests": [
+    {
+     "id": "R000026",
+     "method": "POST",
+     "path": "/api/coupons",
+     "body": {
+      "couponKey": "ck-R000026",
+      "discountAmount": 3000
+     }
+    },
+    {
+     "id": "R000027",
+     "method": "POST",
+     "path": "/api/orders",
+     "body": {
+      "orderKey": "ok-R000027",
+      "items": [
+       {
+        "sku": "D-1",
+        "qty": 2,
+        "price": 5000
+       }
+      ],
+      "couponKey": "ck-R000026"
+     },
+     "settle": [
+      {
+       "hop": "0.h1",
+       "service": "coupon",
+       "origin": "http"
+      }
+     ]
+    },
+    {
+     "id": "R000028",
+     "method": "GET",
+     "path": "/api/orders/by-key/ok-R000027"
+    },
+    {
+     "id": "R000029",
+     "method": "POST",
+     "path": "/api/orders/ok-R000027/pay",
+     "headers": {
+      "Idempotency-Key": "idem-R000029"
+     },
+     "settle": [
+      {
+       "hop": "0.e1",
+       "service": "coupon",
+       "origin": "kafka"
+      }
+     ]
+    },
+    {
+     "id": "R000030",
+     "method": "GET",
+     "path": "/api/orders/by-key/ok-R000027"
+    }
+   ]
+  },
+  {
+   "id": "S007",
+   "user": "userG",
+   "flow": "order-coupon",
+   "split": "eval",
+   "requests": [
+    {
+     "id": "R000031",
+     "method": "POST",
+     "path": "/api/coupons",
+     "body": {
+      "couponKey": "ck-R000031",
+      "discountAmount": 1000
+     }
+    },
+    {
+     "id": "R000032",
+     "method": "POST",
+     "path": "/api/orders",
+     "body": {
+      "orderKey": "ok-R000032",
+      "items": [
+       {
+        "sku": "E-1",
+        "qty": 1,
+        "price": 8000
+       }
+      ],
+      "couponKey": "ck-R000031"
+     },
+     "settle": [
+      {
+       "hop": "0.h1",
+       "service": "coupon",
+       "origin": "http"
+      }
+     ]
+    },
+    {
+     "id": "R000033",
+     "method": "POST",
+     "path": "/api/orders/ok-R000032/pay",
+     "headers": {
+      "Idempotency-Key": "idem-R000033"
+     },
+     "settle": [
+      {
+       "hop": "0.e1",
+       "service": "coupon",
+       "origin": "kafka"
+      }
+     ]
+    },
+    {
+     "id": "R000034",
+     "method": "GET",
+     "path": "/api/orders/by-key/ok-R000032"
+    }
+   ]
+  },
+  {
+   "id": "S008",
+   "user": "userH",
+   "flow": "order-coupon",
+   "split": "learn",
+   "requests": [
+    {
+     "id": "R000035",
+     "method": "POST",
+     "path": "/api/coupons",
+     "body": {
+      "couponKey": "ck-R000035",
+      "discountAmount": 2500
+     }
+    },
+    {
+     "id": "R000036",
+     "method": "POST",
+     "path": "/api/orders",
+     "body": {
+      "orderKey": "ok-R000036",
+      "items": [
+       {
+        "sku": "F-1",
+        "qty": 1,
+        "price": 9000
+       }
+      ],
+      "couponKey": "ck-R000035"
+     },
+     "settle": [
+      {
+       "hop": "0.h1",
+       "service": "coupon",
+       "origin": "http"
+      }
+     ]
+    },
+    {
+     "id": "R000037",
+     "method": "POST",
+     "path": "/api/orders",
+     "body": {
+      "orderKey": "ok-R000037",
+      "items": [
+       {
+        "sku": "F-2",
+        "qty": 1,
+        "price": 7000
+       }
+      ],
+      "couponKey": "ck-R000035"
+     },
+     "settle": [
+      {
+       "hop": "0.h1",
+       "service": "coupon",
+       "origin": "http"
+      }
+     ]
+    },
+    {
+     "id": "R000038",
+     "method": "GET",
+     "path": "/api/orders/by-key/ok-R000037"
+    },
+    {
+     "id": "R000039",
+     "method": "GET",
+     "path": "/api/coupons/by-key/ck-R000035"
+    }
+   ]
+  }
+ ]
+}

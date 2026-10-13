@@ -1,0 +1,14 @@
+{
+ "runId": "p33-mini",
+ "source": "p33-1",
+ "sessions": [
+  "S001",
+  "S006",
+  "S007",
+  "S008"
+ ],
+ "corpus": {
+  "version": "corpus-v2",
+  "path": "corpus.json (fixture 사본)"
+ }
+}

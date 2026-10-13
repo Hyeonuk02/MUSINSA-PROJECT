@@ -1,0 +1,39 @@
+# Phase 3.4 — 기능 계약 선언 (D18). 검사 로직은 엔진(verdict.py)의 built-in이고, 여기서는 켜기·파라미터만 선언한다.
+# 앱 코드를 import하지 않는다 — 엔드포인트는 method + path 정규식(또는 소비 토픽)으로 식별한다.
+version: 1
+
+endpoints:
+  - {id: order.create,  method: POST, path: '^/api/orders$'}
+  - {id: order.get,     method: GET,  path: '^/api/orders/by-key/[^/]+$'}
+  - {id: order.pay,     method: POST, path: '^/api/orders/[^/]+/pay$'}
+  - {id: order.cancel,  method: POST, path: '^/api/orders/[^/]+/cancel$'}
+  - {id: coupon.create, method: POST, path: '^/api/coupons$'}
+  - {id: coupon.get,    method: GET,  path: '^/api/coupons/by-key/[^/]+$'}
+  - {id: coupon.use,    method: POST, path: '^/api/coupons/[^/]+/use$'}
+  - {id: consume.order.paid, topic: order.paid}
+
+# 관측 대상 — 이 호스트로 나간 호출·이 토픽 발행은 자식 홉 Evidence가 있어야 한다(hop 집합). barrier·verify와 같은 값.
+observed:
+  hosts: [order, coupon]
+  topics: [order.paid]
+
+checks:
+  response_status_equal: {enabled: true}          # status 불일치는 무조건 CV — 규칙 예외 없음
+  response_body_compatible: {enabled: true}       # 기존 필드 값 변경·삭제·content-type 변경 → CV (규칙이 그 diff를 설명하면 규칙을 따름). 필드 추가는 CV 아님
+  write_set_equal: {enabled: true}
+  tx_outcome_sequence_equal: {enabled: true}
+  external_calls_equal: {enabled: true}           # 개수·순서·method·path·status·requestBodyHash
+  events_equal: {enabled: true}                   # 발행·소비 이벤트 topic·key·ack(≠ ok면 CV)·payload(기존 필드 변경·삭제)
+  error_equal: {enabled: true}
+  consume_outcome_equal: {enabled: true}
+  hop_set_equal: {enabled: true}
+  publish_after_commit_begin: {enabled: true}     # 홉에 COMMIT_BEGIN이 있으면 모든 publish.seq > COMMIT_BEGIN.seq
+  gateway_calls_per_idem_key_le_1:                 # 세션 범위
+    enabled: true
+    host: wiremock
+    path: /gateway/charge
+  coupon_transition_order: {enabled: true}        # 세션 범위
+  dbstate_equal: {enabled: true}                  # run 범위
+  max_selects:                                     # 선언 단위 = endpoint id. 선언된 엔드포인트만 검사(기본 없음, F8에서 선언)
+    enabled: true
+    endpoints: {}

@@ -1,0 +1,15 @@
+# Phase 3.4 — 사전 승인 Improvement 규칙. 3.4에서는 형식만(규칙 없음).
+# F6(응답에 itemCount 추가)의 규칙은 3.6에서 F6 run 전에 넣는다 — 그래야 "사전 승인"이다.
+#
+# 형식 (learned/*.yaml과 같다):
+# rules:
+#   - id: order-get-item-count
+#     scope: request                 # request | session | run
+#     verdict: improvement           # same | improvement | violation
+#     reason: "주문 조회 응답에 itemCount 추가(승인된 개선)"
+#     provenance: {author: "...", date: "YYYY-MM-DD", runId: null, split: null, sessions: []}
+#     match:
+#       endpoint: order.get           # endpoint id 또는 '*'. replayRequestId·sessionId·runId는 쓸 수 없다(로더가 거부)
+#       diffKind: response.addedFields
+#       fields: [itemCount]
+rules: []
