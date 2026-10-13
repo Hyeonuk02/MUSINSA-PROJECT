@@ -92,7 +92,7 @@ def test_output_deterministic(run, rules):
     b = dumps(judge_run(run, rules, "C"))
     assert a == b
     head = json.loads(a)["engine"]
-    assert head["version"].startswith("engine-v1") and set(head["rules"]) >= {"contract.yaml", "improvement.yaml"}
+    assert head["version"].startswith("engine-v1.1") and set(head["rules"]) >= {"contract.yaml", "improvement.yaml"}
 
 
 # ---------------------------------------------------------------- 계획 7건
@@ -252,3 +252,19 @@ def test_settle_without_use_is_cv_session_rule(run, rules):
     assert pair(r, "R000027", "0.h1")["verdict"] == CV
     p = pair(r, "R000029", "0.e1")
     assert p["verdict"] == CV and has(p["violations"], "coupon_transition_order[ck-R000026]: new에서 use 없이 SETTLED")
+
+
+def test_id_value_masked_but_key_compared(run, rules):
+    """DB auto id는 값만 가린다 — 값이 달라도 SAME, 키가 빠지면 CV(response_body_compatible)."""
+    tamper(run, "R000028", "0", lambda r, _: body(r, id=999))
+    assert pair(judge_run(run, rules, "C"), "R000028")["verdict"] == SAME
+
+    def drop_id(rec, _):
+        b = json.loads(rec["response"]["body"])
+        del b["id"]
+        rec["response"]["body"] = json.dumps(b, separators=(",", ":"))
+    tamper(run, "R000028", "0", drop_id)
+    p = pair(judge_run(run, rules, "C"), "R000028")
+    assert p["verdict"] == CV and has(p["violations"], 'response_body_compatible: response.removedFields {"fields":["id"]}')
+    for arm in ("B0", "B1"):
+        assert pair(judge_run(run, rules, arm), "R000028")["verdict"] == "DIFF"

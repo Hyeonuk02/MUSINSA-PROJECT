@@ -27,7 +27,7 @@ import normalize as nz
 from common import ROOT, STACKS, contract_violations, key_of, load_run, load_validator
 from ruleset import RuleSet
 
-ENGINE_VERSION = "engine-v1 (phase3.4)"
+ENGINE_VERSION = "engine-v1.1 (phase3.5: id 값 마스킹)"
 RULE_COVERABLE = {"response.addedFields", "response.removedFields", "response.valueChanged", "events.payloadFieldsAdded",
                   "dbRead.countDelta", "dbRead.fingerprintReplaced", "callTree.sequenceReplaced",
                   "transactions.nameChanged"}
@@ -331,7 +331,7 @@ def _tsum(t):
 
 
 def _strip(rec: dict) -> dict:
-    """B0: 휘발 필드(시각·runId·version·stack)와 DB auto id만 뺀 원문. 본문은 id 제거 후 원래 키 순서로 다시 직렬화하고
+    """B0: 휘발 필드(시각·runId·version·stack)와 DB auto id 값만 가린 원문. 본문은 id 값 마스킹 후 원래 키 순서로 다시 직렬화하고
     그 본문의 hash는 버린다(id가 들어간 hash라서). 그 외(SQL 원문·callTree·seq·hash)는 그대로 비교한다."""
     out = {k: v for k, v in rec.items() if k not in VOLATILE}
     resp = out.get("response")
@@ -339,7 +339,7 @@ def _strip(rec: dict) -> dict:
         parsed = nz.parse_json(resp["body"])
         if parsed is not None:
             out["response"] = {k: v for k, v in resp.items() if k != "bodyHash"} | {
-                "body": json.dumps(nz.strip_ids(parsed), ensure_ascii=False, separators=(",", ":"))}
+                "body": json.dumps(nz.mask_ids(parsed), ensure_ascii=False, separators=(",", ":"))}
     req = out.get("request")
     if req:
         out["request"] = req | {"headers": {k: v for k, v in req["headers"].items() if k != "x-run-id"}}

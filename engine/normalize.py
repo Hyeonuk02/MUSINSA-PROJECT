@@ -9,7 +9,7 @@ Evidence 레코드 한 건을 판정용 정규형으로 바꾼다. 원문(Eviden
   실행 특성 축  readCount·readFingerprints, callTree, transactions name, externalCalls.responseBodyHash
 
 제외: timing, capturedAt, runId, version, request(요청 동일성은 verify_sameness가 확인),
-      response.body·event payload의 "id" 키(DB auto id, 모든 깊이 — Phase 2 diff_v0와 동일)
+      response.body·event payload의 "id" 키 값(DB auto id, 모든 깊이 — 값만 "<id>"로 마스킹, 키 유무는 비교)
 """
 import json
 import re
@@ -25,14 +25,16 @@ def canonical(value) -> str:
 
 
 AUTO_ID_KEY = "id"
+ID_MASK = "<id>"
 
 
-def strip_ids(value):
-    """키 이름이 정확히 "id"인 필드를 모든 깊이에서 제거(DB auto id — Phase 2 diff_v0와 같은 유일한 제외 필드)."""
+def mask_ids(value):
+    """키 이름이 정확히 "id"인 필드의 값을 "<id>"로 바꾼다(모든 깊이, DB auto id). 키 유무는 남겨 비교한다 —
+    New가 id를 빼먹거나 새로 넣으면 response.removedFields/addedFields로 드러난다(engine-v1.1, phase3.5 구현 시 확정)."""
     if isinstance(value, dict):
-        return {k: strip_ids(v) for k, v in value.items() if k != AUTO_ID_KEY}
+        return {k: (ID_MASK if k == AUTO_ID_KEY else mask_ids(v)) for k, v in value.items()}
     if isinstance(value, list):
-        return [strip_ids(v) for v in value]
+        return [mask_ids(v) for v in value]
     return value
 
 
@@ -131,7 +133,7 @@ def normalize(rec: dict, endpoints: Endpoints) -> dict:
         # 기능 계약 축
         "response.status": None if kafka else response.get("status"),
         "response.contentType": None if kafka else (response.get("headers") or {}).get("content-type"),
-        "response.body": None if kafka else (strip_ids(body_json) if body_json is not None
+        "response.body": None if kafka else (mask_ids(body_json) if body_json is not None
                                               else {"$hash": response.get("bodyHash")}),
         "writeSet": writes,
         "externalCalls": [{k: c[k] for k in ("method", "host", "path", "status", "requestBodyHash")}
@@ -163,7 +165,7 @@ def normalize(rec: dict, endpoints: Endpoints) -> dict:
 
 def _payload(text, payload_hash):
     parsed = parse_json(text)
-    return strip_ids(parsed) if parsed is not None else {"$hash": payload_hash}
+    return mask_ids(parsed) if parsed is not None else {"$hash": payload_hash}
 
 
 FUNCTIONAL_AXES = ("response.status", "response.contentType", "response.body", "writeSet", "externalCalls",
