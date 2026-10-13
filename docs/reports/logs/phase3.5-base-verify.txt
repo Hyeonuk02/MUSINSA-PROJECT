@@ -1,0 +1,93 @@
+== runs/p35-base-1
+== runs/p35-base-1  PASS
+  PASS  입력 계약 (schema·runId·stack)         116/116
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 46건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        자식 홉 짝 12건
+  PASS  request.method                     58/58
+  PASS  request.path                       58/58
+  PASS  request.query                      58/58
+  PASS  request.headers.x-replay-request-id 58/58
+  PASS  request.headers.x-run-id           58/58
+  PASS  request.headers.x-session-id       58/58
+  PASS  request.headers.x-replay-hop-path  58/58
+  PASS  request.headers.idempotency-key    58/58
+  PASS  request.headers.content-type       58/58
+  PASS  request.bodyHash                   58/58
+  PASS  k6 status == legacy response.status 46/46
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-23.7 median=-0.3 max=22.1 (n=58)
+        arrivedAt:   min=-15.3 median=-0.0 max=28.1 (n=58)
+== 요약
+  PASS  runs/p35-base-1
+verify exit=0
+== runs/p35-base-2
+== runs/p35-base-2  PASS
+  PASS  입력 계약 (schema·runId·stack)         116/116
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 46건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        자식 홉 짝 12건
+  PASS  request.method                     58/58
+  PASS  request.path                       58/58
+  PASS  request.query                      58/58
+  PASS  request.headers.x-replay-request-id 58/58
+  PASS  request.headers.x-run-id           58/58
+  PASS  request.headers.x-session-id       58/58
+  PASS  request.headers.x-replay-hop-path  58/58
+  PASS  request.headers.idempotency-key    58/58
+  PASS  request.headers.content-type       58/58
+  PASS  request.bodyHash                   58/58
+  PASS  k6 status == legacy response.status 46/46
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-24.5 median=-0.0 max=25.6 (n=58)
+        arrivedAt:   min=-22.3 median=0.0 max=12.6 (n=58)
+== 요약
+  PASS  runs/p35-base-2
+verify exit=0
+== runs/p35-base-3
+== runs/p35-base-3  PASS
+  PASS  입력 계약 (schema·runId·stack)         116/116
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 46건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        자식 홉 짝 12건
+  PASS  request.method                     58/58
+  PASS  request.path                       58/58
+  PASS  request.query                      58/58
+  PASS  request.headers.x-replay-request-id 58/58
+  PASS  request.headers.x-run-id           58/58
+  PASS  request.headers.x-session-id       58/58
+  PASS  request.headers.x-replay-hop-path  58/58
+  PASS  request.headers.idempotency-key    58/58
+  PASS  request.headers.content-type       58/58
+  PASS  request.bodyHash                   58/58
+  PASS  k6 status == legacy response.status 46/46
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-15.3 median=-0.3 max=7.4 (n=58)
+        arrivedAt:   min=-9.2 median=-0.1 max=7.1 (n=58)
+== 요약
+  PASS  runs/p35-base-3
+verify exit=0

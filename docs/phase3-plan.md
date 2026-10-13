@@ -309,6 +309,7 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 - **OOM run 보존**: 실패한 첫 run은 `runs/p35-v1.1-oom-1`로 이름을 바꿔 보존(Evidence 안의 runId는 `p35-v1.1-1` 그대로라 엔진 입력 계약 대상이 아님), 사다리 표에는 넣지 않는다
 - **게이트 run의 이미지 지정**: 레포의 new overlay는 사다리 현재 단계를 가리키고, base A/A는 `kubectl kustomize deploy/k8s/new`의 order 이미지만 `phase3.3-base`로 바꿔 apply한다(레포 무변경 → dirty=false). 실제 이미지는 run-meta `images.order`로 확인
 - **Metaspace 측정**: run이 끝난 뒤(run 중 아님) `jcmd <pid> VM.metaspace`의 Both used. 대상 컨테이너에 JDK가 없어 로컬 빌드 이미지 `jdk-tools:phase3.5`(빌드 스테이지의 JDK)를 ephemeral container로 붙여 `/proc/1/root/tmp/jdk`로 복사한 뒤 대상 컨테이너에서 실행. 참고값(판정과 무관)
+- **runId 재사용 금지(run.sh preflight, 커밋 `47d7191`)**: Store에 `<base>-1..N` runId의 Evidence가 하나라도 있으면 시작하지 않는다(자동 삭제 없음). 실패 run 디렉터리를 옮기면 기존 "runs/<runId> 존재" 검사가 통과해 버리고, Store에 남은 이전 Evidence 때문에 k6 완료 폴링(exists)이 New 완료 전에 다음 요청을 보낸다 — p35-v1.1-stale-1에서 실측(New R000001 생성 완료 전에 R000002·R000003 도착 → 404). 남은 run은 `DELETE /runs/<runId>`로 사람이 지운다(로컬 export는 보존)
 
 끝난 기준
 - v1.1~v1.4 각 3 run, Undelivered 0, degraded 0, **모든 diff가 4분류 중 하나로 설명됨**(0건이어도 통과)

@@ -1,0 +1,12 @@
+[15:49:34] preflight
+[15:49:34]   nodes: musinsa-phase1-control-plane(Ready) 
+[15:49:34]   cert istio-system/istio-ingressgateway-7d698f779c-kr6hr: VALID CERT=true NOT AFTER=2026-10-14T05:32:36Z (남은 823분)
+[15:49:35]   cert legacy/order-7f8cdf858c-ft5zk: VALID CERT=true NOT AFTER=2026-10-14T15:43:44Z (남은 1434분)
+[15:49:35]   cert new/order-7f588455cc-tqrt2: VALID CERT=true NOT AFTER=2026-10-14T15:46:43Z (남은 1437분)
+[15:49:35]   cert legacy/coupon-8664864f58-r79qc: VALID CERT=true NOT AFTER=2026-10-14T15:43:44Z (남은 1434분)
+[15:49:35]   cert new/coupon-5d69447bd7-q6xmt: VALID CERT=true NOT AFTER=2026-10-14T15:43:44Z (남은 1434분)
+[15:49:35]   cert legacy/kafka-8584957cbf-x2gwk: VALID CERT=true NOT AFTER=2026-10-14T15:46:59Z (남은 1437분)
+[15:49:35]   cert new/kafka-8584957cbf-pnzvh: VALID CERT=true NOT AFTER=2026-10-14T15:46:59Z (남은 1437분)
+[15:49:35]   store: /_evidence/count 200
+[15:49:35]   corpus: validate.py PASS
+[15:49:35] FAIL: preflight: Store에 runId=p35-v1.1-1 Evidence 100건이 이미 있다 — 다른 --run-id를 쓰거나 DELETE /runs/p35-v1.1-1 후 재실행
