@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - Legacy 고정: `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`. 엔진 `engine-v1.1`
-- 진행 상태: base 게이트 재확인 PASS → **v1.1 PASS** → **v1.2 PASS** → v1.3 진행 중 (단계마다 이 문서에 절을 추가한다)
+- 진행 상태: base 게이트 재확인 PASS → **v1.1 PASS** → **v1.2 PASS** → **v1.3 PASS** → v1.4 진행 중 (단계마다 이 문서에 절을 추가한다)
 - 누적 결과 표: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -66,6 +66,26 @@ v1.2 해석: SQL 원문(B0)까지 같다 — Hibernate가 매핑 메타데이터
 | new order (v1.2) | **134.90 MB** | **28,764** |
 | legacy / new coupon | 125.59 / 125.67 MB | 26,345 / 26,330 |
 
+### 1.3 v1.3 — OrderService·Outcome·OrderPaid·OrderEventPublisher (Kotlin)
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| commit 1 · 이미지 1 | PASS | `c64618f`, `order-app:phase3.5-v1.3`. 변경 클래스 3 파일(`OrderService`(+`Kind`·`Outcome`·`NewItem`), `OrderPaid`, `OrderEventPublisher`) — 7 files, +174 −189 |
+| `poc.evidence` 수정 0줄 | PASS | `git diff 98c9356 -- services/evidence-collector` 0줄 |
+| 3 run, Undelivered 0, degraded 0 | PASS | `p35-v1.3-1..3` run.sh exit 0, verify 3/3 PASS, `dirty: false`(rev `c64618f`), images.order new=phase3.5-v1.3 |
+| 모든 diff가 4분류로 설명됨 | PASS (diff 0) | C `{SAME: 58}` ×3, B0·B1 DIFF 0 ×3, dbstate OK. `logs/phase3.5-v1.3-verdict.txt` |
+| learn 리뷰 · 규칙 | 해당 없음 | learn Uncertain 0. v1.3은 규칙을 만들지 않는 단계(만들 것도 없음) — 적용된 규칙 0, eval Uncertain 0→0 |
+
+전환 내용: 생성자 주입은 primary constructor, `@Transactional`·`@TransactionalEventListener`는 그대로(spring all-open으로 프록시 가능), `Outcome`·`NewItem`은 아직 Java인 `OrderController`가 record 접근자(`kind()`·`order()`)·생성자로 쓰므로 **`@JvmRecord data class`**(`javap`: `extends java.lang.Record`, `kind()`·`order()`) — 컨트롤러 무변경. `Kind`는 Kotlin `enum class`(Java `switch`가 그대로 동작). `OrderPaid`는 Java 사용처가 없어져 plain data class(페이로드는 앱 JsonMapper + jackson-module-kotlin). `catch (RestClientException | IllegalStateException)`은 catch 두 개로. 로거는 companion.
+
+v1.3 해석: B0(원문)까지 같다 — 트랜잭션 이름(`poc.order.OrderService.pay`, Spring이 `클래스.메서드`로 만든다), callTree(`OrderController.pay → OrderService.pay → OrderRepository.findByOrderKey → PaymentGatewayClient.charge → OrderEventPublisher.onOrderPaid`), 타임라인(COMMIT_BEGIN 4 < UPDATE 5 < PUBLISH 6 < COMMITTED 7), `order.paid` 페이로드 바이트(`{"orderKey":…,"amount":…,"couponKey":…}` — record와 data class가 같은 순서)가 모두 같다.
+
+| (p35-v1.3 뒤) | Metaspace 사용 | 클래스 |
+|---|---|---|
+| legacy order | 128.98 MB | 26,720 |
+| new order (v1.3) | **134.71 MB** | **28,699** |
+| legacy / new coupon | 126.44 / 126.44 MB | 26,347 / 26,331 |
+
 ## 2. 변경 파일·커밋
 
 | 커밋 | 내용 |
@@ -78,7 +98,9 @@ v1.2 해석: SQL 원문(B0)까지 같다 — Hibernate가 매핑 메타데이터
 | `71c8f04` phase3.5-v1.1: 결과·규칙·보고서 | 이 문서, `docs/phase3-result.md`, `docs/reports/logs/phase3.5-*`, `docs/phase3-plan.md`(구현 시 확정 추가) |
 
 | `fc6e6e2` phase3.5-v1.2: Order·OrderItem 엔티티와 OrderRepository를 Kotlin으로 | `Order.java`·`OrderItem.java`·`OrderRepository.java` → `.kt`, new overlay `phase3.5-v1.2` |
-| (이 커밋) phase3.5-v1.2: 결과·규칙·보고서 | 이 문서, `docs/phase3-result.md`, `docs/reports/logs/phase3.5-v1.2-*` |
+| `cc4dab9` phase3.5-v1.2: 결과·규칙·보고서 | 이 문서, `docs/phase3-result.md`, `docs/reports/logs/phase3.5-v1.2-*` |
+| `c64618f` phase3.5-v1.3: OrderService·Outcome·OrderPaid·OrderEventPublisher를 Kotlin으로 | 3 파일 `.java` → `.kt`, new overlay `phase3.5-v1.3` |
+| (이 커밋) phase3.5-v1.3: 결과·규칙·보고서 | 이 문서, `docs/phase3-result.md`, `docs/reports/logs/phase3.5-v1.3-*` |
 
 ## 3. 실행 명령·주요 출력
 
@@ -107,6 +129,7 @@ verify ×3 PASS; verdict C|B0|B1 ×3 → {SAME: 58}; review list → 유형 0
 | base(A/A) | p35-base-1..3 | 58/0/0/0 ×3 | 0 | 0 | 0 | 0 | 일치 |
 | v1.1 | p35-v1.1-1..3 | 58/0/0/0 ×3 | 0 | 0 | 0 | 0 | 일치 |
 | v1.2 | p35-v1.2-1..3 | 58/0/0/0 ×3 | 0 | 0 | 0 | 0 | 일치 |
+| v1.3 | p35-v1.3-1..3 | 58/0/0/0 ×3 | 0 | 0 | 0 | 0 | 일치 |
 
 ## 5. 지시와 다르게 구현한 것
 

@@ -11,5 +11,6 @@ Legacy = `order-app:phase3.3-base`(고정), Coupon 양쪽 `coupon-app:phase3.3-b
 | base | `d1b283e` | phase3.3-base | `runs/p35-base-1..3` | — (A/A) | 58 | 0 | 0 | 0 | 0 | 0 | 0→0 | 0 | 0 | 125.02 / 125.01 |
 | v1.1 | `fd839d6` | phase3.5-v1.1 | `runs/p35-v1.1-1..3` | `PaymentGatewayClient` (.java −56 → .kt +50), pom +104 | 58 | 0 | 0 | 0 | 0 | 0 | 0→0 | 0 | 0 | 126.79 / 134.23 |
 | v1.2 | `fc6e6e2` | phase3.5-v1.2 | `runs/p35-v1.2-1..3` | `Order`, `OrderItem`, `OrderRepository` (.java −175 → .kt +171) | 58 | 0 | 0 | 0 | 0 | 0 | 0→0 | 0 | 0 | 128.18 / 134.90 |
+| v1.3 | `c64618f` | phase3.5-v1.3 | `runs/p35-v1.3-1..3` | `OrderService`(+Kind·Outcome·NewItem), `OrderPaid`, `OrderEventPublisher` (.java −188 → .kt +173) | 58 | 0 | 0 | 0 | 0 | 0 (규칙 생성 없는 단계) | 0→0 | 0 | 0 | 128.98 / 134.71 |
 
 사다리 표에서 제외한 run: `runs/p35-v1.1-oom-1`(Metaspace OOM), `runs/p35-v1.1-stale-1`(runId 재사용) — `docs/reports/phase3.5.md` 6절.
