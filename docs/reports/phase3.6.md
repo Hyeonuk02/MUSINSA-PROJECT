@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6 일치 → F7부터 진행 중
+- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6 일치 → F7 일치 → F8부터 진행 중
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -115,3 +115,17 @@
 | B0 / B1 / C | ✔ / ✔ / ✔(분류) | B0 DIFF 26/26, B1 DIFF 26/26(응답 body), C IMPROVEMENT 26 — B1은 개선을 결함과 구분하지 못한다 |
 
 로그 `logs/phase3.6-F6-*.txt`
+
+### 1.7 F7 — 결제 게이트웨이 read timeout 1s (설정 변경 결함)
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브랜치·커밋 1·이미지 | PASS | `fault/F7` = `31363ce`, `order-app:phase3.6-F7`. `PaymentGatewayClient.kt` 1줄(+import) — `SimpleClientHttpRequestFactory().apply { setReadTimeout(Duration.ofSeconds(1)) }`. **계획의 "3s→1s"와 다른 점**: Legacy·기준선은 read timeout을 설정하지 않는다(SimpleClientHttpRequestFactory 기본 = 무제한). F7은 "무제한 → 1s"이며, 2s 지연 결제에서 Legacy 성공·New 실패라는 시험 의미는 같다(5절) |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS(참고: `R000041/0.e1` legacy만 — 부모가 선언한 행동 차이), `dirty: false`(rev `4e34a7b`), new=phase3.6-F7. **settleTimeouts `R000041/new/0.e1`**(지표), barrier new 1단계 기대 59 = 진입 48 + 선언된 settle 11, `settleUndeclared: R000041/0.e1` → 엔진. **D19 보완(settle 의미 정리)이 없었다면 여기서 degraded·barrier 미달로 run이 멈췄다** |
+| target R000041·R000042 CV + dbstate | PASS | 2/2 ×3. R000041: `response.status 200 → 502`(`PAYMENT_FAILED`), `externalCalls` charge status 200 → **0**(타임아웃), `writeSet` `update orders` → ∅, `events.published 1 → 0`, `hop_set legacy만 0.e1`. R000042(그 주문 조회): `status PAID → CREATED`, `transactionId → null`. dbstate orders 해시 다름(count·sum은 같고 상태만) |
+| 정상 경로 오탐 0 | PASS | non-target 0. 같은 지연 없는 결제 6건은 SAME(1s 안에 응답) |
+| pair 집합 | 기대대로 | `R000041/0.e1`이 baseline에만(New는 발행이 없어 소비 홉이 없다) — hop_set으로 부모 pair에 나타남 |
+| 세 run 판정 동일 | PASS | CV 3 + SAME 56 (pair 59) ×3 |
+| B0 / B1 / C | ✔ / ✔ / ✔ | B0 DIFF 2/2, B1 DIFF 2/2(응답 status·body), C CV 2/2 |
+
+로그 `logs/phase3.6-F7-*.txt`

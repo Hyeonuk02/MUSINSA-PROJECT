@@ -1,0 +1,96 @@
+== runs/p36-F7-1
+== runs/p36-F7-1  PASS
+  PASS  입력 계약 (schema·runId·stack)         119/119
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 48건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        참고: hop 집합 불일치 — 부모가 선언한 행동 차이(엔진으로) 1건 R000041/0.e1(legacy만)
+        자식 홉 짝 11건
+  PASS  request.method                     59/59
+  PASS  request.path                       59/59
+  PASS  request.query                      59/59
+  PASS  request.headers.x-replay-request-id 59/59
+  PASS  request.headers.x-run-id           59/59
+  PASS  request.headers.x-session-id       59/59
+  PASS  request.headers.x-replay-hop-path  59/59
+  PASS  request.headers.idempotency-key    59/59
+  PASS  request.headers.content-type       59/59
+  PASS  request.bodyHash                   59/59
+  PASS  k6 status == legacy response.status 48/48
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-1001.7 median=7.9 max=1063.8 (n=59)
+        arrivedAt:   min=-8.2 median=0.7 max=1053.6 (n=59)
+== 요약
+  PASS  runs/p36-F7-1
+verify exit=0
+== runs/p36-F7-2
+== runs/p36-F7-2  PASS
+  PASS  입력 계약 (schema·runId·stack)         119/119
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 48건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        참고: hop 집합 불일치 — 부모가 선언한 행동 차이(엔진으로) 1건 R000041/0.e1(legacy만)
+        자식 홉 짝 11건
+  PASS  request.method                     59/59
+  PASS  request.path                       59/59
+  PASS  request.query                      59/59
+  PASS  request.headers.x-replay-request-id 59/59
+  PASS  request.headers.x-run-id           59/59
+  PASS  request.headers.x-session-id       59/59
+  PASS  request.headers.x-replay-hop-path  59/59
+  PASS  request.headers.idempotency-key    59/59
+  PASS  request.headers.content-type       59/59
+  PASS  request.bodyHash                   59/59
+  PASS  k6 status == legacy response.status 48/48
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-996.5 median=3.4 max=20.9 (n=59)
+        arrivedAt:   min=-1.0 median=0.4 max=9.7 (n=59)
+== 요약
+  PASS  runs/p36-F7-2
+verify exit=0
+== runs/p36-F7-3
+== runs/p36-F7-3  PASS
+  PASS  입력 계약 (schema·runId·stack)         119/119
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 48건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        참고: hop 집합 불일치 — 부모가 선언한 행동 차이(엔진으로) 1건 R000041/0.e1(legacy만)
+        자식 홉 짝 11건
+  PASS  request.method                     59/59
+  PASS  request.path                       59/59
+  PASS  request.query                      59/59
+  PASS  request.headers.x-replay-request-id 59/59
+  PASS  request.headers.x-run-id           59/59
+  PASS  request.headers.x-session-id       59/59
+  PASS  request.headers.x-replay-hop-path  59/59
+  PASS  request.headers.idempotency-key    59/59
+  PASS  request.headers.content-type       59/59
+  PASS  request.bodyHash                   59/59
+  PASS  k6 status == legacy response.status 48/48
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-994.7 median=3.1 max=19.9 (n=59)
+        arrivedAt:   min=-1.0 median=0.4 max=16.1 (n=59)
+== 요약
+  PASS  runs/p36-F7-3
+verify exit=0

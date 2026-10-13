@@ -14,7 +14,7 @@
 | F4 | `fault/F4` `f83e211` | `OrderService`(애노테이션 1줄 noRollbackFor) | 진짜 결함 | R000037·R000038 CV + dbstate | 2/2 CV ×3 ✔, dbstate 위반(orders 8→9, order_items 10→11), 오탐 0 | R000037 transactions outcome(ROLLED_BACK → COMMITTED, writeSet은 같음), R000038 응답 404→200, dbstate | B0 ✔ / B1 △(R000038만) / C ✔ |
 | F5 | `fault/F5` `1597c73` | `OrderRepository`(+5), `OrderService`(1줄) | 정상 리팩터링 | 조회 13 pair UNC → learn 라벨 후 IMP | 13/13 UNC ×3 ✔ → learn 3유형 라벨(규칙 3) → 13/13 IMP ×3 ✔(eval 8 포함), 오탐 0 | dbRead 횟수 2→1·fingerprint(404 조회), callTree(findWithItemsByOrderKey) | B0 ✔ / B1 ✔(DIFF만) / C ✔(분류) |
 | F6 | `fault/F6` `84bd197` | `OrderView`(+2 −1) | 승인된 개선 | 생성 8·조회 10·결제 8 = 26 pair IMP(사전 규칙) | 26/26 IMP ×3 ✔(규칙 `order-view-item-count`, `9648cf1` 사전 커밋), 오탐 0 | response.addedFields `itemCount` | B0 ✔ / B1 ✔(DIFF만) / C ✔(분류) |
-| F7 | | | 설정 변경 결함 | R000041·R000042 CV + dbstate | | 응답 status, externalCalls status, 발행 없음(hop), 다음 GET 값, dbstate | |
+| F7 | `fault/F7` `31363ce` | `PaymentGatewayClient`(1줄 read timeout) | 설정 변경 결함 | R000041·R000042 CV + dbstate | 2/2 CV ×3 ✔, dbstate 위반(orders 상태), 정상 결제 6건 SAME, 오탐 0 | 응답 200→502, externalCalls status 200→0, writeSet, 발행 1→0·hop `0.e1`(Legacy만), 다음 GET status·transactionId, dbstate | B0 ✔ / B1 ✔ / C ✔ |
 | F8 | | | 성능 계약 | 조회(있음) 10 pair: 기본 UNC / maxSelects 선언 CV | | dbRead 횟수, callTree | |
 | F9 | | | 진짜 결함 | 쿠폰 주문 생성 4 pair CV | | externalCalls, hop `0.h2`(New만) | |
 
@@ -51,3 +51,8 @@
 
 변경(`fault/F6`): `OrderView`에 `itemCount: Int`(= items 수). 사전 승인 규칙 `order-view-item-count`(improvement.yaml)를 F6 run 전에 커밋.
 실제: OrderView를 내는 26 pair가 모두 `response.addedFields [itemCount]` 하나만 다름 → 규칙으로 Improvement. 그 밖은 baseline과 같음.
+
+## F7 — 게이트웨이 read timeout 1s
+
+변경(`fault/F7`): `PaymentGatewayClient`의 요청 팩토리에 read timeout 1s. 기준선(과 Legacy)은 timeout 미설정(무제한)이라 계획의 "3s→1s"는 "무제한→1s"로 읽는다 — S009의 2s 지연 결제에서 Legacy 성공·New 실패라는 시험 의미는 같다.
+실제: R000041 New 타임아웃 → 502 `PAYMENT_FAILED`, externalCalls status 0, 발행 없음 → New에 `0.e1` 없음(settleTimeouts 지표·`settleUndeclared`, run은 계속) → CV. R000042 조회 PAID→CREATED → CV. 정상 결제 6건 SAME.
