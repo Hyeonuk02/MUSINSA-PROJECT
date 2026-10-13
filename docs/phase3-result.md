@@ -12,5 +12,10 @@ Legacy = `order-app:phase3.3-base`(고정), Coupon 양쪽 `coupon-app:phase3.3-b
 | v1.1 | `fd839d6` | phase3.5-v1.1 | `runs/p35-v1.1-1..3` | `PaymentGatewayClient` (.java −56 → .kt +50), pom +104 | 58 | 0 | 0 | 0 | 0 | 0 | 0→0 | 0 | 0 | 126.79 / 134.23 |
 | v1.2 | `fc6e6e2` | phase3.5-v1.2 | `runs/p35-v1.2-1..3` | `Order`, `OrderItem`, `OrderRepository` (.java −175 → .kt +171) | 58 | 0 | 0 | 0 | 0 | 0 | 0→0 | 0 | 0 | 128.18 / 134.90 |
 | v1.3 | `c64618f` | phase3.5-v1.3 | `runs/p35-v1.3-1..3` | `OrderService`(+Kind·Outcome·NewItem), `OrderPaid`, `OrderEventPublisher` (.java −188 → .kt +173) | 58 | 0 | 0 | 0 | 0 | 0 (규칙 생성 없는 단계) | 0→0 | 0 | 0 | 128.98 / 134.71 |
+| v1.4 | `120b212` | phase3.5-v1.4 | `runs/p35-v1.4-1..3` | `OrderController`(+DTO), `OrderView`, `CouponClient`, `ClockConfig`, `OrderApplication`, `requestlog.RequestLogFilter`, `requestlog.CachedBodyRequest` (.java −428 → .kt +349) = Order 전면 Kotlin | 58 | 0 | 0 | 0 | 0 | 0 (규칙 생성 없는 단계) | 0→0 | 0 | 0 | 128.94 / 135.33 |
+
+요약: 이 corpus가 닿는 행동 범위에서 Order의 점진 Kotlin 전환(1 → 전면 클래스)은 행동 Evidence를 바꾸지 않았다 — 네 단계 모두 C·B0·B1 전 pair SAME(B0 원문까지). Uncertain이 없어 learn 리뷰 0·규칙 0, eval Uncertain 0→0이라 Rule 재사용 효과는 3.6의 F 변형에서 처음 측정된다. Kotlin 전환의 흔적은 Metaspace(new order +6.4~7.4 MB, 클래스 +1,800~2,300)에만 남았다. Kotlin v1.4가 3.6 결함 카탈로그의 새 기준선이다.
+
+Phase 4 입력(스코핑): 단계별 commit = 위 표 commit 열, 이미지 = `order-app:phase3.5-v1.x`, runs = `runs/p35-v1.x-1..3`, 코드 diff = `git diff <이전 단계 commit> <commit> -- services/order`.
 
 사다리 표에서 제외한 run: `runs/p35-v1.1-oom-1`(Metaspace OOM), `runs/p35-v1.1-stale-1`(runId 재사용) — `docs/reports/phase3.5.md` 6절.

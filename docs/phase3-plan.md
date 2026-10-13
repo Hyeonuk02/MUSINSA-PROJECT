@@ -310,6 +310,10 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 - **게이트 run의 이미지 지정**: 레포의 new overlay는 사다리 현재 단계를 가리키고, base A/A는 `kubectl kustomize deploy/k8s/new`의 order 이미지만 `phase3.3-base`로 바꿔 apply한다(레포 무변경 → dirty=false). 실제 이미지는 run-meta `images.order`로 확인
 - **Metaspace 측정**: run이 끝난 뒤(run 중 아님) `jcmd <pid> VM.metaspace`의 Both used. 대상 컨테이너에 JDK가 없어 로컬 빌드 이미지 `jdk-tools:phase3.5`(빌드 스테이지의 JDK)를 ephemeral container로 붙여 `/proc/1/root/tmp/jdk`로 복사한 뒤 대상 컨테이너에서 실행. 참고값(판정과 무관)
 - **runId 재사용 금지(run.sh preflight, 커밋 `47d7191`)**: Store에 `<base>-1..N` runId의 Evidence가 하나라도 있으면 시작하지 않는다(자동 삭제 없음). 실패 run 디렉터리를 옮기면 기존 "runs/<runId> 존재" 검사가 통과해 버리고, Store에 남은 이전 Evidence 때문에 k6 완료 폴링(exists)이 New 완료 전에 다음 요청을 보낸다 — p35-v1.1-stale-1에서 실측(New R000001 생성 완료 전에 R000002·R000003 도착 → 404). 남은 run은 `DELETE /runs/<runId>`로 사람이 지운다(로컬 export는 보존)
+- **Java 호출부가 남은 동안의 interop**(v1.3): Kotlin으로 옮긴 타입을 아직 Java 클래스가 record 접근자(`kind()`)·생성자로 쓰면 `@JvmRecord data class`로 같은 모양을 유지한다(`OrderService.Outcome`·`NewItem`). Java 사용처가 없는 값 타입은 plain data class(`OrderPaid`, v1.4의 DTO·`OrderView`). 상수는 `companion object const val`(Java `switch case`에서 상수로 쓰임)
+- **요청 DTO nullability**(v1.4): Java가 null을 검사하던 필드만 `?`(`orderKey`·`items`·`couponKey`, `Idempotency-Key` 헤더), Java primitive(`qty`·`price`)는 값이 없을 때 Java처럼 0이 되도록 기본값 0, 그 외는 non-null. 이 선택이 corpus 밖 입력(sku 없음)에서 Legacy와 다른 응답을 낼 수 있음을 보고서 6절에 기록
+- **main**: 최상위 `fun main` → `Start-Class: poc.order.OrderApplicationKt`(spring-boot-maven-plugin이 찾음). `OrderApplication` 클래스 FQCN은 유지
+- **결과**: v1.1~v1.4 모두 3 run × C·B0·B1 전 pair SAME, 규칙 0. `docs/phase3-result.md`
 
 끝난 기준
 - v1.1~v1.4 각 3 run, Undelivered 0, degraded 0, **모든 diff가 4분류 중 하나로 설명됨**(0건이어도 통과)

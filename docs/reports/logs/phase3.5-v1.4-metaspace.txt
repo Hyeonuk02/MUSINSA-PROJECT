@@ -1,0 +1,4 @@
+legacy order used=128.94MB max=256.00MB classes=26423
+legacy coupon used=126.93MB max=256.00MB classes=26348
+new order used=135.33MB max=256.00MB classes=28726
+new coupon used=126.86MB max=256.00MB classes=26332
