@@ -6,6 +6,7 @@ import org.springframework.http.client.SimpleClientHttpRequestFactory
 import org.springframework.stereotype.Component
 import org.springframework.web.client.RestClient
 import org.springframework.web.client.body
+import java.time.Duration
 
 /**
  * Phase 2.1: 결제 게이트웨이(WireMock `POST /gateway/charge`) 호출.
@@ -26,7 +27,7 @@ class PaymentGatewayClient(builder: RestClient.Builder, @Value("\${payment.gatew
 
     private val restClient: RestClient = builder
         .baseUrl(gatewayUrl)
-        .requestFactory(SimpleClientHttpRequestFactory())
+        .requestFactory(SimpleClientHttpRequestFactory().apply { setReadTimeout(Duration.ofSeconds(1)) })
         .build()
 
     /**
