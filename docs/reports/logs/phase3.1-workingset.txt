@@ -1,0 +1,35 @@
+# 3.1 JVM·MySQL 상한 적용 후 working set — 2026-10-13 (base A/A p31 직후)
+kind 노드: 4.717GiB / 11.67GiB (40.42%)
+legacy  mesh-check       curl                 0 MiB
+legacy  mesh-check       istio-init           0 MiB
+legacy  mesh-check       istio-proxy         58 MiB
+legacy  mysql            istio-init           0 MiB
+legacy  mysql            istio-proxy         36 MiB
+legacy  mysql            mysql              443 MiB
+legacy  order            istio-init           0 MiB
+legacy  order            istio-proxy         41 MiB
+legacy  order            order              432 MiB
+legacy  order            otel-agent           0 MiB
+legacy  order            wait-for-mysql       0 MiB
+legacy  wiremock         istio-init           0 MiB
+legacy  wiremock         istio-proxy         49 MiB
+legacy  wiremock         wiremock           182 MiB
+new     isolation-injected curl                 7 MiB
+new     isolation-injected istio-init           0 MiB
+new     isolation-injected istio-proxy         38 MiB
+new     isolation-uninjected curl                 1 MiB
+new     mysql            istio-init           0 MiB
+new     mysql            istio-proxy         38 MiB
+new     mysql            mysql              443 MiB
+new     order            istio-init           0 MiB
+new     order            istio-proxy         39 MiB
+new     order            order              420 MiB
+new     order            otel-agent           0 MiB
+new     order            wait-for-mysql       0 MiB
+new     wiremock         istio-init           0 MiB
+new     wiremock         istio-proxy         42 MiB
+new     wiremock         wiremock           194 MiB
+verify  evidence-store   evidence-store      59 MiB
+전체 컨테이너 합계 3979 MiB
+               total        used        free      shared  buff/cache   available
+Mem:           11949        4728        3767          25        3696        7220

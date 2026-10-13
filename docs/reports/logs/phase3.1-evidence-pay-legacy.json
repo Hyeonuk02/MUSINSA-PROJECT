@@ -1,0 +1,113 @@
+{
+  "schemaVersion": "v1",
+  "runId": "p31-1",
+  "replayRequestId": "R000003",
+  "hopPath": "0",
+  "sessionId": "S001",
+  "stack": "legacy",
+  "service": "order",
+  "origin": "http",
+  "version": "legacy",
+  "request": {
+    "method": "POST",
+    "path": "/api/orders/ok-R000001/pay",
+    "query": "",
+    "headers": {
+      "x-replay-request-id": "R000003",
+      "x-run-id": "p31-1",
+      "x-session-id": "S001",
+      "x-replay-hop-path": "0",
+      "idempotency-key": "idem-R000003"
+    },
+    "bodyHash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "bodyHash": "sha256:d6cb8342ef57683a035030f11d8571e5e0fb550f264b36968eb0018319dc30d5",
+    "body": "{\"id\":1,\"orderKey\":\"ok-R000001\",\"items\":[{\"sku\":\"A-1\",\"qty\":1,\"price\":10000}],\"amount\":10000,\"status\":\"PAID\",\"transactionId\":\"tx-idem-R000003\",\"createdAt\":\"2026-09-01T00:00:00Z\"}"
+  },
+  "event": null,
+  "dbAccess": {
+    "statements": [
+      {
+        "seq": 1,
+        "sql": "select o1_0.id,o1_0.amount,o1_0.created_at,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from orders o1_0 where o1_0.order_key=?"
+      },
+      {
+        "seq": 3,
+        "sql": "select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from order_items i1_0 where i1_0.order_id=? order by i1_0.line_no"
+      },
+      {
+        "seq": 5,
+        "sql": "update orders set amount=?,created_at=?,idempotency_key=?,order_key=?,status=?,transaction_id=? where id=?"
+      }
+    ],
+    "truncated": false
+  },
+  "externalCalls": [
+    {
+      "seq": 2,
+      "method": "POST",
+      "host": "wiremock",
+      "path": "/gateway/charge",
+      "requestBodyHash": "sha256:1287ab8951f7a96da951f365c4212b92d57b847e824fae4e2fbf2a68ca396112",
+      "status": 200,
+      "responseBodyHash": "sha256:7be4e9d634535f8f35e8cd926b57c69127adf84ced0a6e615a593fe269d39f7f",
+      "childHopPath": "0.h1"
+    }
+  ],
+  "events": {
+    "published": []
+  },
+  "transactions": [
+    {
+      "seq": 4,
+      "name": "poc.order.OrderController.pay",
+      "phase": "COMMIT_BEGIN",
+      "outcome": null
+    },
+    {
+      "seq": 6,
+      "name": "poc.order.OrderController.pay",
+      "phase": "COMPLETED",
+      "outcome": "COMMITTED"
+    }
+  ],
+  "callTree": {
+    "nodes": [
+      {
+        "seq": 1,
+        "depth": 0,
+        "class": "poc.order.OrderController",
+        "method": "pay",
+        "threw": false
+      },
+      {
+        "seq": 2,
+        "depth": 1,
+        "class": "poc.order.OrderRepository",
+        "method": "findByOrderKey",
+        "threw": false
+      },
+      {
+        "seq": 3,
+        "depth": 1,
+        "class": "poc.order.PaymentGatewayClient",
+        "method": "charge",
+        "threw": false
+      }
+    ],
+    "truncated": false
+  },
+  "error": null,
+  "timing": {
+    "arrivedAt": "2026-10-13T06:20:52.629011459Z",
+    "completedAt": "2026-10-13T06:20:52.702400251Z",
+    "arrivedNano": 2433079732736,
+    "completedNano": 2433153121652
+  },
+  "capturedAt": "2026-10-13T06:20:52.702608209Z"
+}

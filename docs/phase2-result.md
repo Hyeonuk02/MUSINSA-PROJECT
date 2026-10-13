@@ -179,6 +179,7 @@ Phase 3에서 diff가 나오면 같은 corpus를 VU=1로 재실행해 동시성 
 ## 7. 한계
 
 - **예외 경로 Evidence 없음**: `chain.doFilter` 예외 시 Evidence를 남기지 않는다 → degraded·Undelivered로만 드러남 (Phase 3 `error` 필드)
+  - → **Phase 3.1에서 해소**: Evidence v1이 `error{type, where}`와 `response.status = 0`으로 예외 경로를 기록한다(임시 예외 엔드포인트로 실측, `ROLLED_BACK` 확인 — `docs/reports/phase3.1.md`)
 - **Store는 emptyDir**: export 전에 Store pod가 재생성되면 그 run의 Evidence가 사라진다. run마다 즉시 export로 회수한다
 - **spill hostPath는 kind 전용**: 노드 1개 전제. 운영이면 PVC
 - **k6 helper metric**: VU 간 상태 공유가 없어 요청 id별 metric으로 수집한다. 요청이 수백 건이 되면 `--out json` + 태그 기반으로 전환이 필요하다

@@ -1,0 +1,38 @@
+== runs/p31-1  PASS
+  PASS  입력 계약 (schema·runId·stack)  28/28
+        비교 대상: sent 14건 중 진입 홉 짝 14건 + 자식 홉 짝 0건
+  PASS  response      diff 0건
+  PASS  dbAccess      diff 0건
+  PASS  callTree      diff 0건
+  PASS  externalCalls diff 0건
+  PASS  transactions  diff 0건
+  PASS  events        diff 0건
+  PASS  dbstate       legacy == new
+  PASS  wiremock      legacy == new
+== runs/p31-2  PASS
+  PASS  입력 계약 (schema·runId·stack)  28/28
+        비교 대상: sent 14건 중 진입 홉 짝 14건 + 자식 홉 짝 0건
+  PASS  response      diff 0건
+  PASS  dbAccess      diff 0건
+  PASS  callTree      diff 0건
+  PASS  externalCalls diff 0건
+  PASS  transactions  diff 0건
+  PASS  events        diff 0건
+  PASS  dbstate       legacy == new
+  PASS  wiremock      legacy == new
+== runs/p31-3  PASS
+  PASS  입력 계약 (schema·runId·stack)  28/28
+        비교 대상: sent 14건 중 진입 홉 짝 14건 + 자식 홉 짝 0건
+  PASS  response      diff 0건
+  PASS  dbAccess      diff 0건
+  PASS  callTree      diff 0건
+  PASS  externalCalls diff 0건
+  PASS  transactions  diff 0건
+  PASS  events        diff 0건
+  PASS  dbstate       legacy == new
+  PASS  wiremock      legacy == new
+== 요약
+  runs/p31-1  diff 집합 = ∅
+  runs/p31-2  diff 집합 = ∅
+  runs/p31-3  diff 집합 = ∅
+  PASS  3개 run의 diff 집합 동일

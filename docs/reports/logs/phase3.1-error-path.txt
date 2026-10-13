@@ -1,0 +1,10 @@
+# 3.1 error 경로 — 임시 엔드포인트 POST /api/orders/_temp-fail/ok-R910031 (주문 INSERT·flush 후 IllegalStateException). 응답은 컨테이너 500. 엔드포인트는 시험 후 삭제(커밋 안 함). runId t31-err
+== R910031 legacy POST /api/orders/_temp-fail/ok-R910031 response.status=0 error={'type': 'java.lang.IllegalStateException', 'where': 'poc.order.TempFailController.fail'}
+   timeline: 1:SQL insert into orders | 2:SQL insert into order_items | 3:TX COMPLETED ROLLED_BACK
+   externalCalls: 0건
+   callTree: 0:poc.order.TempFailController.fail(threw) > 1:poc.order.OrderRepository.saveAndFlush
+== R910031 new POST /api/orders/_temp-fail/ok-R910031 response.status=0 error={'type': 'java.lang.IllegalStateException', 'where': 'poc.order.TempFailController.fail'}
+   timeline: 1:SQL insert into orders | 2:SQL insert into order_items | 3:TX COMPLETED ROLLED_BACK
+   externalCalls: 0건
+   callTree: 0:poc.order.TempFailController.fail(threw) > 1:poc.order.OrderRepository.saveAndFlush
+error 시험 후 legacy DB의 ok-R910031 행 수 = 0 (롤백)

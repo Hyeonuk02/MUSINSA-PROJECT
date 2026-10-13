@@ -5,36 +5,104 @@
   "description": "요청 1건의 한 홉(hop) × 스택 1개의 실행 Evidence. Phase 3 엔진의 입력 계약. 키는 (runId, replayRequestId, stack, hopPath)이고 service·origin은 필드다(D15). SQL·외부 호출·이벤트 발행·트랜잭션 단계는 하나의 seq 카운터를 공유하는 타임라인이다(D16) — 각 배열 안의 seq는 연속이 아니다. callTree는 별도 카운터. Evidence Store는 이 스키마를 검증하지 않고 본문을 그대로 저장·반환한다.",
   "type": "object",
   "additionalProperties": false,
-  "required": ["schemaVersion", "runId", "replayRequestId", "hopPath", "sessionId", "stack", "service", "origin", "version",
-               "request", "response", "event", "dbAccess", "externalCalls", "events", "transactions", "callTree", "error",
-               "timing", "capturedAt"],
+  "required": [
+    "schemaVersion",
+    "runId",
+    "replayRequestId",
+    "hopPath",
+    "sessionId",
+    "stack",
+    "service",
+    "origin",
+    "version",
+    "request",
+    "response",
+    "event",
+    "dbAccess",
+    "externalCalls",
+    "events",
+    "transactions",
+    "callTree",
+    "error",
+    "timing",
+    "capturedAt"
+  ],
   "properties": {
-    "schemaVersion": { "const": "v1" },
-    "runId": { "type": "string", "pattern": "^[A-Za-z0-9._-]{1,128}$" },
-    "replayRequestId": { "type": "string", "pattern": "^R[0-9]{6}$" },
+    "schemaVersion": {
+      "const": "v1"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,128}$"
+    },
+    "replayRequestId": {
+      "type": "string",
+      "pattern": "^R[0-9]{6}$"
+    },
     "hopPath": {
       "description": "진입 요청 \"0\". 홉 안 n번째 HTTP 호출 \"<부모>.h<n>\", n번째 이벤트 소비 \"<부모>.e<n>\" — 종류별 순번(D15).",
-      "type": "string", "pattern": "^0(\\.[he][1-9][0-9]*)*$"
+      "type": "string",
+      "pattern": "^0(\\.[he][1-9][0-9]*)*$"
     },
-    "sessionId": { "type": "string", "pattern": "^S[0-9]{3}$" },
-    "stack": { "enum": ["legacy", "new"] },
-    "service": { "type": "string", "minLength": 1 },
-    "origin": { "description": "http = HTTP 요청으로 생긴 홉, kafka = 이벤트 소비로 생긴 홉.", "enum": ["http", "kafka"] },
-    "version": { "type": "string", "minLength": 1 },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^S[0-9]{3}$"
+    },
+    "stack": {
+      "enum": [
+        "legacy",
+        "new"
+      ]
+    },
+    "service": {
+      "type": "string",
+      "minLength": 1
+    },
+    "origin": {
+      "description": "http = HTTP 요청으로 생긴 홉, kafka = 이벤트 소비로 생긴 홉.",
+      "enum": [
+        "http",
+        "kafka"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
     "request": {
       "description": "origin=http일 때 객체, origin=kafka일 때 null.",
       "oneOf": [
-        { "type": "null" },
+        {
+          "type": "null"
+        },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["method", "path", "query", "headers", "bodyHash"],
+          "required": [
+            "method",
+            "path",
+            "query",
+            "headers",
+            "bodyHash"
+          ],
           "properties": {
-            "method": { "type": "string", "pattern": "^[A-Z]+$" },
-            "path": { "type": "string", "pattern": "^/" },
-            "query": { "type": "string" },
-            "headers": { "$ref": "#/$defs/headers" },
-            "bodyHash": { "$ref": "#/$defs/sha256" }
+            "method": {
+              "type": "string",
+              "pattern": "^[A-Z]+$"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^/"
+            },
+            "query": {
+              "type": "string"
+            },
+            "headers": {
+              "$ref": "#/$defs/headers"
+            },
+            "bodyHash": {
+              "$ref": "#/$defs/sha256"
+            }
           }
         }
       ]
@@ -42,16 +110,38 @@
     "response": {
       "description": "origin=http일 때 객체, origin=kafka일 때 null. 필터 밖으로 예외가 나간 경우(error != null) status 0, headers {}, body \"\".",
       "oneOf": [
-        { "type": "null" },
+        {
+          "type": "null"
+        },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["status", "headers", "bodyHash", "body"],
+          "required": [
+            "status",
+            "headers",
+            "bodyHash",
+            "body"
+          ],
           "properties": {
-            "status": { "type": "integer", "minimum": 0, "maximum": 599 },
-            "headers": { "$ref": "#/$defs/headers" },
-            "bodyHash": { "$ref": "#/$defs/sha256" },
-            "body": { "description": "UTF-8 원문. 32KB 초과 시 null(bodyHash 유지).", "type": ["string", "null"], "maxLength": 32768 }
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 599
+            },
+            "headers": {
+              "$ref": "#/$defs/headers"
+            },
+            "bodyHash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "body": {
+              "description": "UTF-8 원문. 32KB 초과 시 null(bodyHash 유지).",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 32768
+            }
           }
         }
       ]
@@ -59,15 +149,31 @@
     "event": {
       "description": "origin=kafka일 때 소비한 레코드, origin=http일 때 null.",
       "oneOf": [
-        { "type": "null" },
+        {
+          "type": "null"
+        },
         {
           "type": "object",
           "additionalProperties": false,
-          "required": ["topic", "key", "payloadHash"],
+          "required": [
+            "topic",
+            "key",
+            "payloadHash"
+          ],
           "properties": {
-            "topic": { "type": "string", "minLength": 1 },
-            "key": { "type": ["string", "null"] },
-            "payloadHash": { "$ref": "#/$defs/sha256" }
+            "topic": {
+              "type": "string",
+              "minLength": 1
+            },
+            "key": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "payloadHash": {
+              "$ref": "#/$defs/sha256"
+            }
           }
         }
       ]
@@ -76,55 +182,136 @@
       "description": "Hibernate StatementInspector가 본 SQL 원문(바인딩 전). 가공 없음. 문장당 2,048자·200건 상한.",
       "type": "object",
       "additionalProperties": false,
-      "required": ["statements", "truncated"],
+      "required": [
+        "statements",
+        "truncated"
+      ],
       "properties": {
         "statements": {
-          "type": "array", "maxItems": 200,
+          "type": "array",
+          "maxItems": 200,
           "items": {
-            "type": "object", "additionalProperties": false, "required": ["seq", "sql"],
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "seq",
+              "sql"
+            ],
             "properties": {
-              "seq": { "$ref": "#/$defs/seq" },
-              "sql": { "type": "string", "maxLength": 2048 }
+              "seq": {
+                "$ref": "#/$defs/seq"
+              },
+              "sql": {
+                "type": "string",
+                "maxLength": 2048
+              }
             }
           }
         },
-        "truncated": { "type": "boolean" }
+        "truncated": {
+          "type": "boolean"
+        }
       }
     },
     "externalCalls": {
       "description": "이 홉에서 나간 HTTP 호출. seq는 호출이 나간 시점의 타임라인 번호. childHopPath는 호출 대상이 남길 Evidence의 hopPath.",
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false,
-        "required": ["seq", "method", "host", "path", "requestBodyHash", "status", "responseBodyHash", "childHopPath"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "seq",
+          "method",
+          "host",
+          "path",
+          "requestBodyHash",
+          "status",
+          "responseBodyHash",
+          "childHopPath"
+        ],
         "properties": {
-          "seq": { "$ref": "#/$defs/seq" },
-          "method": { "type": "string", "pattern": "^[A-Z]+$" },
-          "host": { "type": "string", "minLength": 1 },
-          "path": { "type": "string", "pattern": "^/" },
-          "requestBodyHash": { "$ref": "#/$defs/sha256" },
-          "status": { "description": "I/O 실패면 0.", "type": "integer", "minimum": 0, "maximum": 599 },
-          "responseBodyHash": { "$ref": "#/$defs/sha256" },
-          "childHopPath": { "type": "string", "pattern": "^0(\\.[he][1-9][0-9]*)*\\.h[1-9][0-9]*$" }
+          "seq": {
+            "$ref": "#/$defs/seq"
+          },
+          "method": {
+            "type": "string",
+            "pattern": "^[A-Z]+$"
+          },
+          "host": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "requestBodyHash": {
+            "$ref": "#/$defs/sha256"
+          },
+          "status": {
+            "description": "I/O 실패면 0.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 599
+          },
+          "responseBodyHash": {
+            "$ref": "#/$defs/sha256"
+          },
+          "childHopPath": {
+            "type": "string",
+            "pattern": "^0(\\.[he][1-9][0-9]*)*\\.h[1-9][0-9]*$"
+          }
         }
       }
     },
     "events": {
-      "type": "object", "additionalProperties": false, "required": ["published"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "published"
+      ],
       "properties": {
         "published": {
           "description": "동기 발행(send().get()). ack는 get()이 돌아온 호출 스레드에서 기록.",
           "type": "array",
           "items": {
-            "type": "object", "additionalProperties": false,
-            "required": ["seq", "topic", "key", "payloadHash", "ack", "childHopPath"],
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "seq",
+              "topic",
+              "key",
+              "payloadHash",
+              "ack",
+              "childHopPath"
+            ],
             "properties": {
-              "seq": { "$ref": "#/$defs/seq" },
-              "topic": { "type": "string", "minLength": 1 },
-              "key": { "type": ["string", "null"] },
-              "payloadHash": { "$ref": "#/$defs/sha256" },
-              "ack": { "enum": ["ok", "failed"] },
-              "childHopPath": { "type": "string", "pattern": "^0(\\.[he][1-9][0-9]*)*\\.e[1-9][0-9]*$" }
+              "seq": {
+                "$ref": "#/$defs/seq"
+              },
+              "topic": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "payloadHash": {
+                "$ref": "#/$defs/sha256"
+              },
+              "ack": {
+                "enum": [
+                  "ok",
+                  "failed"
+                ]
+              },
+              "childHopPath": {
+                "type": "string",
+                "pattern": "^0(\\.[he][1-9][0-9]*)*\\.e[1-9][0-9]*$"
+              }
             }
           }
         }
@@ -134,77 +321,353 @@
       "description": "TransactionExecutionListener: beforeCommit → COMMIT_BEGIN, afterCommit/afterRollback → COMPLETED(outcome). 한 트랜잭션이 두 번 찍힌다.",
       "type": "array",
       "items": {
-        "type": "object", "additionalProperties": false, "required": ["seq", "name", "phase", "outcome"],
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "seq",
+          "name",
+          "phase",
+          "outcome"
+        ],
         "properties": {
-          "seq": { "$ref": "#/$defs/seq" },
-          "name": { "type": ["string", "null"] },
-          "phase": { "enum": ["COMMIT_BEGIN", "COMPLETED"] },
-          "outcome": { "enum": ["COMMITTED", "ROLLED_BACK", "COMMIT_FAILED", null] }
+          "seq": {
+            "$ref": "#/$defs/seq"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phase": {
+            "enum": [
+              "COMMIT_BEGIN",
+              "COMPLETED"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "COMMITTED",
+              "ROLLED_BACK",
+              "COMMIT_FAILED",
+              null
+            ]
+          }
         },
-        "if": { "properties": { "phase": { "const": "COMMIT_BEGIN" } } },
-        "then": { "properties": { "outcome": { "const": null } } },
-        "else": { "properties": { "outcome": { "enum": ["COMMITTED", "ROLLED_BACK", "COMMIT_FAILED"] } } }
+        "if": {
+          "properties": {
+            "phase": {
+              "const": "COMMIT_BEGIN"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "outcome": {
+              "const": null
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "outcome": {
+              "enum": [
+                "COMMITTED",
+                "ROLLED_BACK",
+                "COMMIT_FAILED"
+              ]
+            }
+          }
+        }
       }
     },
     "callTree": {
       "description": "빈 메서드 호출 pre-order + depth(call-graph.md 5절). 별도 seq 카운터. 불변식: 첫 노드 depth 0, depth[i] <= depth[i-1] + 1(엔진 입력 계약). 요청당 500노드 상한.",
-      "type": "object", "additionalProperties": false, "required": ["nodes", "truncated"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes",
+        "truncated"
+      ],
       "properties": {
         "nodes": {
-          "type": "array", "maxItems": 500,
+          "type": "array",
+          "maxItems": 500,
           "items": {
-            "type": "object", "additionalProperties": false, "required": ["seq", "depth", "class", "method", "threw"],
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "seq",
+              "depth",
+              "class",
+              "method",
+              "threw"
+            ],
             "properties": {
-              "seq": { "$ref": "#/$defs/seq" },
-              "depth": { "type": "integer", "minimum": 0 },
-              "class": { "type": "string", "minLength": 1 },
-              "method": { "type": "string", "minLength": 1 },
-              "threw": { "type": "boolean" }
+              "seq": {
+                "$ref": "#/$defs/seq"
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "class": {
+                "type": "string",
+                "minLength": 1
+              },
+              "method": {
+                "type": "string",
+                "minLength": 1
+              },
+              "threw": {
+                "type": "boolean"
+              }
             }
           }
         },
-        "truncated": { "type": "boolean" }
+        "truncated": {
+          "type": "boolean"
+        }
       }
     },
     "error": {
       "description": "필터 밖으로 예외가 나간 경우. type = 원인 예외(ServletException 래핑 제거), where = 앱 패키지 안 첫 스택 프레임의 class.method.",
       "oneOf": [
-        { "type": "null" },
         {
-          "type": "object", "additionalProperties": false, "required": ["type", "where"],
-          "properties": { "type": { "type": "string", "minLength": 1 }, "where": { "type": ["string", "null"] } }
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "where"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 1
+            },
+            "where": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
         }
       ]
     },
     "timing": {
-      "type": "object", "additionalProperties": false,
-      "required": ["arrivedAt", "completedAt", "arrivedNano", "completedNano"],
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arrivedAt",
+        "completedAt",
+        "arrivedNano",
+        "completedNano"
+      ],
       "properties": {
-        "arrivedAt": { "type": "string", "format": "date-time" },
-        "completedAt": { "type": "string", "format": "date-time" },
-        "arrivedNano": { "type": "integer" },
-        "completedNano": { "type": "integer" }
+        "arrivedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "arrivedNano": {
+          "type": "integer"
+        },
+        "completedNano": {
+          "type": "integer"
+        }
       }
     },
-    "capturedAt": { "type": "string", "format": "date-time" }
+    "capturedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
   },
   "allOf": [
     {
-      "if": { "properties": { "origin": { "const": "http" } } },
-      "then": { "properties": { "request": { "type": "object" }, "response": { "type": "object" }, "event": { "type": "null" } } }
+      "if": {
+        "properties": {
+          "origin": {
+            "const": "http"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "request": {
+            "type": "object"
+          },
+          "response": {
+            "type": "object"
+          },
+          "event": {
+            "type": "null"
+          }
+        }
+      }
     },
     {
-      "if": { "properties": { "origin": { "const": "kafka" } } },
-      "then": { "properties": { "request": { "type": "null" }, "response": { "type": "null" }, "event": { "type": "object" } } }
+      "if": {
+        "properties": {
+          "origin": {
+            "const": "kafka"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "request": {
+            "type": "null"
+          },
+          "response": {
+            "type": "null"
+          },
+          "event": {
+            "type": "object"
+          }
+        }
+      }
     }
   ],
   "$defs": {
-    "seq": { "type": "integer", "minimum": 1 },
-    "sha256": { "type": "string", "pattern": "^sha256:[0-9a-f]{64}$" },
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
     "headers": {
       "description": "지정 목록(EVIDENCE_HEADERS)에 있는 헤더만. 이름은 소문자.",
-      "type": "object", "propertyNames": { "pattern": "^[a-z0-9-]+$" }, "additionalProperties": { "type": "string" }
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
     }
   },
-  "examples": []
+  "examples": [
+    {
+      "schemaVersion": "v1",
+      "runId": "p31-1",
+      "replayRequestId": "R000003",
+      "hopPath": "0",
+      "sessionId": "S001",
+      "stack": "legacy",
+      "service": "order",
+      "origin": "http",
+      "version": "legacy",
+      "request": {
+        "method": "POST",
+        "path": "/api/orders/ok-R000001/pay",
+        "query": "",
+        "headers": {
+          "x-replay-request-id": "R000003",
+          "x-run-id": "p31-1",
+          "x-session-id": "S001",
+          "x-replay-hop-path": "0",
+          "idempotency-key": "idem-R000003"
+        },
+        "bodyHash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "bodyHash": "sha256:d6cb8342ef57683a035030f11d8571e5e0fb550f264b36968eb0018319dc30d5",
+        "body": "{\"id\":1,\"orderKey\":\"ok-R000001\",\"items\":[{\"sku\":\"A-1\",\"qty\":1,\"price\":10000}],\"amount\":10000,\"status\":\"PAID\",\"transactionId\":\"tx-idem-R000003\",\"createdAt\":\"2026-09-01T00:00:00Z\"}"
+      },
+      "event": null,
+      "dbAccess": {
+        "statements": [
+          {
+            "seq": 1,
+            "sql": "select o1_0.id,o1_0.amount,o1_0.created_at,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from orders o1_0 where o1_0.order_key=?"
+          },
+          {
+            "seq": 3,
+            "sql": "select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from order_items i1_0 where i1_0.order_id=? order by i1_0.line_no"
+          },
+          {
+            "seq": 5,
+            "sql": "update orders set amount=?,created_at=?,idempotency_key=?,order_key=?,status=?,transaction_id=? where id=?"
+          }
+        ],
+        "truncated": false
+      },
+      "externalCalls": [
+        {
+          "seq": 2,
+          "method": "POST",
+          "host": "wiremock",
+          "path": "/gateway/charge",
+          "requestBodyHash": "sha256:1287ab8951f7a96da951f365c4212b92d57b847e824fae4e2fbf2a68ca396112",
+          "status": 200,
+          "responseBodyHash": "sha256:7be4e9d634535f8f35e8cd926b57c69127adf84ced0a6e615a593fe269d39f7f",
+          "childHopPath": "0.h1"
+        }
+      ],
+      "events": {
+        "published": []
+      },
+      "transactions": [
+        {
+          "seq": 4,
+          "name": "poc.order.OrderController.pay",
+          "phase": "COMMIT_BEGIN",
+          "outcome": null
+        },
+        {
+          "seq": 6,
+          "name": "poc.order.OrderController.pay",
+          "phase": "COMPLETED",
+          "outcome": "COMMITTED"
+        }
+      ],
+      "callTree": {
+        "nodes": [
+          {
+            "seq": 1,
+            "depth": 0,
+            "class": "poc.order.OrderController",
+            "method": "pay",
+            "threw": false
+          },
+          {
+            "seq": 2,
+            "depth": 1,
+            "class": "poc.order.OrderRepository",
+            "method": "findByOrderKey",
+            "threw": false
+          },
+          {
+            "seq": 3,
+            "depth": 1,
+            "class": "poc.order.PaymentGatewayClient",
+            "method": "charge",
+            "threw": false
+          }
+        ],
+        "truncated": false
+      },
+      "error": null,
+      "timing": {
+        "arrivedAt": "2026-10-13T06:20:52.629011459Z",
+        "completedAt": "2026-10-13T06:20:52.702400251Z",
+        "arrivedNano": 2433079732736,
+        "completedNano": 2433153121652
+      },
+      "capturedAt": "2026-10-13T06:20:52.702608209Z"
+    }
+  ]
 }

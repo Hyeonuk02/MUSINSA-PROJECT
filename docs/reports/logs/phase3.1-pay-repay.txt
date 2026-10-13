@@ -1,0 +1,25 @@
+# 3.1 수동 시험 — 생성(R910001) → 결제(R910002, idem-R910002) → 같은 Idempotency-Key 재결제(R910003). runId t31-pay
+== R910001 legacy POST /api/orders response.status=201 error=None
+   timeline: 1:SQL select o1_0.id from | 2:SQL insert into orders | 3:SQL insert into order_items | 4:TX COMMIT_BEGIN | 5:TX COMPLETED COMMITTED
+   externalCalls: 0건
+   callTree: 0:poc.order.OrderController.create > 1:poc.order.OrderRepository.existsByOrderKey > 1:poc.order.OrderRepository.save
+== R910001 new POST /api/orders response.status=201 error=None
+   timeline: 1:SQL select o1_0.id from | 2:SQL insert into orders | 3:SQL insert into order_items | 4:TX COMMIT_BEGIN | 5:TX COMPLETED COMMITTED
+   externalCalls: 0건
+   callTree: 0:poc.order.OrderController.create > 1:poc.order.OrderRepository.existsByOrderKey > 1:poc.order.OrderRepository.save
+== R910002 legacy POST /api/orders/ok-R910001/pay response.status=200 error=None
+   timeline: 1:SQL select o1_0.id,o1_0.amount,o1_0.created_at,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from | 2:CALL POST /gateway/charge -> 200 child=0.h1 | 3:SQL select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from | 4:TX COMMIT_BEGIN | 5:SQL update orders set | 6:TX COMPLETED COMMITTED
+   externalCalls: 1건
+   callTree: 0:poc.order.OrderController.pay > 1:poc.order.OrderRepository.findByOrderKey > 1:poc.order.PaymentGatewayClient.charge
+== R910002 new POST /api/orders/ok-R910001/pay response.status=200 error=None
+   timeline: 1:SQL select o1_0.id,o1_0.amount,o1_0.created_at,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from | 2:CALL POST /gateway/charge -> 200 child=0.h1 | 3:SQL select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from | 4:TX COMMIT_BEGIN | 5:SQL update orders set | 6:TX COMPLETED COMMITTED
+   externalCalls: 1건
+   callTree: 0:poc.order.OrderController.pay > 1:poc.order.OrderRepository.findByOrderKey > 1:poc.order.PaymentGatewayClient.charge
+== R910003 legacy POST /api/orders/ok-R910001/pay response.status=200 error=None
+   timeline: 1:SQL select o1_0.id,o1_0.amount,o1_0.created_at,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from | 2:SQL select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from | 3:TX COMMIT_BEGIN | 4:TX COMPLETED COMMITTED
+   externalCalls: 0건
+   callTree: 0:poc.order.OrderController.pay > 1:poc.order.OrderRepository.findByOrderKey
+== R910003 new POST /api/orders/ok-R910001/pay response.status=200 error=None
+   timeline: 1:SQL select o1_0.id,o1_0.amount,o1_0.created_at,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from | 2:SQL select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from | 3:TX COMMIT_BEGIN | 4:TX COMPLETED COMMITTED
+   externalCalls: 0건
+   callTree: 0:poc.order.OrderController.pay > 1:poc.order.OrderRepository.findByOrderKey

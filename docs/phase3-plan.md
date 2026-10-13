@@ -144,6 +144,20 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 구현 시 확정 (자리)
 - `error` 상태코드 획득 / `TransactionManagerCustomizer` 등록 방식 / 포인트컷 최종 식 / callTree seq와 타임라인 seq 분리 확인
 
+구현 시 확정 (3.1)
+- **error 상태코드**: `chain.doFilter` 예외 시점에는 컨테이너가 보낼 상태코드를 알 수 없어 `response.status = 0`, `headers {}`, `body ""`(bodyHash는 빈 바이트열). `error.type` = 원인 예외(ServletException 래핑 제거), `error.where` = `EVIDENCE_APP_PACKAGES` 안 첫 스택 프레임의 `class.method`. Evidence를 남긴 뒤 예외를 그대로 던진다(컨테이너 에러 처리는 그대로 — 실측 응답 500, Spring 기본 에러 본문)
+- **트랜잭션 리스너 등록**: `TransactionExecutionListener` 빈 하나. Boot 4.1의 `ExecutionListenersTransactionManagerCustomizer`가 `JpaTransactionManager`에 붙인다(별도 `TransactionManagerCustomizer` 불필요). 롤백 경로에는 `COMMIT_BEGIN` 없이 `COMPLETED/ROLLED_BACK`만 찍힌다. `readOnly` 트랜잭션(GET)도 `COMMIT_BEGIN`·`COMMITTED`가 찍힌다
+- **포인트컷 최종 식**: 대상 패키지를 env `EVIDENCE_APP_PACKAGES`(쉼표, Order는 `poc.order`)로 받아 `AspectJExpressionPointcutAdvisor`로 등록 — `poc.evidence`를 Coupon·Kotlin New에 수정 없이 붙이기 위함. 식: `(execution(* <pkg>..*.*(..))) && !within(poc.evidence..*) && !within(jakarta.servlet.Filter+) && !@within(org.springframework.context.annotation.Configuration)`. 필터 제외 이유: `OncePerRequestFilter`의 final 메서드를 CGLIB 프록시가 가로채지 못해 프록시 상태로 호출되면 깨진다. advisor order는 최우선(트랜잭션 프록시 바깥)
+- **callTree class**: 사용자 클래스 FQCN. Spring Data 리포지토리 프록시는 대상 패키지의 인터페이스(`poc.order.OrderRepository`)로 기록 — `save`처럼 `CrudRepository`에 선언된 메서드도 `OrderRepository`로 잡힘(실측)
+- **callTree seq와 타임라인 seq 분리**: 확인. callTree는 1부터 1씩, 타임라인은 SQL·외부 호출·트랜잭션이 한 카운터(배열 안에서 비연속). 엔진 입력 계약이 둘 다 검사(`engine/common.py`)
+- **외부 호출 인터셉터 부착**: Boot 4는 `RestClient.Builder` 자동 구성이 `spring-boot-restclient` 모듈로 분리돼 있어 Order에 `spring-boot-starter-restclient`를 추가하고, `PaymentGatewayClient`가 정적 `RestClient.builder()` 대신 Boot의 `RestClient.Builder`를 주입받도록 바꿨다(요청 팩토리 `SimpleClientHttpRequestFactory` 고정은 유지). `poc.evidence`는 `RestClientCustomizer`로 인터셉터를 붙인다(클래스가 있을 때만)
+- **재생 헤더**: Evidence는 `X-Replay-Request-Id`·`X-Run-Id`·`X-Session-Id`·`X-Replay-Hop-Path` 넷이 모두 있을 때만 남긴다. `EVIDENCE_HEADERS`·`REQUEST_LOG_HEADERS`에 `X-Replay-Hop-Path` 추가. k6가 `X-Replay-Hop-Path: 0`
+- **Store 키**: 3.1은 진입 홉만 있으므로 Store는 v0 키 그대로. hopPath 키는 3.2(Store v1)
+- **실측 콜백 순서**(`docs/reports/logs/phase3.1-tx-callback-order.txt`): 동기화 `beforeCommit` → 리스너 `beforeCommit`(**COMMIT_BEGIN**) → `doCommit`(JPA "Committing") → Hibernate flush SQL(**UPDATE가 COMMIT_BEGIN 뒤**) → 동기화 `afterCommit` → 동기화 `afterCompletion` → 리스너 `afterCommit`(**COMMITTED**). 즉 동기화 afterCommit이 리스너 afterCommit보다 먼저다. `@TransactionalEventListener(AFTER_COMMIT)`의 발행은 COMMIT_BEGIN과 COMMITTED **사이** seq를 받게 되고, F3 판정(`publish.seq < COMMIT_BEGIN.seq`)은 이 순서와 무관하게 성립한다
+- **dbstate**: `k6/dbstate-export.sh` — 테이블별 `count`, 숫자 컬럼 `sum`, business key 순 행(auto id·시각 제외, 외래키는 `order_key`로 치환)의 canonical JSON sha256. 엔진(`diff_v0`)은 legacy·new 파일 전체 동일성을 본다
+- **WireMock journal 비교**: journal은 최신순으로 나오고 VU=3에서는 요청 간 순서가 보장되지 않아 `(method, url, body)` 목록을 정렬한 **다중집합**으로 비교한다
+- **자원(D-2 (C))**: Order `-Xmx384m -XX:MaxMetaspaceSize=128m`, requests 100m/512Mi·limits 2/768Mi. MySQL `--innodb-buffer-pool-size=64M`, requests 100m/256Mi·limits 1/512Mi. 실측 working set: order 432/420MiB(전 590/588), mysql 443/443MiB(전 473/473) — `docs/reports/logs/phase3.1-workingset.txt`
+
 끝난 기준
 - Legacy·New 동일 이미지(`order-app:phase3-base`)로 A/A 3회(VU=3) diff ∅ — callTree·externalCalls·transactions 포함
 - `POST /pay` Evidence: `externalCalls` 1건(charge, `childHopPath: "0.h1"`), `transactions`에 `COMMIT_BEGIN`·`COMMITTED` 각 1건, 타임라인에서 **외부 호출 seq < COMMIT_BEGIN seq < COMMITTED seq**, callTree에 Controller→Service→Repository→Client
