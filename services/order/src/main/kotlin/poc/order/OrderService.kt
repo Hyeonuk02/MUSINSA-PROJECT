@@ -42,7 +42,7 @@ class OrderService(
      * Coupon 실패는 [CouponClient.CouponFailure]로 던져 주문 INSERT까지 롤백한다.
      * "Coupon은 USED인데 주문은 롤백"(보상 누락)은 분산 일관성 문제로 범위 밖이다(phase3-plan 3절).
      */
-    @Transactional
+    @Transactional(noRollbackFor = [CouponClient.CouponFailure::class])
     fun create(orderKey: String, items: List<NewItem>, couponKey: String?): Outcome {
         if (orderRepository.existsByOrderKey(orderKey)) {
             return Outcome.of(Kind.KEY_EXISTS)
