@@ -15,7 +15,7 @@
 | F5 | `fault/F5` `1597c73` | `OrderRepository`(+5), `OrderService`(1줄) | 정상 리팩터링 | 조회 13 pair UNC → learn 라벨 후 IMP | 13/13 UNC ×3 ✔ → learn 3유형 라벨(규칙 3) → 13/13 IMP ×3 ✔(eval 8 포함), 오탐 0 | dbRead 횟수 2→1·fingerprint(404 조회), callTree(findWithItemsByOrderKey) | B0 ✔ / B1 ✔(DIFF만) / C ✔(분류) |
 | F6 | `fault/F6` `84bd197` | `OrderView`(+2 −1) | 승인된 개선 | 생성 8·조회 10·결제 8 = 26 pair IMP(사전 규칙) | 26/26 IMP ×3 ✔(규칙 `order-view-item-count`, `9648cf1` 사전 커밋), 오탐 0 | response.addedFields `itemCount` | B0 ✔ / B1 ✔(DIFF만) / C ✔(분류) |
 | F7 | `fault/F7` `31363ce` | `PaymentGatewayClient`(1줄 read timeout) | 설정 변경 결함 | R000041·R000042 CV + dbstate | 2/2 CV ×3 ✔, dbstate 위반(orders 상태), 정상 결제 6건 SAME, 오탐 0 | 응답 200→502, externalCalls status 200→0, writeSet, 발행 1→0·hop `0.e1`(Legacy만), 다음 GET status·transactionId, dbstate | B0 ✔ / B1 ✔ / C ✔ |
-| F8 | | | 성능 계약 | 조회(있음) 10 pair: 기본 UNC / maxSelects 선언 CV | | dbRead 횟수, callTree | |
+| F8 | `fault/F8` `60edcda` | `OrderRepository`(+5), `OrderService`(+4 −1) | 성능 계약 | 조회(있음) 10 pair: 기본 UNC / maxSelects 선언 CV | 기본 10/10 UNC ×3 ✔ / `contract-maxselects.yaml` 10/10 CV ×3 ✔, 오탐 0, learn 규칙 적용 0 | dbRead 횟수 2→3·4, callTree(`findItem`), 선언 시 max_selects | B0 ✔ / B1 ✔ / C ✔(선언에 따라 UNC·CV) |
 | F9 | | | 진짜 결함 | 쿠폰 주문 생성 4 pair CV | | externalCalls, hop `0.h2`(New만) | |
 
 ## F0 — baseline 기지 차이 (S011, 주입 아님)
@@ -56,3 +56,8 @@
 
 변경(`fault/F7`): `PaymentGatewayClient`의 요청 팩토리에 read timeout 1s. 기준선(과 Legacy)은 timeout 미설정(무제한)이라 계획의 "3s→1s"는 "무제한→1s"로 읽는다 — S009의 2s 지연 결제에서 Legacy 성공·New 실패라는 시험 의미는 같다.
 실제: R000041 New 타임아웃 → 502 `PAYMENT_FAILED`, externalCalls status 0, 발행 없음 → New에 `0.e1` 없음(settleTimeouts 지표·`settleUndeclared`, run은 계속) → CV. R000042 조회 PAID→CREATED → CV. 정상 결제 6건 SAME.
+
+## F8 — 조회 N+1
+
+변경(`fault/F8`): `OrderRepository.findItem(orderKey, lineNo)` 추가, `OrderService.getByKey`가 항목마다 다시 조회. 응답·쓰기 집합 동일, 조회 SELECT가 2 → 2+N.
+실제: 기본 계약에서 조회 10 pair Uncertain(countDelta 2→3·2→4 + callTree), `contract-maxselects.yaml`(order.get: 2)로 같은 run을 재판정하면 10 pair CV. F5 learn 규칙은 맞지 않아 가리지 않음.

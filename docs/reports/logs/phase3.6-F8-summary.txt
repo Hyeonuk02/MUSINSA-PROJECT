@@ -1,0 +1,15 @@
+runs/p36-F8-1 git {'rev': 'cb444fd19a5431aa3ad47f536187cd4b22e644fa', 'dirty': False} new order-app:phase3.6-F8
+   target 10 B0 DIFF 10 B1 DIFF 10
+   violation axes {} uncertain kinds {'dbRead.countDelta': 10, 'callTree.sequenceReplaced': 10}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'SAME': 28, 'UNCERTAIN': 6}, 'learn': {'SAME': 21, 'UNCERTAIN': 4}}
+runs/p36-F8-2 git {'rev': 'cb444fd19a5431aa3ad47f536187cd4b22e644fa', 'dirty': False} new order-app:phase3.6-F8
+   target 10 B0 DIFF 10 B1 DIFF 10
+   violation axes {} uncertain kinds {'dbRead.countDelta': 10, 'callTree.sequenceReplaced': 10}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'SAME': 28, 'UNCERTAIN': 6}, 'learn': {'SAME': 21, 'UNCERTAIN': 4}}
+runs/p36-F8-3 git {'rev': 'cb444fd19a5431aa3ad47f536187cd4b22e644fa', 'dirty': False} new order-app:phase3.6-F8
+   target 10 B0 DIFF 10 B1 DIFF 10
+   violation axes {} uncertain kinds {'dbRead.countDelta': 10, 'callTree.sequenceReplaced': 10}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'SAME': 28, 'UNCERTAIN': 6}, 'learn': {'SAME': 21, 'UNCERTAIN': 4}}

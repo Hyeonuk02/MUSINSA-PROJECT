@@ -1,0 +1,3 @@
+== p36-F8-1  arm C  pairs 60  {'CONTRACT_VIOLATION': 11, 'SAME': 49}
+== p36-F8-2  arm C  pairs 60  {'CONTRACT_VIOLATION': 11, 'SAME': 49}
+== p36-F8-3  arm C  pairs 60  {'CONTRACT_VIOLATION': 11, 'SAME': 49}

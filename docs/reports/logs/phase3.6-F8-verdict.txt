@@ -1,0 +1,219 @@
+== p36-F8-1  arm C  pairs 60  {'CONTRACT_VIOLATION': 1, 'SAME': 49, 'UNCERTAIN': 10}
+  split eval   {'CONTRACT_VIOLATION': 1, 'SAME': 28, 'UNCERTAIN': 6}
+  split learn  {'SAME': 21, 'UNCERTAIN': 4}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'SAME': 3, 'UNCERTAIN': 10}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  UNCERTAIN          R000002/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000004/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000006/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000009/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000014/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000028/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000030/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000034/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000042/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000046/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F8-1/verdict.json
+== p36-F8-1  arm B0  pairs 60  {'DIFF': 11, 'SAME': 49}
+  split eval   {'DIFF': 7, 'SAME': 28}
+  split learn  {'DIFF': 4, 'SAME': 21}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 10, 'SAME': 3}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000002/0 order.get: 
+  DIFF               R000004/0 order.get: 
+  DIFF               R000006/0 order.get: 
+  DIFF               R000009/0 order.get: 
+  DIFF               R000014/0 order.get: 
+  DIFF               R000028/0 order.get: 
+  DIFF               R000030/0 order.get: 
+  DIFF               R000034/0 order.get: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000046/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F8-1/verdict-B0.json
+== p36-F8-1  arm B1  pairs 60  {'DIFF': 11, 'SAME': 49}
+  split eval   {'DIFF': 7, 'SAME': 28}
+  split learn  {'DIFF': 4, 'SAME': 21}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 10, 'SAME': 3}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000002/0 order.get: 
+  DIFF               R000004/0 order.get: 
+  DIFF               R000006/0 order.get: 
+  DIFF               R000009/0 order.get: 
+  DIFF               R000014/0 order.get: 
+  DIFF               R000028/0 order.get: 
+  DIFF               R000030/0 order.get: 
+  DIFF               R000034/0 order.get: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000046/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F8-1/verdict-B1.json
+== p36-F8-2  arm C  pairs 60  {'CONTRACT_VIOLATION': 1, 'SAME': 49, 'UNCERTAIN': 10}
+  split eval   {'CONTRACT_VIOLATION': 1, 'SAME': 28, 'UNCERTAIN': 6}
+  split learn  {'SAME': 21, 'UNCERTAIN': 4}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'SAME': 3, 'UNCERTAIN': 10}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  UNCERTAIN          R000002/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000004/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000006/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000009/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000014/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000028/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000030/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000034/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000042/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000046/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F8-2/verdict.json
+== p36-F8-2  arm B0  pairs 60  {'DIFF': 11, 'SAME': 49}
+  split eval   {'DIFF': 7, 'SAME': 28}
+  split learn  {'DIFF': 4, 'SAME': 21}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 10, 'SAME': 3}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000002/0 order.get: 
+  DIFF               R000004/0 order.get: 
+  DIFF               R000006/0 order.get: 
+  DIFF               R000009/0 order.get: 
+  DIFF               R000014/0 order.get: 
+  DIFF               R000028/0 order.get: 
+  DIFF               R000030/0 order.get: 
+  DIFF               R000034/0 order.get: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000046/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F8-2/verdict-B0.json
+== p36-F8-2  arm B1  pairs 60  {'DIFF': 11, 'SAME': 49}
+  split eval   {'DIFF': 7, 'SAME': 28}
+  split learn  {'DIFF': 4, 'SAME': 21}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 10, 'SAME': 3}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000002/0 order.get: 
+  DIFF               R000004/0 order.get: 
+  DIFF               R000006/0 order.get: 
+  DIFF               R000009/0 order.get: 
+  DIFF               R000014/0 order.get: 
+  DIFF               R000028/0 order.get: 
+  DIFF               R000030/0 order.get: 
+  DIFF               R000034/0 order.get: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000046/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F8-2/verdict-B1.json
+== p36-F8-3  arm C  pairs 60  {'CONTRACT_VIOLATION': 1, 'SAME': 49, 'UNCERTAIN': 10}
+  split eval   {'CONTRACT_VIOLATION': 1, 'SAME': 28, 'UNCERTAIN': 6}
+  split learn  {'SAME': 21, 'UNCERTAIN': 4}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'SAME': 3, 'UNCERTAIN': 10}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  UNCERTAIN          R000002/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000004/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000006/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000009/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000014/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000028/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000030/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000034/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000042/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  UNCERTAIN          R000046/0 order.get: dbRead.countDelta; callTree.sequenceReplaced
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F8-3/verdict.json
+== p36-F8-3  arm B0  pairs 60  {'DIFF': 11, 'SAME': 49}
+  split eval   {'DIFF': 7, 'SAME': 28}
+  split learn  {'DIFF': 4, 'SAME': 21}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 10, 'SAME': 3}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000002/0 order.get: 
+  DIFF               R000004/0 order.get: 
+  DIFF               R000006/0 order.get: 
+  DIFF               R000009/0 order.get: 
+  DIFF               R000014/0 order.get: 
+  DIFF               R000028/0 order.get: 
+  DIFF               R000030/0 order.get: 
+  DIFF               R000034/0 order.get: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000046/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F8-3/verdict-B0.json
+== p36-F8-3  arm B1  pairs 60  {'DIFF': 11, 'SAME': 49}
+  split eval   {'DIFF': 7, 'SAME': 28}
+  split learn  {'DIFF': 4, 'SAME': 21}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 10, 'SAME': 3}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000002/0 order.get: 
+  DIFF               R000004/0 order.get: 
+  DIFF               R000006/0 order.get: 
+  DIFF               R000009/0 order.get: 
+  DIFF               R000014/0 order.get: 
+  DIFF               R000028/0 order.get: 
+  DIFF               R000030/0 order.get: 
+  DIFF               R000034/0 order.get: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000046/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F8-3/verdict-B1.json

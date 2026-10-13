@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6 일치 → F7 일치 → F8부터 진행 중
+- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6 일치 → F7 일치 → F8 일치(두 설정) → F9부터 진행 중
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -129,3 +129,18 @@
 | B0 / B1 / C | ✔ / ✔ / ✔ | B0 DIFF 2/2, B1 DIFF 2/2(응답 status·body), C CV 2/2 |
 
 로그 `logs/phase3.6-F7-*.txt`
+
+### 1.8 F8 — 주문 조회 N+1 (성능 계약, 두 설정)
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브랜치·커밋 1·이미지 | PASS | `fault/F8` = `60edcda`, `order-app:phase3.6-F8`. 2 files(클래스 2): `OrderRepository.kt` +5(`@Query("select i from OrderItem i where i.order.orderKey = :orderKey and i.lineNo = :lineNo") findItem`), `OrderService.kt` +4 −1(`getByKey`가 항목마다 `findItem`). 커밋 전 스모크: 응답 정상 |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS, settleTimeouts 0, `dirty: false`(rev `cb444fd`), new=phase3.6-F8 |
+| 기본 contract(maxSelects 미선언) → 조회 10 pair UNCERTAIN | PASS | 10/10 ×3(learn 4 / eval 6). 항목: `dbRead.countDelta` 2→3(항목 1개 주문 7) · 2→4(항목 2개 주문 3), `callTree.sequenceReplaced`(`OrderRepository.findItem` 추가). 404 조회 3건은 항목이 없어 SAME |
+| `--contract contract-maxselects.yaml`(order.get: 2) → CV | PASS | 같은 run 재판정(클러스터 재실행 없음) 10/10 CV ×3, `max_selects[order.get]: new readCount 3 > 2`(또는 4 > 2). `verdict-maxselects.json` `engine.contract = contract-maxselects.yaml`, sha256 `6d4b3c07…`. baseline(p36-base-1)을 같은 계약으로 판정해도 위반·경고 0(Legacy order.get = 2) |
+| 정상 경로 오탐 0 | PASS | 두 설정 모두 non-target 0 |
+| 오판정(learn 규칙이 가림) | 0 | F5 learned 규칙 3개(countDelta 2→1, callTree findWithItemsByOrderKey, fingerprint)가 있는 상태에서 판정 — F8 항목과 맞지 않아 적용 0. Uncertain으로 남음 |
+| 세 run 판정 동일 | PASS | 기본: UNC 10 + CV 1(F0) + SAME 49 / maxSelects: CV 11 + SAME 49 ×3 |
+| B0 / B1 / C | ✔ / ✔ / ✔ | B0 DIFF 10, B1 DIFF 10(SELECT 횟수는 B1 축 — 관측 매트릭스대로 F8은 B1에서도 보인다), C는 선언에 따라 UNC/CV |
+
+해석: 같은 Evidence가 **선언(maxSelects)에 따라** Uncertain(사람이 볼 것)과 CV(계약 위반)로 갈린다 — D18 "판정은 선언된 해상도". F5(2→1)와 F8(2→3·4)은 모두 SELECT 수 변화지만, learn 규칙이 F5 유형만 설명하므로 F8은 Improvement로 새지 않았다. 로그 `logs/phase3.6-F8-*.txt`
