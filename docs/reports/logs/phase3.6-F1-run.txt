@@ -1,0 +1,119 @@
+[16:45:50] preflight
+[16:45:50]   nodes: musinsa-phase1-control-plane(Ready) 
+[16:45:51]   cert istio-system/istio-ingressgateway-7d698f779c-kr6hr: VALID CERT=true NOT AFTER=2026-10-14T05:32:36Z (남은 766분)
+[16:45:51]   cert legacy/order-7f8cdf858c-ft5zk: VALID CERT=true NOT AFTER=2026-10-14T15:43:44Z (남은 1377분)
+[16:45:51]   cert new/order-86c9bff8cf-7zrc8: VALID CERT=true NOT AFTER=2026-10-14T16:45:37Z (남은 1439분)
+[16:45:51]   cert legacy/coupon-8664864f58-r79qc: VALID CERT=true NOT AFTER=2026-10-14T15:43:44Z (남은 1377분)
+[16:45:52]   cert new/coupon-5d69447bd7-q6xmt: VALID CERT=true NOT AFTER=2026-10-14T15:43:44Z (남은 1377분)
+[16:45:52]   cert legacy/kafka-555f9c698c-tlcvw: VALID CERT=true NOT AFTER=2026-10-14T16:40:25Z (남은 1434분)
+[16:45:52]   cert new/kafka-555f9c698c-8wb54: VALID CERT=true NOT AFTER=2026-10-14T16:40:25Z (남은 1434분)
+[16:45:52]   store: /_evidence/count 200
+[16:45:52]   corpus: validate.py PASS
+[16:45:52]   store: runId p36-F1-1..3 비어 있음
+[16:45:52] ===== iteration 1/3 runId=p36-F1-1 vus=3
+[16:45:52] reset: MySQL·Coupon MySQL·Kafka rollout restart (S0)
+[16:46:19]   kafka legacy/new: 토픽 order.paid order.paid.dlq (partition 1)
+[16:46:21]   order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)
+[16:46:24]   kafka legacy/new: coupon-settlement 그룹이 order.paid partition 할당받음
+[16:46:24]   wiremock legacy/new: DELETE /__admin/requests 200
+[16:46:24]   reset 소요 32s
+[16:46:24] k6: RUN_ID=p36-F1-1 VUS=3 k6 run k6/run.js
+  
+    runId              p36-F1-1
+    corpus             corpus-v2.1
+    vus                3
+    sent               48 (R000001 R000002 R000003 R000004 R000005 R000006 R000007 R000008 R000009 R000010 R000011 R000012 R000013 R000014 R000015 R000016 R000017 R000018 R000019 R000020 R000021 R000022 R000023 R000024 R000025 R000026 R000027 R000028 R000029 R000030 R000031 R000032 R000033 R000034 R000035 R000036 R000037 R000038 R000039 R000040 R000041 R000042 R000043 R000044 R000045 R000046 R000047 R000048)
+    degraded           0
+    settleTimeouts     0
+    newWaitMs          min=2 median=106 max=523
+    iteration_duration {"avg":2706.0330556666668,"min":1819.3145,"med":2128.813875,"max":4169.970792,"p(90)":3761.7394086,"p(95)":3965.8551003,"count":3}
+    summary            runs/p36-F1-1/k6-summary.json
+[16:46:29] barrier: spill 회수
+  [legacy] pod=order-7f8cdf858c-ft5zk spill=0 recovered=0
+  [new] pod=order-86c9bff8cf-7zrc8 spill=0 recovered=0
+  store count runId=p36-F1-1 stack=legacy: {"count":60}
+  store count runId=p36-F1-1 stack=new: {"count":61}
+[16:46:29] barrier: 기대 집합(진입 + 부모가 선언한 settle + 자식 홉 폐포, 관측 호스트 order,coupon, 관측 토픽 order.paid)
+    1단계 기대: 스택당 진입 48 + corpus settle 12 {'kafka': 7, 'http': 5} 중 부모가 선언한 것
+    1단계 legacy: 기대 60 (진입 48 + 선언된 settle 12)
+    1단계 new: 기대 60 (진입 48 + 선언된 settle 12)
+    2단계 폐포 라운드 1: 기대 legacy 60, new 61
+    legacy: 기대 60, 도착 60, 누락 0
+    new: 기대 61, 도착 61, 누락 0
+[16:46:29] export: runs/p36-F1-1/legacy.json (60건), runs/p36-F1-1/new.json (61건)
+  [legacy] dbstate: coupons=6, order_items=10, orders=8
+  [new] dbstate: coupons=6, order_items=10, orders=8
+[16:46:30] export: wiremock journal legacy 7건, new 8건
+[16:46:32] run-meta: runs/p36-F1-1/run-meta.json
+[16:46:32] ===== iteration 2/3 runId=p36-F1-2 vus=3
+[16:46:32] reset: MySQL·Coupon MySQL·Kafka rollout restart (S0)
+[16:47:03]   kafka legacy/new: 토픽 order.paid order.paid.dlq (partition 1)
+[16:47:04]   order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)
+[16:47:08]   kafka legacy/new: coupon-settlement 그룹이 order.paid partition 할당받음
+[16:47:09]   wiremock legacy/new: DELETE /__admin/requests 200
+[16:47:09]   reset 소요 37s
+[16:47:09] k6: RUN_ID=p36-F1-2 VUS=3 k6 run k6/run.js
+  
+    runId              p36-F1-2
+    corpus             corpus-v2.1
+    vus                3
+    sent               48 (R000001 R000002 R000003 R000004 R000005 R000006 R000007 R000008 R000009 R000010 R000011 R000012 R000013 R000014 R000015 R000016 R000017 R000018 R000019 R000020 R000021 R000022 R000023 R000024 R000025 R000026 R000027 R000028 R000029 R000030 R000031 R000032 R000033 R000034 R000035 R000036 R000037 R000038 R000039 R000040 R000041 R000042 R000043 R000044 R000045 R000046 R000047 R000048)
+    degraded           0
+    settleTimeouts     0
+    newWaitMs          min=2 median=105 max=134
+    iteration_duration {"p(95)":3399.8976788,"count":3,"avg":2252.557999666667,"min":1356.792875,"med":1826.119166,"max":3574.761958,"p(90)":3225.0333996}
+    summary            runs/p36-F1-2/k6-summary.json
+[16:47:13] barrier: spill 회수
+  [legacy] pod=order-7f8cdf858c-ft5zk spill=0 recovered=0
+  [new] pod=order-86c9bff8cf-7zrc8 spill=0 recovered=0
+  store count runId=p36-F1-2 stack=legacy: {"count":60}
+  store count runId=p36-F1-2 stack=new: {"count":61}
+[16:47:13] barrier: 기대 집합(진입 + 부모가 선언한 settle + 자식 홉 폐포, 관측 호스트 order,coupon, 관측 토픽 order.paid)
+    1단계 기대: 스택당 진입 48 + corpus settle 12 {'kafka': 7, 'http': 5} 중 부모가 선언한 것
+    1단계 legacy: 기대 60 (진입 48 + 선언된 settle 12)
+    1단계 new: 기대 60 (진입 48 + 선언된 settle 12)
+    2단계 폐포 라운드 1: 기대 legacy 60, new 61
+    legacy: 기대 60, 도착 60, 누락 0
+    new: 기대 61, 도착 61, 누락 0
+[16:47:13] export: runs/p36-F1-2/legacy.json (60건), runs/p36-F1-2/new.json (61건)
+  [legacy] dbstate: coupons=6, order_items=10, orders=8
+  [new] dbstate: coupons=6, order_items=10, orders=8
+[16:47:14] export: wiremock journal legacy 7건, new 8건
+[16:47:17] run-meta: runs/p36-F1-2/run-meta.json
+[16:47:17] ===== iteration 3/3 runId=p36-F1-3 vus=3
+[16:47:17] reset: MySQL·Coupon MySQL·Kafka rollout restart (S0)
+[16:47:50]   kafka legacy/new: 토픽 order.paid order.paid.dlq (partition 1)
+[16:47:50]   order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)
+[16:47:55]   kafka legacy/new: coupon-settlement 그룹이 order.paid partition 할당받음
+[16:47:55]   wiremock legacy/new: DELETE /__admin/requests 200
+[16:47:55]   reset 소요 38s
+[16:47:55] k6: RUN_ID=p36-F1-3 VUS=3 k6 run k6/run.js
+  
+    runId              p36-F1-3
+    corpus             corpus-v2.1
+    vus                3
+    sent               48 (R000001 R000002 R000003 R000004 R000005 R000006 R000007 R000008 R000009 R000010 R000011 R000012 R000013 R000014 R000015 R000016 R000017 R000018 R000019 R000020 R000021 R000022 R000023 R000024 R000025 R000026 R000027 R000028 R000029 R000030 R000031 R000032 R000033 R000034 R000035 R000036 R000037 R000038 R000039 R000040 R000041 R000042 R000043 R000044 R000045 R000046 R000047 R000048)
+    degraded           0
+    settleTimeouts     0
+    newWaitMs          min=2 median=11 max=650
+    iteration_duration {"p(90)":3498.327717,"p(95)":3682.375817,"count":3,"avg":2467.766125,"min":1510.931541,"med":2025.942917,"max":3866.423917}
+    summary            runs/p36-F1-3/k6-summary.json
+[16:47:59] barrier: spill 회수
+  [legacy] pod=order-7f8cdf858c-ft5zk spill=0 recovered=0
+  [new] pod=order-86c9bff8cf-7zrc8 spill=0 recovered=0
+  store count runId=p36-F1-3 stack=legacy: {"count":60}
+  store count runId=p36-F1-3 stack=new: {"count":61}
+[16:48:00] barrier: 기대 집합(진입 + 부모가 선언한 settle + 자식 홉 폐포, 관측 호스트 order,coupon, 관측 토픽 order.paid)
+    1단계 기대: 스택당 진입 48 + corpus settle 12 {'kafka': 7, 'http': 5} 중 부모가 선언한 것
+    1단계 legacy: 기대 60 (진입 48 + 선언된 settle 12)
+    1단계 new: 기대 60 (진입 48 + 선언된 settle 12)
+    2단계 폐포 라운드 1: 기대 legacy 60, new 61
+    legacy: 기대 60, 도착 60, 누락 0
+    new: 기대 61, 도착 61, 누락 0
+[16:48:00] export: runs/p36-F1-3/legacy.json (60건), runs/p36-F1-3/new.json (61건)
+  [legacy] dbstate: coupons=6, order_items=10, orders=8
+  [new] dbstate: coupons=6, order_items=10, orders=8
+[16:48:02] export: wiremock journal legacy 7건, new 8건
+[16:48:04] run-meta: runs/p36-F1-3/run-meta.json
+[16:48:04] done: 3 run(s) — runs/p36-F1-1 .. runs/p36-F1-3
+run.sh exit=0
