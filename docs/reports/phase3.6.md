@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2부터 진행 중
+- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3부터 진행 중
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -47,3 +47,17 @@
 
 해석: 멱등성 결함은 **응답과 SQL에 흔적이 없다**(B1 미탐) — 외부 호출 축과 세션 규칙이 있어야 잡힌다. 관측 매트릭스(3.7: "C만 잡는 것은 F1…")와 같은 결과.
 로그: `logs/phase3.6-F1-{run,verify,verdict,check}.txt`
+
+### 1.2 F2 — order_items INSERT 누락 (Order.items cascade 제거)
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브랜치·커밋 1·이미지 | PASS | `fault/F2` = `a131294`, `order-app:phase3.6-F2`. `Order.kt` 1 file +1 −2 (클래스 1) — `@OneToMany(mappedBy = "order", cascade = [ALL], orphanRemoval = true)` → `@OneToMany(mappedBy = "order")`. 커밋 전 스모크: New에 주문 행만 남고 항목 행 0, 예외 없음 |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS, settleTimeouts 0, `dirty: false`(rev `b70a6b7`), new=phase3.6-F2 |
+| target 27 pair CV (생성 9·조회 10·결제 8) | PASS | 27/27 ×3. 위반 축: `writeSet`(생성 9 — `insert order_items` 없음), `response_body_compatible`(조회·결제 18 — 응답 items 사라짐) |
+| dbstate | PASS(기대대로 위반) | `dbstate_equal` False — order_items legacy 10건 / new 0건 |
+| 정상 경로 오탐 0 | PASS | baseline과 다른 non-target 0 (CV 28 = target 27 + F0 R000047) |
+| 세 run 판정 동일 | PASS | CV 28 + SAME 32 ×3 |
+| B0 / B1 / C | ✔ / ✔ / ✔ | target 27 중 B0 DIFF 27, B1 DIFF 27(쓰기 문장·응답 모두 B1 축), C CV 27 |
+
+해석: 생성 응답은 메모리상 items가 있어 **응답만 보면 정상**이다 — 생성 pair는 쓰기 집합(writeSet)으로만, 그 뒤 조회·결제 pair는 응답 items로, run 전체는 dbstate로 세 겹에서 잡혔다. 로그 `logs/phase3.6-F2-{run,verify,verdict,check,summary}.txt`

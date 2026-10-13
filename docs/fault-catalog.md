@@ -9,7 +9,7 @@
 |---|---|---|---|---|---|---|---|
 | F0 | — (baseline 기지 차이, 주입 아님) | — | 입력 검증 경로 차이(Java 409 vs Kotlin 400) | R000047 CV, R000048 SAME | **R000047 CV ×3, R000048 SAME ×3** — 일치 | response.status 409→400, content-type, writeSet `insert orders` vs ∅, transactions ROLLED_BACK vs 없음 | ✔ / ✔ / ✔ |
 | F1 | `fault/F1` `da92b8e` | `OrderService`(+1 −3) | 진짜 결함 | R000008 CV | R000008 CV ×3 ✔. 정상 경로: engine-v1.1에서 R000007도 CV(세션 귀속) → D-6 → engine-v1.2 재판정 R000007 SAME(오탐 0), sessionViolations `idem-R000007` legacy 1 / new 2 → R000008 | externalCalls, events, hop `0.e1`(New만), 세션 규칙 `idem-R000007` legacy 1 / new 2 | B0 ✔ / B1 ✘ / C ✔ — 응답·SQL에 흔적이 없어 B1은 놓치고 B0(원문 DIFF)·C(CV)는 잡음 |
-| F2 | | | 진짜 결함 | 주문 생성 9·조회(있음) 10·결제 8 = 27 pair CV + dbstate | | writeSet, 응답 items, dbstate | |
+| F2 | `fault/F2` `a131294` | `Order`(+1 −2, cascade 제거) | 진짜 결함 | 주문 생성 9·조회(있음) 10·결제 8 = 27 pair CV + dbstate | 27/27 CV ×3 ✔, dbstate 위반(order_items 10 vs 0), 정상 경로 오탐 0 | writeSet(생성 9), 응답 items(조회·결제 18), dbstate | B0 ✔ / B1 ✔ / C ✔ |
 | F3 | | | 진짜 결함 | 첫 결제 7 pair CV | | 타임라인 publish.seq < COMMIT_BEGIN | |
 | F4 | | | 진짜 결함 | R000037·R000038 CV + dbstate | | transactions outcome, writeSet, 다음 GET 200 vs 404, dbstate | |
 | F5 | | | 정상 리팩터링 | 조회 13 pair UNC → learn 라벨 후 IMP | | dbRead 횟수·fingerprint, callTree | |
@@ -26,3 +26,8 @@
 
 변경(`fault/F1`): `OrderService.pay`의 `Order.PAID ->` 분기를 `Order.PAID if idempotencyKey != order.idempotencyKey -> ALREADY_PAID`로 — 같은 키로 다시 오면 PAID 분기를 지나 게이트웨이를 다시 호출하고 `markPaid`·`OrderPaid` 발행까지 한다(발행 로직은 그대로).
 실제(`p36-F1-1..3`, 세 run 동일): R000008(S002 같은 키 재결제) New에서 charge 1회 + `order.paid` 발행(ack ok, `0.e1` → Coupon no-op 소비) → CV. 응답은 같은 transactionId(WireMock이 키에서 결정론적 생성)라 동일, `markPaid`가 같은 값이라 UPDATE 없음 → **응답·SQL 축에는 흔적 없음**. engine-v1.1에서는 R000007도 CV — 세션 규칙 위반이 같은 키를 가진 pair 전부에 붙는 3.4 귀속 규칙 때문. D-6으로 귀속 규칙을 일반화(engine-v1.2: Legacy와 다른 기여를 한 pair에만)한 뒤 같은 run 재판정: R000007 SAME, R000008만 CV. **귀속 규칙은 F1 결과를 본 뒤 일반화했다.**
+
+## F2 — order_items INSERT 누락
+
+변경(`fault/F2`): `Order.items`의 `cascade = [CascadeType.ALL], orphanRemoval = true` 제거(Kotlin 전환 때 흔히 빠뜨리는 매핑 옵션 형태). 주문 행은 저장되고 항목은 메모리에만 남는다.
+실제(`p36-F2-1..3`, 세 run 동일): 생성 9 pair(쿠폰 400 롤백 R000037 포함) — 응답은 같고 `writeSet`만 다름(`insert order_items` 없음) → CV. 조회 10·결제 8 pair — 응답 `items`가 빈 배열 → `response_body_compatible` CV. dbstate order_items 10 → 0. 정상 경로(쿠폰·소비·404 조회·취소 409) 오탐 0.

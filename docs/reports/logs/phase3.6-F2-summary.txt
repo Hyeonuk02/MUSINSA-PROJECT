@@ -1,0 +1,15 @@
+runs/p36-F2-1 git {'rev': 'b70a6b77100634c4cb8adf43097be2085dbe76a7', 'dirty': False} new order-app:phase3.6-F2
+   target 27 B0 DIFF 27 B1 DIFF 27
+   violation axes {'writeSet': 9, 'response_body_compatible': 18} uncertain kinds {'response.addedFields': 18}
+   sessionViolations [] runChecks [('dbstate_equal', False, ["order_items: legacy={'count': 10, 'sum': {'price': 59500, 'qty': 15}, 'sha256': 'sha256:dbeff278b78dd45b0b8b737d647a8128ada103a3d6e5fe687c019ecb8416c75d'} new={'count': 0, 'sum': {'price': 0, 'qty': 0}, 'sha256': 'sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}"])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 18, 'SAME': 17}, 'learn': {'CONTRACT_VIOLATION': 10, 'SAME': 15}}
+runs/p36-F2-2 git {'rev': 'b70a6b77100634c4cb8adf43097be2085dbe76a7', 'dirty': False} new order-app:phase3.6-F2
+   target 27 B0 DIFF 27 B1 DIFF 27
+   violation axes {'writeSet': 9, 'response_body_compatible': 18} uncertain kinds {'response.addedFields': 18}
+   sessionViolations [] runChecks [('dbstate_equal', False, ["order_items: legacy={'count': 10, 'sum': {'price': 59500, 'qty': 15}, 'sha256': 'sha256:dbeff278b78dd45b0b8b737d647a8128ada103a3d6e5fe687c019ecb8416c75d'} new={'count': 0, 'sum': {'price': 0, 'qty': 0}, 'sha256': 'sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}"])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 18, 'SAME': 17}, 'learn': {'CONTRACT_VIOLATION': 10, 'SAME': 15}}
+runs/p36-F2-3 git {'rev': 'b70a6b77100634c4cb8adf43097be2085dbe76a7', 'dirty': False} new order-app:phase3.6-F2
+   target 27 B0 DIFF 27 B1 DIFF 27
+   violation axes {'writeSet': 9, 'response_body_compatible': 18} uncertain kinds {'response.addedFields': 18}
+   sessionViolations [] runChecks [('dbstate_equal', False, ["order_items: legacy={'count': 10, 'sum': {'price': 59500, 'qty': 15}, 'sha256': 'sha256:dbeff278b78dd45b0b8b737d647a8128ada103a3d6e5fe687c019ecb8416c75d'} new={'count': 0, 'sum': {'price': 0, 'qty': 0}, 'sha256': 'sha256:4f53cda18c2baa0c0354bb5f9a3ecbe5ed12ab4d8e11ba873c2f11161202b945'}"])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 18, 'SAME': 17}, 'learn': {'CONTRACT_VIOLATION': 10, 'SAME': 15}}
