@@ -130,6 +130,21 @@ imageRef는 kind 노드 containerd의 이미지 config digest(run-meta에 기록
 - 스택 간 DB 격리: [isolation-proof.md "스택 간 DB 격리"](isolation-proof.md) — 처음 legacy → mysql.new가 열려 있었고, `base/mysql-networkpolicy.yaml`(mysql ingress ← 같은 ns의 `app=order` 3306만)로 막은 뒤 교차 스택 세 경우 모두 차단, 대조군 성공
 - spill 디렉터리도 스택별 hostPath(`/var/evidence/spill/legacy`·`/var/evidence/spill/new`)로 분리 — 두 스택 사이 공유 자원 없음
 
+### (g) 관측 분리 — 검증 트래픽이 관측 대상에 섞이지 않음
+
+architecture §5.1 "관측 트래픽 제외 규칙"의 실측. 검증 파이프라인 자신의 트래픽(Evidence 전송·조회)이 비교 대상(요청 trace·미러·Evidence)에 들어가지 않는다.
+
+| 확인 | 결과 | 단계 |
+|---|---|---|
+| 게이트웨이 `/_evidence/` 라우트는 미러되지 않는다 | 호스트 `/_evidence/count` 200 동안 new order istio-proxy 로그에 `/_evidence` 0줄. 같은 시간대 `/api/...` 요청은 1줄(미러 정상, 양성 대조) | 2.3 |
+| Evidence POST는 앱 span에 없다 | 요청 trace의 앱 span(order-legacy·order-new)에 Evidence POST client span 0건 — POST 클라이언트는 `java.net.http.HttpClient`, `OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED=false` | 2.4a |
+| Evidence POST는 요청 trace에 섞이지 않는다 | Envoy outbound span(`outbound\|8080\|\|evidence-store.verify…`, 200)은 요청 trace가 아니라 **단일 span의 별도 trace**로 남는다(측정 구간 legacy 4건·new 4건). traceparent가 전파되지 않기 때문 | 2.4a |
+| Evidence POST 식별 | 헤더 `X-Evidence-Internal: true` | 2.4a |
+| Evidence에 실행 시점 헤더가 없다 | `x-request-id`·`Host`는 `EVIDENCE_HEADERS`에서 제외(로그용 `REQUEST_LOG_HEADERS`에만) | 2.4a |
+| 요청 처리 시간과 분리 | Evidence는 응답 커밋 후 비동기 전송 — Store 정상/내림에서 응답 시간 차이가 작음(4절 (c), 참고) | 2.4a·2.4b |
+
+Phase 3 traceTopology는 destination=`evidence-store`인 trace를 방어적으로 제외한다(phase2-plan 2.4(b)).
+
 ## 5. VU 결정
 
 [decision-log D13](decision-log.md): **기본 VU=3, 진단용 VU=1.** VU=1·VU=3 모두 3회 diff ∅(p26-1..3, p28-1..3).
