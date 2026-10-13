@@ -81,9 +81,7 @@ class OrderService(
         val order = orderRepository.findByOrderKey(orderKey).orElse(null)
             ?: return Outcome.of(Kind.NOT_FOUND)
         return when (order.status) {
-            Order.PAID ->
-                if (idempotencyKey == order.idempotencyKey) Outcome(Kind.OK, OrderView.from(order))
-                else Outcome.of(Kind.ALREADY_PAID)
+            Order.PAID if idempotencyKey != order.idempotencyKey -> Outcome.of(Kind.ALREADY_PAID)
             Order.CANCELLED -> Outcome.of(Kind.CANCELLED)
             else -> {
                 val transactionId = try {
