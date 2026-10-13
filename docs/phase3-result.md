@@ -22,9 +22,9 @@ Phase 4 입력(스코핑): 단계별 commit = 위 표 commit 열, 이미지 = `o
 
 ## 3.6 결함 카탈로그 v1 + New v2
 
-기준선 `phase3.5-v1.4`, corpus v2.1(60 pair/run, learn 25 · eval 35), VU=3 ×3, 엔진 `engine-v1.1`. 기대 판정은 run 전에 `docs/fault-expectations.json`에 등록. 상세 `docs/fault-catalog.md`, `docs/reports/phase3.6.md`.
+기준선 `phase3.5-v1.4`, corpus v2.1(60 pair/run, learn 25 · eval 35), VU=3 ×3, 엔진 `engine-v1.2`(F1 이후 D-6 귀속 규칙, F2~F9의 사전 등록 엔진). 기대 판정은 run 전에 `docs/fault-expectations.json`에 등록. 상세 `docs/fault-catalog.md`, `docs/reports/phase3.6.md`.
 
 | 변형 | 브랜치·commit | 이미지(new) | runs | 변경 클래스 | 기대(target) | 실제(target) | 탐지 | 정상 경로 오탐 | UNC learn/eval | 규칙 수(생성) | eval UNC 규칙 전→후 | B0 / B1 / C 가시성 |
 |---|---|---|---|---|---|---|---|---|---|---|---|---|
 | baseline | `phase3.5-v1.4` | phase3.5-v1.4 | `runs/p36-base-1..3` | — | F0: R000047 CV, R000048 SAME | 59 SAME + R000047 CV ×3 | (F0 관측) | — | 0/0 | 0 | 0→0 | B0 DIFF 1 / B1 DIFF 1 / C CV 1 |
-| F1 | `fault/F1` `da92b8e` | phase3.6-F1 | `runs/p36-F1-1..3` | `OrderService` | R000008 CV | R000008 CV ✔ (+ R000007 CV — 세션 규칙 귀속) | ✔ | **1 (R000007, 결정 대기 D-6)** | 0/0 | 0 | 0→0 | B0 ✔ / B1 ✘ / C ✔ |
+| F1 | `fault/F1` `da92b8e` | phase3.6-F1 | `runs/p36-F1-1..3` | `OrderService` | R000008 CV | R000008 CV ✔ | ✔ | v1.1: 1(R000007 세션 귀속) / v1.2: 0 | 0/0 | 0 | 0→0 | B0 ✔ / B1 ✘ / C ✔ |

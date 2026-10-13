@@ -28,7 +28,7 @@ import normalize as nz
 from common import ROOT, STACKS, contract_violations, key_of, load_run, load_validator
 from ruleset import RuleSet
 
-ENGINE_VERSION = "engine-v1.1 (phase3.5: id 값 마스킹)"
+ENGINE_VERSION = "engine-v1.2 (phase3.6: 세션 검사 귀속 규칙)"
 RULE_COVERABLE = {"response.addedFields", "response.removedFields", "response.valueChanged", "events.payloadFieldsAdded",
                   "dbRead.countDelta", "dbRead.fingerprintReplaced", "callTree.sequenceReplaced",
                   "transactions.nameChanged"}
@@ -235,7 +235,7 @@ class Judge:
                 if a != b:
                     pv[key].append(f"hop_set: legacy만 {sorted(a - b)} / new만 {sorted(b - a)}")
 
-        self._session_checks(pv)
+        self.session_violations = self._session_checks(pv)
 
         # 규칙 적용 → 4분류
         results = []
@@ -272,17 +272,23 @@ class Judge:
                 "warnings": pwarn.get(key, [])})
         return results, self._run_checks()
 
-    def _session_checks(self, pv: dict) -> None:
+    def _session_checks(self, pv: dict) -> list[dict]:
+        """세션 범위 검사. 귀속 원칙(engine-v1.2): 위반은 "Legacy와 다른 기여를 한 pair"에만 CV로 붙인다.
+        귀속할 pair가 없으면 pair 판정은 바꾸지 않는다(키를 공유한 pair 전체에 전파하지 않음).
+        양쪽 스택이 똑같이 위반한 경우(변경 전부터 있던 위반)는 pair를 SAME으로 두고 bothStacks 플래그로만 남긴다.
+        반환: sessionViolations [{session, check, key, legacy, new, bothStacks, attributedPairs}] — 귀속과 무관한 세션 단위 뷰."""
         chk = self.rules.check
+        out = []
         sessions = defaultdict(list)
         for key in self.pairs:
             sessions[self.by_key["legacy"][key]["sessionId"]].append(key)
         conf = chk("gateway_calls_per_idem_key_le_1")
-        for sid, keys in sessions.items():
+        for sid, keys in sorted(sessions.items()):
             ordered = sorted(keys, key=lambda k: (self.req_order.get(k[0], 0), k[1]))
             if conf:
+                limit = 1
                 counts = {s: Counter() for s in STACKS}
-                owners = defaultdict(list)
+                per_pair = {s: defaultdict(Counter) for s in STACKS}   # stack → idem → (rid, hop) → 호출 수
                 for s in STACKS:
                     for (rid, hop), rec in self.by_key[s].items():
                         if rec["sessionId"] != sid:
@@ -292,17 +298,23 @@ class Judge:
                             continue
                         n = sum(1 for c in rec.get("externalCalls", []) if c["host"] == conf["host"] and c["path"] == conf["path"])
                         counts[s][idem] += n
-                        if (rid, hop) not in owners[idem]:
-                            owners[idem].append((rid, hop))
+                        per_pair[s][idem][(rid, hop)] += n
                 for idem in sorted(set(counts["legacy"]) | set(counts["new"])):
                     a, b = counts["legacy"][idem], counts["new"][idem]
-                    if b > 1 or a > 1 or a != b:
-                        for k in owners[idem]:
-                            if k in pv:
-                                pv[k].append(f"gateway_calls_per_idem_key_le_1[{idem}]: legacy {a} / new {b}")
+                    if a != b:
+                        # 차등 판정: 자기 pair의 호출 수가 Legacy와 다른 pair에만 CV
+                        attributed = sorted(k for k in set(per_pair["legacy"][idem]) | set(per_pair["new"][idem])
+                                            if k in pv and per_pair["legacy"][idem][k] != per_pair["new"][idem][k])
+                        for k in attributed:
+                            pv[k].append(f"gateway_calls_per_idem_key_le_1[{idem}]: legacy {a} / new {b}")
+                        out.append(_sv(sid, "gateway_calls_per_idem_key_le_1", idem, a, b, False, attributed))
+                    elif a > limit:
+                        # 절대 플래그: 양쪽이 똑같이 상한 초과 — 변경으로 생긴 결함이 아니므로 pair는 SAME
+                        out.append(_sv(sid, "gateway_calls_per_idem_key_le_1", idem, a, b, True, []))
             if chk("coupon_transition_order"):
-                for s in ("legacy", "new"):
-                    used = set()
+                broken = {}
+                for s in STACKS:
+                    used, bad = set(), {}
                     for key in ordered:
                         n = self.norm[s][key]
                         if n["endpoint"] == "coupon.use" and n["response.status"] == 200 and isinstance(n["response.body"], dict):
@@ -310,7 +322,16 @@ class Judge:
                         if n["endpoint"] == "consume.order.paid" and ["update", "coupons"] in n["writeSet"]:
                             ck = (n["event"]["payload"] or {}).get("couponKey") if isinstance(n["event"]["payload"], dict) else None
                             if ck not in used:
-                                pv[key].append(f"coupon_transition_order[{ck}]: {s}에서 use 없이 SETTLED")
+                                bad[key] = ck
+                    broken[s] = bad
+                for key in sorted(set(broken["legacy"]) | set(broken["new"])):
+                    ck = broken["new"].get(key, broken["legacy"].get(key))
+                    in_l, in_n = key in broken["legacy"], key in broken["new"]
+                    attributed = [key] if in_n and not in_l else []
+                    for k in attributed:
+                        pv[k].append(f"coupon_transition_order[{ck}]: new에서 use 없이 SETTLED")
+                    out.append(_sv(sid, "coupon_transition_order", ck, in_l, in_n, in_l and in_n, attributed))
+        return out
 
     def _run_checks(self) -> list[dict]:
         out = []
@@ -325,6 +346,11 @@ class Judge:
             else:
                 out.append({"check": "dbstate_equal", "ok": None, "violations": ["dbstate 파일 없음"]})
         return out
+
+
+def _sv(session, check, key, legacy, new, both, attributed) -> dict:
+    return {"session": session, "check": check, "key": key, "legacy": legacy, "new": new, "bothStacks": both,
+            "attributedPairs": [f"{r}/{h}" for r, h in attributed]}
 
 
 def _tsum(t):
@@ -355,8 +381,10 @@ def _short(calls: list) -> str:
 def judge_run(run_dir: Path, rules_dir: Path, arm: str = "C", contract: Path | None = None) -> dict:
     rules = RuleSet(rules_dir, contract)
     j = Judge(run_dir, rules)
+    session_violations = []
     if arm == "C":
         pairs, run_checks = j.judge_full()
+        session_violations = j.session_violations
     else:
         pairs, run_checks = j.judge_simple(arm), []
     by_split, by_ep = defaultdict(Counter), defaultdict(Counter)
@@ -373,6 +401,7 @@ def judge_run(run_dir: Path, rules_dir: Path, arm: str = "C", contract: Path | N
             "verdicts": dict(sorted(Counter(p["verdict"] for p in pairs).items())),
             "bySplit": {k: dict(sorted(v.items())) for k, v in sorted(by_split.items())},
             "byEndpoint": {k: dict(sorted(v.items())) for k, v in sorted(by_ep.items())},
+            "sessionViolations": session_violations,
             **j.delivery(),
         },
     }
@@ -391,6 +420,9 @@ def print_table(result: dict) -> None:
         print(f"  {ep:20} {c}")
     for rc in result["runChecks"]:
         print(f"  run {rc['check']}: {'OK' if rc['ok'] else 'VIOLATION'} {rc['violations'] or ''}")
+    for sv in s["sessionViolations"]:
+        print(f"  session {sv['session']} {sv['check']}[{sv['key']}]: legacy {sv['legacy']} / new {sv['new']}"
+              f"{' bothStacks' if sv['bothStacks'] else ''} → {sv['attributedPairs'] or '귀속 pair 없음'}")
     print(f"  Undelivered legacy {len(s['undelivered']['legacy'])} / new {len(s['undelivered']['new'])}, degraded {len(s['degraded'])}")
     for p in result["pairs"]:
         if p["verdict"] not in ("SAME",):

@@ -92,7 +92,7 @@ def test_output_deterministic(run, rules):
     b = dumps(judge_run(run, rules, "C"))
     assert a == b
     head = json.loads(a)["engine"]
-    assert head["version"].startswith("engine-v1.1") and set(head["rules"]) >= {"contract.yaml", "improvement.yaml"}
+    assert head["version"].startswith("engine-v1.2") and set(head["rules"]) >= {"contract.yaml", "improvement.yaml"}
 
 
 # ---------------------------------------------------------------- 계획 7건
@@ -278,3 +278,61 @@ def test_contract_file_option(run, rules):
     assert pair(base, "R000028")["verdict"] == UNC and base["engine"]["contract"] == "contract.yaml"
     assert pair(alt, "R000028")["verdict"] == CV and alt["engine"]["contract"] == "contract-maxselects.yaml"
     assert "contract-maxselects.yaml" in alt["engine"]["rules"] and "contract.yaml" not in alt["engine"]["rules"]
+
+
+# ---------------------------------------------------------------- engine-v1.2 세션 검사 귀속 규칙
+def tamper_both(run_dir: Path, rid: str, hop: str, fn) -> None:
+    for stack in ("legacy", "new"):
+        path = run_dir / f"{stack}.json"
+        recs = json.loads(path.read_text(encoding="utf-8"))
+        hit = [r for r in recs if r["replayRequestId"] == rid and r["hopPath"] == hop]
+        assert len(hit) == 1
+        fn(hit[0], recs)
+        path.write_text(json.dumps(recs, ensure_ascii=False), encoding="utf-8")
+
+
+def test_session_violations_empty_on_fixture(run, rules):
+    assert judge_run(run, rules, "C")["summary"]["sessionViolations"] == []
+
+
+def test_gateway_sum_differs_only_differing_pair_cv(run, rules):
+    """F1형: 같은 키를 가진 pair 둘 — 합계가 다르면 자기 호출 수가 Legacy와 다른 pair만 CV, 나머지는 SAME."""
+    tamper_both(run, "R000004", "0", lambda r, _: r["request"]["headers"].update({"idempotency-key": "idem-R000003"}))
+
+    def charge(rec, recs):
+        src = next(x for x in recs if x["replayRequestId"] == "R000003" and x["hopPath"] == "0")["externalCalls"][0]
+        rec["externalCalls"].append(dict(src, seq=next_seq(rec)))
+    tamper(run, "R000004", "0", charge)
+    r = judge_run(run, rules, "C")
+    assert pair(r, "R000003")["verdict"] == SAME
+    p4 = pair(r, "R000004")
+    assert p4["verdict"] == CV and has(p4["violations"], "gateway_calls_per_idem_key_le_1[idem-R000003]: legacy 1 / new 2")
+    assert r["summary"]["sessionViolations"] == [{
+        "session": "S001", "check": "gateway_calls_per_idem_key_le_1", "key": "idem-R000003", "legacy": 1, "new": 2,
+        "bothStacks": False, "attributedPairs": ["R000004/0"]}]
+
+
+def test_gateway_both_stacks_over_limit_flag_only(run, rules):
+    """양쪽 다 2회(합계 같고 상한 초과) → pair SAME, sessionViolations에 bothStacks만."""
+    tamper_both(run, "R000003", "0",
+                lambda r, _: r["externalCalls"].append(dict(r["externalCalls"][0], seq=next_seq(r))))
+    r = judge_run(run, rules, "C")
+    assert pair(r, "R000003")["verdict"] == SAME
+    sv = r["summary"]["sessionViolations"]
+    assert len(sv) == 1 and sv[0]["bothStacks"] is True and sv[0]["attributedPairs"] == [] \
+        and (sv[0]["legacy"], sv[0]["new"]) == (2, 2)
+
+
+def test_coupon_transition_new_only_attributed(run, rules):
+    tamper(run, "R000027", "0.h1", lambda r, _: r["response"].update(status=409))
+    sv = judge_run(run, rules, "C")["summary"]["sessionViolations"]
+    assert sv == [{"session": "S006", "check": "coupon_transition_order", "key": "ck-R000026", "legacy": False,
+                   "new": True, "bothStacks": False, "attributedPairs": ["R000029/0.e1"]}]
+
+
+def test_coupon_transition_both_stacks_flag_only(run, rules):
+    tamper_both(run, "R000027", "0.h1", lambda r, _: r["response"].update(status=409))
+    r = judge_run(run, rules, "C")
+    assert pair(r, "R000029", "0.e1")["verdict"] == SAME and pair(r, "R000027", "0.h1")["verdict"] == SAME
+    sv = r["summary"]["sessionViolations"]
+    assert len(sv) == 1 and sv[0]["bothStacks"] is True and sv[0]["attributedPairs"] == []

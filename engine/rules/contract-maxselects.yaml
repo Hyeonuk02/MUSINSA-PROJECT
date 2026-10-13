@@ -30,11 +30,13 @@ checks:
   consume_outcome_equal: {enabled: true}
   hop_set_equal: {enabled: true}
   publish_after_commit_begin: {enabled: true}     # 홉에 COMMIT_BEGIN이 있으면 모든 publish.seq > COMMIT_BEGIN.seq
-  gateway_calls_per_idem_key_le_1:                 # 세션 범위
+  # 세션 범위 검사는 두 출력을 낸다(engine-v1.2): 차등 판정(CV) — Legacy와 다른 기여를 한 pair에만 귀속,
+  # 절대 플래그(bothStacks) — 양쪽이 똑같이 위반하면 pair는 SAME, summary.sessionViolations에만 기록.
+  gateway_calls_per_idem_key_le_1:                 # 세션 범위. 키별 호출 합이 스택 간 다르면 자기 pair 호출 수가 다른 pair에 CV, 같고 >1이면 bothStacks
     enabled: true
     host: wiremock
     path: /gateway/charge
-  coupon_transition_order: {enabled: true}        # 세션 범위
+  coupon_transition_order: {enabled: true}        # 세션 범위. 선행 use 200 없이 SETTLED가 New에서만 → 그 소비 홉 pair CV, 양쪽이면 bothStacks
   dbstate_equal: {enabled: true}                  # run 범위
   max_selects:                                     # 선언 단위 = endpoint id. 선언된 엔드포인트만 검사(기본 없음, F8에서 선언)
     enabled: true
