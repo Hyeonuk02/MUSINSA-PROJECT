@@ -12,4 +12,14 @@
 #       endpoint: order.get           # endpoint id 또는 '*'. replayRequestId·sessionId·runId는 쓸 수 없다(로더가 거부)
 #       diffKind: response.addedFields
 #       fields: [itemCount]
-rules: []
+rules:
+  # Phase 3.6 F6 — 사전 승인(F6 run 전에 커밋). 주문 응답(OrderView)에 itemCount 필드 추가는 승인된 개선.
+  - id: order-view-item-count
+    scope: request
+    verdict: improvement
+    reason: "주문 응답(OrderView)에 itemCount 필드 추가 — 승인된 개선(phase3-plan 3.6 F6). 기존 필드 값·삭제는 덮지 않음"
+    provenance: {author: Hyeonuk02, approvedBy: Hyeonuk02, date: "2026-10-14", runId: null, split: null, sessions: []}
+    match:
+      endpoint: "*"
+      diffKind: response.addedFields
+      fields: [itemCount]
