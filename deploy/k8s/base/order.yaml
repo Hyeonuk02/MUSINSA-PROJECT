@@ -44,7 +44,7 @@ spec:
             - until nc -z mysql 3306; do echo "waiting for mysql:3306"; sleep 2; done
       containers:
         - name: order
-          image: order-app:phase3-base
+          image: order-app:phase3.2-base
           # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
           imagePullPolicy: IfNotPresent
           ports:

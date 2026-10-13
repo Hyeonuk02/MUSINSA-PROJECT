@@ -394,6 +394,7 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 **근거**: 필터 시점엔 트랜잭션이 없어 동기화 등록이 불가. AFTER_COMMIT 콜백 안에서도 트랜잭션 리소스가 활성으로 보일 수 있어 불리언 판정은 오탐. COMMIT_BEGIN 기준이면 afterCommit 리스너와 AFTER_COMMIT 이벤트 리스너의 호출 순서를 가정하지 않아도 된다. 타임라인이면 롤백 시나리오 없이도 결정론적으로 판정된다.
 **대안**: Hibernate Interceptor.afterTransactionCompletion(Framework < 6.1 폴백). Outbox는 범위 밖.
 (주석, 2026-10-13: Framework < 6.1 폴백은 불필요 — 7.0.9 실측, docs/reports/phase3.0.md)
+실측(3.1): 동기화 afterCommit → 리스너 afterCommit 순서, flush SQL은 COMMIT_BEGIN 뒤 — docs/reports/logs/phase3.1-tx-callback-order.txt
 
 ### D17. New v1은 Order의 점진 Kotlin 전환 사다리 (2026-10-13)
 **결정**: v1.1 클라이언트 → v1.2 엔티티·리포지토리 → v1.3 서비스 → v1.4 컨트롤러. 같은 Boot·JDK, FQCN·API 유지, kotlin-spring·kotlin-jpa 필수, 엔티티 data class 금지, 결함을 섞지 않음. 단계마다 commit·이미지 1개. A/A 게이트는 인프라·엔진 단계와 base에만, A/B 단계의 기준은 "모든 diff가 4분류로 설명됨"(0건 포함).
