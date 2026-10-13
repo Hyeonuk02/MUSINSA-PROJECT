@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3부터 진행 중
+- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4부터 진행 중
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -61,3 +61,16 @@
 | B0 / B1 / C | ✔ / ✔ / ✔ | target 27 중 B0 DIFF 27, B1 DIFF 27(쓰기 문장·응답 모두 B1 축), C CV 27 |
 
 해석: 생성 응답은 메모리상 items가 있어 **응답만 보면 정상**이다 — 생성 pair는 쓰기 집합(writeSet)으로만, 그 뒤 조회·결제 pair는 응답 items로, run 전체는 dbstate로 세 겹에서 잡혔다. 로그 `logs/phase3.6-F2-{run,verify,verdict,check,summary}.txt`
+
+### 1.3 F3 — OrderPaid를 @EventListener로 (커밋 전 동기 발행)
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브랜치·커밋 1·이미지 | PASS | `fault/F3` = `12482f0`, `order-app:phase3.6-F3`. `OrderEventPublisher.kt` 1 file — `@TransactionalEventListener(AFTER_COMMIT)` → `@EventListener` |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS, settleTimeouts 0, `dirty: false`(rev `0a7c1f8`), new=phase3.6-F3 |
+| target 첫 결제 7 pair CV | PASS | 7/7 ×3, 위반 축은 `publish_after_commit_begin` 하나뿐 |
+| 정상 경로 오탐 0 | PASS | non-target 0 (CV 8 = 7 + F0) |
+| 세 run 판정 동일 | PASS | CV 8 + SAME 52 ×3 |
+| B0 / B1 / C | ✔ / ✘ / ✔ | B0 DIFF 7(seq 원문), **B1 DIFF 0**, C CV 7 |
+
+타임라인(p36-F3-1 R000003): Legacy `SELECT(1) < CALL(2) < SELECT(3) < COMMIT_BEGIN(4) < UPDATE(5) < PUBLISH(6) < COMPLETED(7)` / New `SELECT(1) < CALL(2) < **PUBLISH(3)** < SELECT(4) < COMMIT_BEGIN(5) < UPDATE(6) < COMPLETED(7)`. 응답·SQL 집합·callTree·이벤트 내용·ack·소비 Evidence가 모두 같고 **순서만** 다르다 — D16(단일 seq 타임라인 + COMMIT_BEGIN)이 없으면 보이지 않는 결함. 로그 `logs/phase3.6-F3-*.txt`

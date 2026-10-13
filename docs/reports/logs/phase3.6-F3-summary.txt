@@ -1,0 +1,15 @@
+runs/p36-F3-1 git {'rev': '0a7c1f82931862f05d6484a1b43fe564b5f9e89b', 'dirty': False} new order-app:phase3.6-F3
+   target 7 B0 DIFF 7 B1 DIFF 0
+   violation axes {'publish_after_commit_begin': 7} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 6, 'SAME': 29}, 'learn': {'CONTRACT_VIOLATION': 2, 'SAME': 23}}
+runs/p36-F3-2 git {'rev': '0a7c1f82931862f05d6484a1b43fe564b5f9e89b', 'dirty': False} new order-app:phase3.6-F3
+   target 7 B0 DIFF 7 B1 DIFF 0
+   violation axes {'publish_after_commit_begin': 7} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 6, 'SAME': 29}, 'learn': {'CONTRACT_VIOLATION': 2, 'SAME': 23}}
+runs/p36-F3-3 git {'rev': '0a7c1f82931862f05d6484a1b43fe564b5f9e89b', 'dirty': False} new order-app:phase3.6-F3
+   target 7 B0 DIFF 7 B1 DIFF 0
+   violation axes {'publish_after_commit_begin': 7} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 6, 'SAME': 29}, 'learn': {'CONTRACT_VIOLATION': 2, 'SAME': 23}}

@@ -1,0 +1,171 @@
+== p36-F3-1  arm C  pairs 60  {'CONTRACT_VIOLATION': 8, 'SAME': 52}
+  split eval   {'CONTRACT_VIOLATION': 6, 'SAME': 29}
+  split learn  {'CONTRACT_VIOLATION': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'CONTRACT_VIOLATION': 7, 'SAME': 1}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000003/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000007/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000012/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000029/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000033/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000041/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000045/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F3-1/verdict.json
+== p36-F3-1  arm B0  pairs 60  {'DIFF': 8, 'SAME': 52}
+  split eval   {'DIFF': 6, 'SAME': 29}
+  split learn  {'DIFF': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'DIFF': 7, 'SAME': 1}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000003/0 order.pay: 
+  DIFF               R000007/0 order.pay: 
+  DIFF               R000012/0 order.pay: 
+  DIFF               R000029/0 order.pay: 
+  DIFF               R000033/0 order.pay: 
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000045/0 order.pay: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F3-1/verdict-B0.json
+== p36-F3-1  arm B1  pairs 60  {'DIFF': 1, 'SAME': 59}
+  split eval   {'DIFF': 1, 'SAME': 34}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F3-1/verdict-B1.json
+== p36-F3-2  arm C  pairs 60  {'CONTRACT_VIOLATION': 8, 'SAME': 52}
+  split eval   {'CONTRACT_VIOLATION': 6, 'SAME': 29}
+  split learn  {'CONTRACT_VIOLATION': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'CONTRACT_VIOLATION': 7, 'SAME': 1}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000003/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000007/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000012/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000029/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000033/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000041/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000045/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F3-2/verdict.json
+== p36-F3-2  arm B0  pairs 60  {'DIFF': 8, 'SAME': 52}
+  split eval   {'DIFF': 6, 'SAME': 29}
+  split learn  {'DIFF': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'DIFF': 7, 'SAME': 1}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000003/0 order.pay: 
+  DIFF               R000007/0 order.pay: 
+  DIFF               R000012/0 order.pay: 
+  DIFF               R000029/0 order.pay: 
+  DIFF               R000033/0 order.pay: 
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000045/0 order.pay: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F3-2/verdict-B0.json
+== p36-F3-2  arm B1  pairs 60  {'DIFF': 1, 'SAME': 59}
+  split eval   {'DIFF': 1, 'SAME': 34}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F3-2/verdict-B1.json
+== p36-F3-3  arm C  pairs 60  {'CONTRACT_VIOLATION': 8, 'SAME': 52}
+  split eval   {'CONTRACT_VIOLATION': 6, 'SAME': 29}
+  split learn  {'CONTRACT_VIOLATION': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'CONTRACT_VIOLATION': 7, 'SAME': 1}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000003/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000007/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000012/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000029/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000033/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000041/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000045/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F3-3/verdict.json
+== p36-F3-3  arm B0  pairs 60  {'DIFF': 8, 'SAME': 52}
+  split eval   {'DIFF': 6, 'SAME': 29}
+  split learn  {'DIFF': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'DIFF': 7, 'SAME': 1}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000003/0 order.pay: 
+  DIFF               R000007/0 order.pay: 
+  DIFF               R000012/0 order.pay: 
+  DIFF               R000029/0 order.pay: 
+  DIFF               R000033/0 order.pay: 
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000045/0 order.pay: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F3-3/verdict-B0.json
+== p36-F3-3  arm B1  pairs 60  {'DIFF': 1, 'SAME': 59}
+  split eval   {'DIFF': 1, 'SAME': 34}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F3-3/verdict-B1.json
