@@ -30,3 +30,4 @@ configMapGenerator:
     files:
       - wiremock-mappings/ping.json
       - wiremock-mappings/gateway-charge.json
+      - wiremock-mappings/gateway-charge-slow.json

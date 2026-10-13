@@ -9,7 +9,7 @@
 #   / Store 준비(게이트웨이 /_evidence/count 200) / corpus validate.py / Store에 같은 runId Evidence 없음(3.5)
 # reset: MySQL rollout restart(S0) → order readiness(없는 키 조회 404) → WireMock request journal 비움
 #   WireMock admin은 게이트웨이로 열지 않고 tooling pod(kubectl exec)로 호출한다(게이트웨이 표면은 /api/, /_evidence/뿐)
-# barrier v2(Phase 3.2, D19): spill 회수 → k6/barrier.py — 스택별 기대 집합 = sent의 진입 홉 + corpus settle 홉(최대 30초),
+# barrier v2(Phase 3.2, D19): spill 회수 → k6/barrier.py — 스택별 기대 집합 = sent의 진입 홉 + corpus settle 홉 중 그 스택의 부모가 선언한 것(v2.1, 최대 30초),
 #   그다음 도착 Evidence가 선언한 자식 홉 폐포(관측 호스트 OBSERVED_HOSTS로 나간 호출만, 최대 10초, 반복).
 #   미달이면 누락 (requestId, hopPath)를 출력하고 export(디버깅용)만 한 뒤 exit 1 — 다음 iteration으로 가지 않는다
 # export(3.1): Evidence(legacy.json·new.json) + 최종 DB 상태(dbstate-<stack>.json) + WireMock journal(wiremock-<stack>.json)
@@ -20,7 +20,7 @@ cd "$ROOT"
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 BASE_URL="${BASE_URL:-http://localhost}"
 EVIDENCE_URL="${EVIDENCE_URL:-http://localhost/_evidence}"
-CORPUS=corpus/corpus-v2.json
+CORPUS=corpus/corpus-v2.1.json
 # 관측 서비스 호스트 — externalCalls.childHopPath를 barrier 폐포에 넣는 대상(WireMock 등 외부는 Evidence를 남기지 않음)
 OBSERVED_HOSTS="${OBSERVED_HOSTS:-order,coupon}"
 # 관측 토픽 — events.published.childHopPath를 폐포에 넣는 대상(소비자가 있는 토픽만. order.paid.dlq는 소비자 없음)
@@ -196,7 +196,7 @@ export_run() {  # runId dir
 barrier() {  # runId dir
   log "barrier: spill 회수"
   k6/spill-recover.sh --run-id "$1" | sed 's/^/  /' || fail "barrier: spill-recover 실패"
-  log "barrier: 기대 집합(corpus settle + 자식 홉 폐포, 관측 호스트 $OBSERVED_HOSTS, 관측 토픽 $OBSERVED_TOPICS)"
+  log "barrier: 기대 집합(진입 + 부모가 선언한 settle + 자식 홉 폐포, 관측 호스트 $OBSERVED_HOSTS, 관측 토픽 $OBSERVED_TOPICS)"
   if ! "$PY" k6/barrier.py --run-dir "$2" --corpus "$CORPUS" --evidence-url "$EVIDENCE_URL" \
         --observed-hosts "$OBSERVED_HOSTS" --observed-topics "$OBSERVED_TOPICS" | sed 's/^/  /'; then
     export_run "$1" "$2"

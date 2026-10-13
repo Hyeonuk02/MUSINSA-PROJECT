@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """corpus 검증 — schema.json(구조) + 구조로 표현하기 어려운 규칙.
 
-사용: .venv/bin/python corpus/validate.py [corpus/corpus-v2.json]   (version으로 v1/v2 규칙을 고른다)
+사용: .venv/bin/python corpus/validate.py [corpus/corpus-v2.1.json]   (version으로 v1/v2 규칙을 고른다)
       .venv/bin/python corpus/validate.py --self-test
 의존: 루트 requirements.txt (jsonschema) — .venv/bin/pip install -r requirements.txt
 
@@ -28,6 +28,7 @@ v2 (corpus-v2, Phase 3.2) — schema-v2.json + 아래 규칙
      두 번째 이후 /pay에는 0.e1 금지(재결제는 발행 없음). 그 외 요청에 settle 금지
   7. 흐름 유형(flow)마다 learn·eval 세션이 각각 1개 이상
   8. 실행 시점 값 없음
+  9. (v2.1, Phase 3.6) 주문 항목의 sku는 필수 — allowMissingSku: true 세션에서만 생략 가능
 
 expectMissing의 의미는 이 스크립트에만 있다. k6와 engine은 무시한다.
 종료 코드: 0 = 통과, 1 = 위반, 2 = 사용법/파일 오류
@@ -233,6 +234,8 @@ def validate_v2(corpus, schema):
                     errors.append(f"[body] {where}: 주문 생성 body 형식이 아님")
                 if body.get("orderKey") != f"ok-{rid}":
                     errors.append(f"[orderKey] {where}: 생성 키는 ok-{rid} 이어야 함 (실제 {body.get('orderKey')})")
+                if not s.get("allowMissingSku") and any("sku" not in item for item in body.get("items", [])):
+                    errors.append(f"[sku] {where}: 주문 항목에 sku 없음 — allowMissingSku 세션에서만 허용")
                 if "couponKey" in body:
                     refs.append(body["couponKey"])
                     if COUPON_SETTLE not in r.get("settle", []):
@@ -302,14 +305,14 @@ def validate_v2(corpus, schema):
 
 def run_validate(corpus):
     """corpus version으로 스키마·규칙을 고른다."""
-    if corpus.get("version") == "corpus-v2":
+    if corpus.get("version") in ("corpus-v2", "corpus-v2.1"):
         return validate_v2(corpus, json.loads((HERE / "schema-v2.json").read_text(encoding="utf-8")))
     return validate(corpus, json.loads((HERE / "schema.json").read_text(encoding="utf-8")))
 
 
 def self_test():
     results = []
-    for valid in (HERE / "corpus-v1.json", HERE / "corpus-v2.json"):
+    for valid in (HERE / "corpus-v1.json", HERE / "corpus-v2.json", HERE / "corpus-v2.1.json"):
         errors, _ = run_validate(json.loads(valid.read_text(encoding="utf-8")))
         results.append((valid.name, "PASS 기대", not errors, errors[:1]))
 
@@ -333,7 +336,7 @@ def self_test():
 def main(argv):
     if argv[1:] == ["--self-test"]:
         return self_test()
-    corpus_path = Path(argv[1]) if len(argv) > 1 else HERE / "corpus-v2.json"
+    corpus_path = Path(argv[1]) if len(argv) > 1 else HERE / "corpus-v2.1.json"
     try:
         corpus = json.loads(corpus_path.read_text(encoding="utf-8"))
     except (OSError, json.JSONDecodeError) as e:

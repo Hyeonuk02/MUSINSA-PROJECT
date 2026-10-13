@@ -336,6 +336,16 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 | F8 | N+1 (items fetch 전략 변경) | 성능 계약 | `maxSelects` 선언 시 CV, 미선언 시 Uncertain — **둘 다 실험** | DB 실행 특성 |
 | F9 | Coupon `use`를 두 번 호출 | 진짜 결함 | CV (hop 집합: `0.h2` 출현) | 외부 호출·hop |
 
+구현 시 확정 (3.6)
+- **태그**: `phase3.3-base` = `98c9356`(Legacy 고정 코드), `phase3.5-v1.4` = `120b212`(결함의 기준선)
+- **settle 의미(D19 보완)**: corpus settle은 k6가 폴링할 힌트, 스택별 기대 집합의 근거는 부모 Evidence의 선언. barrier 1단계 = 진입 홉 + corpus settle 중 그 스택의 부모가 childHopPath로 실제 선언한 것(최대 30초), 2단계 = 폐포. 부모가 선언하지 않은 settle 홉은 `barrier.json`의 `settleUndeclared`에 남기고 엔진(hop_set_equal)으로 넘긴다. k6의 settle 폴링 타임아웃은 `k6-summary.json`의 `settleTimeouts`(지표) — degraded는 진입 Evidence 실패에만. verify_sameness 세 분기는 그대로
+- **corpus v2.1**(`corpus/corpus-v2.1.json`, run.sh·k6·validate.py 기본값): v2 + S011(flow order, split eval, `allowMissingSku: true`) — R000047 `POST /api/orders` 항목에 sku 없음, R000048 `GET by-key`. 스키마 v2는 version `corpus-v2|corpus-v2.1`, 항목 required에서 sku를 빼고 validate.py 규칙 9("sku는 allowMissingSku 세션에서만 생략")로 검사, 음성 fixture `invalid-v2/sku-missing-without-flag.json`. S001~S010은 v2와 동일. 기존 run(run-meta corpus.path = corpus-v2.json)은 그대로 재판정 가능
+- **WireMock 지연 스텁**(base, 양쪽 동일): `gateway-charge-slow.json` — 본문 `$.idempotencyKey`가 `^idem-slow-.+$`이면 `fixedDelayMilliseconds: 2000`, `priority: 1`(기본 스텁보다 우선), 응답 본문은 기본 스텁과 같음. S009(R000041 `idem-slow-R000041`)가 지연 세션
+- **엔진 `--contract`**(F8 준비, F run 전): `verdict.py --contract <file>`로 기능 계약 파일 교체, `verdict.json`의 `engine.contract`(파일명)와 `engine.rules`(sha256)에 기록. `engine/rules/contract-maxselects.yaml` = contract.yaml + `max_selects.endpoints: {order.get: 2}`
+- **결함 격리**: 결함마다 브랜치 `fault/F<n>` = `phase3.5-v1.4` 위 커밋 정확히 1개(`phase3.6-F<n>: ...`), 이미지 `order-app:phase3.6-F<n>`. hyeonuk-dev에는 결과·보고서·규칙만. Phase 4 입력 = `git diff phase3.5-v1.4..fault/F<n>`. run은 hyeonuk-dev 작업트리(clean)에서 new overlay 렌더링의 order 이미지만 치환해 apply(레포 무변경 → dirty=false). 코드 diff는 클래스 1~2개, Coupon·poc.evidence·corpus는 결함에서 손대지 않는다
+- **baseline**: `p36-base`(new = `phase3.5-v1.4`, corpus v2.1) — 모든 F run의 기준. S011 create의 CV는 baseline 기지 차이 F0(주입 아님)로 fault-catalog에 기록하고, 정상 경로 오탐은 baseline CV 집합을 뺀 pair로 센다
+- **F7 해석**: "설정만, 코드 변경 없음" = 로직 무변경. `PaymentGatewayClient`의 read timeout 한 줄(클래스 1)
+
 끝난 기준
 - 결함별 3 run, 기대 판정 = 실제 판정 표(**결함 탐지율**), 정상 경로 오탐 0, **오판정률**(learn에서 만든 규칙이 F를 SAME·Improvement로 가린 건수) 0
 - 각 결함 commit의 코드 diff가 클래스 1~2개(Phase 4 입력)

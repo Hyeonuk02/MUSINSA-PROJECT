@@ -268,3 +268,13 @@ def test_id_value_masked_but_key_compared(run, rules):
     assert p["verdict"] == CV and has(p["violations"], 'response_body_compatible: response.removedFields {"fields":["id"]}')
     for arm in ("B0", "B1"):
         assert pair(judge_run(run, rules, arm), "R000028")["verdict"] == "DIFF"
+
+
+def test_contract_file_option(run, rules):
+    """--contract로 같은 run을 다른 계약 선언(maxSelects)으로 판정 — 어떤 계약 파일을 썼는지 sha와 함께 기록."""
+    tamper(run, "R000028", "0", add_select)
+    base = judge_run(run, rules, "C")
+    alt = judge_run(run, rules, "C", rules / "contract-maxselects.yaml")
+    assert pair(base, "R000028")["verdict"] == UNC and base["engine"]["contract"] == "contract.yaml"
+    assert pair(alt, "R000028")["verdict"] == CV and alt["engine"]["contract"] == "contract-maxselects.yaml"
+    assert "contract-maxselects.yaml" in alt["engine"]["rules"] and "contract.yaml" not in alt["engine"]["rules"]

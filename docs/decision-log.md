@@ -408,3 +408,4 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 **결정**: 스택별 1브로커·NetworkPolicy·partition 1·재시도 0·DLQ. 내부 Evidence(서비스 간 호출·소비)의 완료는 corpus의 settle 선언을 k6가 양쪽 스택에서 폴링해 확인하고, barrier 기대 집합은 corpus에서 계산한 뒤 도착한 Evidence가 선언한 childHopPath 폐포까지 넓혀 기다린다. 안정화 대기 휴리스틱은 쓰지 않는다. 없는 Evidence는 Undelivered(internal)이며 양쪽에 없어도 SAME이 아니다.
 **근거**: "1초간 변화 없음"은 완료의 증거가 아님. Legacy의 소비 Evidence도 비동기라 New만 폴링하면 export 전에 빠질 수 있음. settle만 기다리면 한쪽에만 생긴 추가 호출(F9)의 Evidence를 놓칠 수 있음.
 **한계**: 자원 부족 시 공유 브로커 + 토픽 접두사로 후퇴할 수 있으며 그때 Kafka는 스택 축 격리의 예외.
+**보완(2026-10-14, Phase 3.6)**: corpus settle은 k6가 폴링할 힌트이고, 스택별 기대 집합의 근거는 부모 Evidence의 선언(childHopPath)이다. barrier 1단계 = 진입 홉 + 그 스택의 부모가 실제 선언한 settle 홉, 2단계 = 폐포. 부모가 선언하지 않은 settle 홉은 미달이 아니라 행동 차이(엔진 hop_set_equal)로 넘기고, k6의 settle 타임아웃은 degraded가 아니라 settleTimeouts 지표(degraded는 진입 Evidence 실패에만). 이유: F7처럼 New의 결제가 실패하면 0.e1이 New에 오지 않는 것 자체가 결함의 증상이다.

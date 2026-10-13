@@ -4,8 +4,11 @@
 스택별 기대 집합을 corpus에서 결정론적으로 계산하고, 도착한 Evidence가 선언한 자식 홉까지 넓혀 기다린다.
 안정화 대기(“N초간 변화 없음”) 휴리스틱은 쓰지 않는다.
 
-  1단계  기대 = k6-summary.json의 sent 각각의 진입 홉 "0" + corpus에서 그 요청에 선언된 settle 홉
-         → 양쪽 스택에 모두 도착할 때까지 최대 30초
+  1단계  기대 = k6-summary.json의 sent 각각의 진입 홉 "0"
+         + corpus settle 홉 중 **그 스택의 부모 Evidence가 childHopPath로 실제 선언한 것**(v2.1, Phase 3.6 — D19 보완)
+         → 스택별로 도착할 때까지 최대 30초
+         settle은 k6가 폴링할 힌트일 뿐 기대 집합의 근거가 아니다. 부모가 선언하지 않은 settle 홉(예: F7에서 New 결제가
+         실패해 발행이 없음)은 미달이 아니라 행동 차이 — barrier.json의 settleUndeclared에 남기고 엔진(hop_set_equal)으로 넘긴다
   2단계  폐포 = 도착한 Evidence의 externalCalls[].childHopPath(host가 관측 서비스일 때만)
          + events.published[].childHopPath(topic이 관측 토픽일 때만 — order.paid.dlq처럼 소비자가 없는 토픽은 Evidence가 없다)
          → 새로 늘어난 기대가 도착할 때까지 최대 10초. 새로 도착한 Evidence가 또 자식을 선언하면 반복
@@ -65,27 +68,37 @@ def main(argv: list[str]) -> int:
     sent = json.loads((args.run_dir / "k6-summary.json").read_text(encoding="utf-8"))["sent"]
     settle = {r["id"]: [s["hop"] for s in r.get("settle", [])]
               for s in json.loads(args.corpus.read_text(encoding="utf-8"))["sessions"] for r in s["requests"]}
-    base = {(rid, "0") for rid in sent} | {(rid, hop) for rid in sent for hop in settle.get(rid, [])}
-    expected = {stack: set(base) for stack in STACKS}
+    entries = {(rid, "0") for rid in sent}
+    settle_all = {(rid, hop) for rid in sent for hop in settle.get(rid, [])}
+    expected = {stack: set(entries) for stack in STACKS}
     kinds = {}
     for s in json.loads(args.corpus.read_text(encoding="utf-8"))["sessions"]:
         for r in s["requests"]:
             if r["id"] in sent:
                 for x in r.get("settle", []):
                     kinds[x["origin"]] = kinds.get(x["origin"], 0) + 1
-    print(f"  1단계 기대: 스택당 {len(base)} (진입 {len(sent)} + settle {len(base) - len(sent)} {kinds})")
+    print(f"  1단계 기대: 스택당 진입 {len(sent)} + corpus settle {len(settle_all)} {kinds} 중 부모가 선언한 것")
 
-    def wait(deadline_s: float, phase: str) -> dict[str, set]:
-        """기대가 모두 도착하거나 deadline까지. 반환: 스택별 (present, children)."""
+    def wait(deadline_s: float, phase: str, with_settle: bool = False) -> dict[str, set]:
+        """기대가 모두 도착하거나 deadline까지. 반환: 스택별 (present, children).
+        with_settle이면 매 폴링마다 '부모가 선언한 settle 홉'을 기대에 더한다(1단계)."""
         end = time.monotonic() + deadline_s
         while True:
             state = {stack: keys_and_children(export(args.evidence_url, run_id, stack), observed, topics) for stack in STACKS}
+            if with_settle:
+                for stack in STACKS:
+                    expected[stack] |= settle_all & state[stack][1]
             missing = {stack: expected[stack] - state[stack][0] for stack in STACKS}
             if not any(missing.values()) or time.monotonic() >= end:
                 return state, missing
             time.sleep(POLL_S)
 
-    state, missing = wait(ENTRY_TIMEOUT_S, "1단계")
+    state, missing = wait(ENTRY_TIMEOUT_S, "1단계", with_settle=True)
+    settle_undeclared = {stack: sorted(f"{r}/{h}" for r, h in settle_all - state[stack][1]) for stack in STACKS}
+    for stack in STACKS:
+        print(f"  1단계 {stack}: 기대 {len(expected[stack])} (진입 {len(entries)} + 선언된 settle {len(expected[stack]) - len(entries)})"
+              + (f", 부모가 선언하지 않은 settle {len(settle_undeclared[stack])}: {' '.join(settle_undeclared[stack])} → 엔진(hop 집합)"
+                 if settle_undeclared[stack] else ""))
     rounds = 0
     while not any(missing.values()):
         grown = False
@@ -110,6 +123,7 @@ def main(argv: list[str]) -> int:
             "present": len(state[stack][0]),
             "unexpected": sorted(f"{r}/{h}" for r, h in state[stack][0] - expected[stack]),
             "missing": sorted(f"{r}/{h}" for r, h in missing[stack]),
+            "settleUndeclared": settle_undeclared[stack],
             "hops": sorted({h for _, h in expected[stack]}),
         } for stack in STACKS},
     }

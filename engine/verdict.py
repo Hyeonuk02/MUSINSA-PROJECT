@@ -15,6 +15,7 @@ arm(3.7 측정용): B0 = 휘발 필드를 뺀 원문 동일성 / B1 = Normalizat
 
 사용: .venv/bin/python engine/verdict.py --run runs/<runId> [--arm C] [--rules engine/rules] [--out <file>]
       기본 출력 runs/<runId>/verdict.json (arm B0·B1은 verdict-<arm>.json)
+      --contract <file>: 기능 계약 파일 교체(예: engine/rules/contract-maxselects.yaml). verdict.json engine.contract·rules에 이름·sha256
 """
 import argparse
 import hashlib
@@ -351,8 +352,8 @@ def _short(calls: list) -> str:
 
 
 # ---------------------------------------------------------------- 실행
-def judge_run(run_dir: Path, rules_dir: Path, arm: str = "C") -> dict:
-    rules = RuleSet(rules_dir)
+def judge_run(run_dir: Path, rules_dir: Path, arm: str = "C", contract: Path | None = None) -> dict:
+    rules = RuleSet(rules_dir, contract)
     j = Judge(run_dir, rules)
     if arm == "C":
         pairs, run_checks = j.judge_full()
@@ -363,7 +364,7 @@ def judge_run(run_dir: Path, rules_dir: Path, arm: str = "C") -> dict:
         by_split[p["split"] or "-"][p["verdict"]] += 1
         by_ep[p["endpoint"]][p["verdict"]] += 1
     return {
-        "engine": {"version": ENGINE_VERSION, "arm": arm, "rules": rules.sha256()},
+        "engine": {"version": ENGINE_VERSION, "arm": arm, "contract": rules.contract_name(), "rules": rules.sha256()},
         "runId": run_dir.name,
         "pairs": pairs,
         "runChecks": run_checks,
@@ -402,9 +403,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--run", required=True, type=Path)
     ap.add_argument("--arm", default="C", choices=["B0", "B1", "C"])
     ap.add_argument("--rules", default=ROOT / "engine" / "rules", type=Path)
+    ap.add_argument("--contract", type=Path, help="기능 계약 파일(기본 <rules>/contract.yaml). 같은 run을 다른 선언으로 판정할 때")
     ap.add_argument("--out", type=Path)
     args = ap.parse_args(argv)
-    result = judge_run(args.run, args.rules, args.arm)
+    result = judge_run(args.run, args.rules, args.arm, args.contract)
     out = args.out or args.run / ("verdict.json" if args.arm == "C" else f"verdict-{args.arm}.json")
     out.write_text(dumps(result), encoding="utf-8")
     print_table(result)

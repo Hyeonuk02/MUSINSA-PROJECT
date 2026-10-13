@@ -93,9 +93,11 @@ def _all_match(values: list[str], patterns: list[str]) -> bool:
 
 
 class RuleSet:
-    def __init__(self, rules_dir: Path):
+    def __init__(self, rules_dir: Path, contract: Path | None = None):
+        """contract: 기능 계약 파일. 기본 rules_dir/contract.yaml. 같은 run을 다른 계약 선언으로 판정할 때(F8 maxSelects) 바꾼다."""
         self.dir = rules_dir
-        self.contract = yaml.safe_load((rules_dir / "contract.yaml").read_text(encoding="utf-8"))
+        self.contract_path = contract or rules_dir / "contract.yaml"
+        self.contract = yaml.safe_load(self.contract_path.read_text(encoding="utf-8"))
         self.improvement = self._load(rules_dir / "improvement.yaml")
         self.learned = []
         for path in sorted((rules_dir / "learned").glob("*.yaml")):
@@ -122,5 +124,14 @@ class RuleSet:
 
     def sha256(self) -> dict:
         """규칙 파일별 sha256 — verdict.json에 기록(같은 규칙·같은 입력 → 같은 판정)."""
-        files = [self.dir / "contract.yaml", self.dir / "improvement.yaml"] + sorted((self.dir / "learned").glob("*.yaml"))
-        return {str(p.relative_to(self.dir)): "sha256:" + hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+        files = [self.contract_path, self.dir / "improvement.yaml"] + sorted((self.dir / "learned").glob("*.yaml"))
+        return {self._name(p): "sha256:" + hashlib.sha256(p.read_bytes()).hexdigest() for p in files}
+
+    def contract_name(self) -> str:
+        return self._name(self.contract_path)
+
+    def _name(self, path: Path) -> str:
+        try:
+            return str(path.resolve().relative_to(self.dir.resolve()))
+        except ValueError:
+            return str(path)
