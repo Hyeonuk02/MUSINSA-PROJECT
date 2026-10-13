@@ -1,0 +1,61 @@
+$ verdict.py (변조: R000028[S006 learn]·R000034[S007 eval] 응답에 note 추가)
+== p33-mini  arm C  pairs 25  {'SAME': 23, 'UNCERTAIN': 2}
+  split eval   {'SAME': 5, 'UNCERTAIN': 1}
+  split learn  {'SAME': 18, 'UNCERTAIN': 1}
+  consume.order.paid   {'SAME': 3}
+  coupon.create        {'SAME': 3}
+  coupon.get           {'SAME': 1}
+  coupon.use           {'SAME': 4}
+  order.create         {'SAME': 5}
+  order.get            {'SAME': 4, 'UNCERTAIN': 2}
+  order.pay            {'SAME': 3}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  UNCERTAIN          R000028/0 order.get: response.addedFields
+  UNCERTAIN          R000034/0 order.get: response.addedFields
+  → p33-mini/verdict.json
+
+$ review.py list --split learn
+== p33-mini  learn Uncertain 유형 1
+
+[501c42bf89a5] order.get  response.body  response.addedFields  (1건: R000028/0)
+  detail: {fields: [note]}
+  제안 match: {diffKind: response.addedFields, endpoint: order.get, fields: [note]}
+
+$ review.py label --uid 501c42bf89a5 --as improvement --reason '응답에 note 필드 추가(하위 호환)'
+→ rules/learned/501c42bf89a5.yaml
+
+id: learned-501c42bf89a5
+scope: request
+verdict: improvement
+reason: 응답에 note 필드 추가(하위 호환)
+provenance:
+  author: Hyeonuk02
+  date: '2026-10-13'
+  runId: p33-mini
+  split: learn
+  sessions:
+  - S006
+  uid: 501c42bf89a5
+match:
+  endpoint: order.get
+  diffKind: response.addedFields
+  fields:
+  - note
+
+$ verdict.py (재판정)
+== p33-mini  arm C  pairs 25  {'IMPROVEMENT': 2, 'SAME': 23}
+  split eval   {'IMPROVEMENT': 1, 'SAME': 5}
+  split learn  {'IMPROVEMENT': 1, 'SAME': 18}
+  consume.order.paid   {'SAME': 3}
+  coupon.create        {'SAME': 3}
+  coupon.get           {'SAME': 1}
+  coupon.use           {'SAME': 4}
+  order.create         {'SAME': 5}
+  order.get            {'IMPROVEMENT': 2, 'SAME': 4}
+  order.pay            {'SAME': 3}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  IMPROVEMENT        R000028/0 order.get: learned-501c42bf89a5
+  IMPROVEMENT        R000034/0 order.get: learned-501c42bf89a5
+  → p33-mini/verdict.json

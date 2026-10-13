@@ -291,7 +291,7 @@ class Judge:
                             continue
                         n = sum(1 for c in rec.get("externalCalls", []) if c["host"] == conf["host"] and c["path"] == conf["path"])
                         counts[s][idem] += n
-                        if s == "new":
+                        if (rid, hop) not in owners[idem]:
                             owners[idem].append((rid, hop))
                 for idem in sorted(set(counts["legacy"]) | set(counts["new"])):
                     a, b = counts["legacy"][idem], counts["new"][idem]

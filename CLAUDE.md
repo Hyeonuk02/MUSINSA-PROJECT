@@ -42,7 +42,7 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 | 3.1 | Evidence v1 — 타임라인·callTree·외부 호출·트랜잭션·error·최종 DB 상태 | 완료 — docs/reports/phase3.1.md |
 | 3.2 | Coupon 서비스 + Store v1 키 + corpus v2 | 완료 — docs/reports/phase3.2.md |
 | 3.3 | Kafka — 이벤트 축 | 완료 — docs/reports/phase3.3.md (Legacy 고정 이미지 order·coupon-app:phase3.3-base) |
-| 3.4 | Normalization v1 + 판정 엔진 v1 + Rule + Human Review | |
+| 3.4 | Normalization v1 + 판정 엔진 v1 + Rule + Human Review | 완료 — docs/reports/phase3.4.md (engine-v1, p33-1..3 전 pair SAME) |
 | 3.5 | New v1 사다리 — Order 점진 Kotlin 전환 (v1.1~v1.4) | |
 | 3.6 | 결함 카탈로그 v1 + New v2 | |
 | 3.7 | 사다리 첫 측정 — B0 / B1 / C + 평가 지표 | |
