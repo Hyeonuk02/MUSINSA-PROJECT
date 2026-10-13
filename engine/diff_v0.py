@@ -19,6 +19,8 @@ Phase 3 Normalization의 자리표시자다. 아래 규칙 외에는 넣지 않�
       이 정규화는 이 스크립트에만 둔다. 앱에는 넣지 않는다
 
   v1 레코드(Phase 3.1)는 추가로 — 짝 키는 (replayRequestId, hopPath)
+    - origin=kafka 홉(Phase 3.3)은 response 대신 event 축: topic·key·consumeOutcome 일치 + payload를 response body와 같은 방식으로
+      (JSON이면 id 제거·canonical, 아니면 payloadHash)
     - callTree: class.method 시퀀스(순서 유지)
     - externalCalls: 개수·순서·method·path·requestBodyHash·responseBodyHash
     - transactions: 개수와 (phase, outcome) 순서
@@ -81,6 +83,24 @@ def compare_response(legacy: dict, new: dict) -> list[str]:
         lk, lv, nk, nv = "bodyHash", legacy["bodyHash"], "bodyHash", new["bodyHash"]
     if lv != nv:
         diffs.append(f"body({lk}):\n            legacy={lv}\n            new   ={nv}")
+    return diffs
+
+
+def compare_event(legacy: dict, new: dict) -> list[str]:
+    """origin=kafka 홉: 소비한 레코드와 소비 결과."""
+    diffs = []
+    le, ne = legacy["event"], new["event"]
+    for field in ("topic", "key"):
+        if le[field] != ne[field]:
+            diffs.append(f"event.{field}: legacy={le[field]!r} new={ne[field]!r}")
+    if legacy.get("consumeOutcome") != new.get("consumeOutcome"):
+        diffs.append(f"consumeOutcome: legacy={legacy.get('consumeOutcome')} new={new.get('consumeOutcome')}")
+    as_body = lambda e: {"body": e["payload"], "bodyHash": e["payloadHash"]}
+    (lk, lv), (nk, nv) = normalized_body(as_body(le)), normalized_body(as_body(ne))
+    if lk != nk:
+        lk, lv, nk, nv = "payloadHash", le["payloadHash"], "payloadHash", ne["payloadHash"]
+    if lv != nv:
+        diffs.append(f"event.payload({lk}):\n            legacy={lv}\n            new   ={nv}")
     return diffs
 
 
@@ -188,12 +208,17 @@ def diff_run(run_dir: Path, validator) -> tuple[bool, set[tuple[str, str]] | Non
 
     diff_set = set()
     details = []
-    kinds = ["response", "dbAccess"]
+    kinds = ["response", "event", "dbAccess"]
     for key in paired:
         legacy, new = by_key["legacy"][key], by_key["new"][key]
         label = key[0] if key[1] == ENTRY_HOP else f"{key[0]}/{key[1]}"
-        axes = [("response", compare_response(legacy["response"], new["response"])),
-                ("dbAccess", compare_db(legacy["dbAccess"], new["dbAccess"]))]
+        if legacy.get("origin") == "kafka" or new.get("origin") == "kafka":
+            same_origin = legacy.get("origin") == new.get("origin")
+            axes = [("event", compare_event(legacy, new) if same_origin
+                     else [f"origin: legacy={legacy.get('origin')} new={new.get('origin')}"])]
+        else:
+            axes = [("response", compare_response(legacy["response"], new["response"]))]
+        axes.append(("dbAccess", compare_db(legacy["dbAccess"], new["dbAccess"])))
         if legacy["schemaVersion"] == "v1":
             axes += v1_axes(legacy, new)
         for kind, found in axes:
@@ -202,7 +227,7 @@ def diff_run(run_dir: Path, validator) -> tuple[bool, set[tuple[str, str]] | Non
             if found:
                 diff_set.add((kind, label))
                 where = (f"{legacy['request']['method']} {legacy['request']['path']}" if legacy.get("request")
-                         else f"event {legacy['event']['topic']}")
+                         else f"event {legacy['event']['topic']}" if legacy.get("event") else "")
                 details.append(f"        [{kind}] {label} {where}")
                 details += [f"          {d}" for d in found]
     for kind in kinds:
