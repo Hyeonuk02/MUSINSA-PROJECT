@@ -31,7 +31,9 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 | 2.7 | verify_sameness — pairing·request 동일성 | 완료 |
 | 2.8 | diff_v0 + A/A run VU=3 | 완료 |
 
-## Phase 3 — 진행 중
+## Phase 3 — 완료 (2026-10-14, tag phase3-done)
+
+결과: docs/phase3-result.md. 지표: docs/phase3-metrics.md. 발견: docs/findings.md.
 
 계획: docs/phase3-plan.md (v2.1). 단계별 세부 작업과 끝난 기준은 그 문서가 기준이다.
 목표: New ≠ Legacy — MSA 확장(Order·Coupon·Payment(WireMock)·Kafka) + Order 점진 Kotlin 전환 사다리 + 결함 카탈로그 + 판정 엔진(4분류·Rule).
@@ -45,8 +47,8 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 | 3.4 | Normalization v1 + 판정 엔진 v1 + Rule + Human Review | 완료 — docs/reports/phase3.4.md (engine-v1, p33-1..3 전 pair SAME) |
 | 3.5 | New v1 사다리 — Order 점진 Kotlin 전환 (v1.1~v1.4) | 완료 — docs/reports/phase3.5.md, docs/phase3-result.md (v1.1~v1.4 전 pair SAME, Order 전면 Kotlin = 3.6 기준선 order-app:phase3.5-v1.4) |
 | 3.6 | 결함 카탈로그 v1 + New v2 | 완료 — docs/reports/phase3.6.md, docs/fault-catalog.md (9/9 기대 일치, 오탐 0·오판정 0, engine-v1.2) |
-| 3.7 | 사다리 첫 측정 — B0 / B1 / C + 평가 지표 | |
-| 3.8 | (선택) New v3 — 런타임 교체 | |
+| 3.7 | 사다리 첫 측정 — B0 / B1 / C + 평가 지표 | 완료 — docs/reports/phase3.7.md, docs/phase3-metrics.md (탐지 9/9, eval UNC 31→6, 오판정 0/129) |
+| 3.8 | (선택) New v3 — 런타임 교체 | 미실시 — Phase 4 이후 선택 |
 
 ### Phase 3 확정 사항 (요약 — 원문은 phase3-plan 3절)
 
@@ -109,5 +111,6 @@ Coupon/Payment 실서비스, Kafka, 이벤트·외부 호출 Evidence(DB Evidenc
   4. Legacy/New 비교 결과와 수치 — 표.
   5. 지시와 다르게 구현한 것과 이유.
   6. 발견한 문제·해결·남은 한계.
+- 6절에 적는 발견(관측)은 `docs/findings.md`에도 O번호로 적는다(날짜·단계 / 무엇을 봤나 / 근거 / 왜 중요한가 / 후속). 결정은 decision-log.
 - 다음 단계는 내 승인 후에만 시작한다.
 - 문서 수정 범위: `docs/phase*-plan.md`의 기존 문장은 수정 금지, "구현 시 확정" 절 추가는 허용. `docs/architecture.md`는 지시 없이 수정 금지. 문서에 없는 설계 결정은 임의로 하지 말고 0절에 질문으로 올린다.

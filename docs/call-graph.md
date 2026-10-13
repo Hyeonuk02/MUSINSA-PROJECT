@@ -105,3 +105,8 @@ OTel agent는 계측 목록의 라이브러리만 span으로 남긴다(Evidence 
 - 수집 범위는 3절 표가 전부다. 표 밖의 호출은 기록되지 않으며, 그 위험은 규칙 3·4·6으로 fail-closed 처리한다. 맵에 없는 변경 클래스는 원인(비-빈/미실행/미관측)을 구분할 수 없으므로 모두 "미관측"으로 같게 다룬다.
 - Observed-diff Recall은 관측된 차이에 대한 지표다. 미실행 경로와 Evidence가 못 잡는 차이는 분모에 없으며, 그 크기는 corpus 커버리지로 따로 보고한다. 관측 독립 지표는 결함 탐지율뿐이다.
 - 교수님 확인 필요: 원 요구 "Call Graph"를 동적 수집·합성으로 해석해도 되는지.
+
+## 메모 (Phase 3.7, 2026-10-14) — Phase 4 변경 클래스 추출
+
+- 변경 클래스 추출은 `git diff -M`(rename 감지)으로 한다. Java → Kotlin 전환은 `Foo.java` 삭제 + `Foo.kt` 추가로 기록되며, rename 감지 없이는 "클래스 삭제 + 새 클래스"로 잘못 읽힌다(FQCN은 같음 — D17). 현업 전환기 두 곳도 git rename 이력 보존을 주의점으로 꼽았다(references/kakaopay·woowahan-kotlin-migration.md)
+- 사다리(`phase3.5-v1.x` 커밋)·결함 브랜치(`fault/F<n>`, 기준선 위 1커밋)는 **squash 금지** — 커밋 하나가 Phase 4 스코핑 입력 단위다

@@ -20,3 +20,7 @@
 | ↳ 출처 | https://docs.spring.io/spring-framework/reference/data-access/transaction/event.html | |
 | AWS — Transactional Outbox | 커밋과 발행 원자성 문제의 표준 해법 | 범위 밖 명시, 동기 ack로 관측만 |
 | ↳ 출처 | https://docs.aws.amazon.com/prescriptive-guidance/latest/cloud-design-patterns/transactional-outbox.html | |
+| 카카오페이 — 자바 프로젝트 3개 코틀린 점진적 전환기 (2023-12-05) | 해외결제 백엔드 1,100 파일·2.5개월·3명, 엔티티·리포지토리·유틸 → 컨트롤러 → 서비스 순, 안전망은 전환 전 테스트 강화뿐(트래픽·사이드이펙트 비교 없음), 자동 변환 후 nullable 오판이 함정, 혼재 1년 뒤 80~90%, git rename 이력 | F0 현업 근거 / 사다리 순서 비교 / Phase 4 혼재 전제 (3.7 추가) |
+| ↳ 출처 | [docs/references/kakaopay-kotlin-migration.md](kakaopay-kotlin-migration.md) | |
+| 우아한형제들 — Java야 우리 그만 헤어져, Kotlin으로 환승연애 (2025-07-22) | 배민페이 포인트 시스템 3개월·6명·45k라인·배포 10회·장애 0, 테스트 선행 전환(커버리지 61.5→76.7%)+QA+점진 배포(트래픽 복제 없음), null 재설계·Jackson KotlinModule 누락·QueryDSL 생성자 순서·롤백 규칙 변화(실제 원인은 checked 예외의 Spring 기본 롤백 규칙)가 함정 | F0 근거 2 / F4 transactions·dbstate 축 근거 / "현업 전환 검증 = 테스트 커버리지" (3.7 추가) |
+| ↳ 출처 | [docs/references/woowahan-kotlin-migration.md](woowahan-kotlin-migration.md) | |
