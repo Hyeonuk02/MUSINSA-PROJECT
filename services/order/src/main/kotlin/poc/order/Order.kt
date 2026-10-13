@@ -1,6 +1,5 @@
 package poc.order
 
-import jakarta.persistence.CascadeType
 import jakarta.persistence.Column
 import jakarta.persistence.Entity
 import jakarta.persistence.GeneratedValue
@@ -70,7 +69,7 @@ class Order protected constructor() {
     var discountAmount: Long = 0
         protected set
 
-    @OneToMany(mappedBy = "order", cascade = [CascadeType.ALL], orphanRemoval = true)
+    @OneToMany(mappedBy = "order")
     @OrderBy("lineNo ASC")
     var items: MutableList<OrderItem> = ArrayList()
         protected set
