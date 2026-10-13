@@ -24,6 +24,7 @@
   - JDK 18 (JEP 400): 기본 charset이 UTF-8로 고정(`file.encoding` 기본값 변경)
   - JDK 19: `Double.toString`·`Float.toString`이 최단 표현으로 바뀜(일부 값의 문자열이 달라짐)
 - **D-2 자원**: (A) Docker Desktop 메모리를 3.2 전까지 12GiB로 증설(사용자) + (C) JVM·MySQL 상한과 k8s resources를 base 매니페스트에(양쪽 동일). Order는 3.1에서 `JAVA_TOOL_OPTIONS`에 `-Xmx384m -XX:MaxMetaspaceSize=128m`(실측 후 조정 가능), MySQL `--innodb-buffer-pool-size=64M`, requests·limits. Coupon·Kafka는 3.2·3.3에서 같은 방식. D19(스택별 Kafka) 유지, 공유 브로커는 12GiB에서도 부족할 때만
+  - 3.5에서 조정: Order·Coupon `-XX:MaxMetaspaceSize` 128m → **256m**, memory limits 768Mi → **1Gi**(requests 그대로) — legacy도 128m의 99%였고 Kotlin 런타임으로 초과(`docs/reports/phase3.5.md`)
 - Framework < 6.1 폴백(Hibernate Interceptor)은 불필요 — 7.0.9 실측
 
 ---
@@ -304,6 +305,10 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 - **jackson-module-kotlin**: v1.1에서 추가 — `PaymentGatewayClient.ChargeResponse`(Kotlin data class)가 Kotlin DTO를 역직렬화하는 첫 지점. 앱 JsonMapper 빈에만 등록, `poc.evidence`는 private JsonMapper
 - **"수집기 수정 0줄" 확인 기준**: `git diff 98c9356 -- services/evidence-collector`(98c9356 = phase3.3 마지막 커밋, phase3.3 태그는 없음)가 비어 있음
 - **이미지·매니페스트**: `deploy/k8s/new/kustomization.yaml`의 `images`(order-app newTag)만 단계마다 바꾼다. legacy overlay·Coupon 무변경
+- **D-5 Metaspace(결정 (A), 256m)**: base 공통(양쪽 동일) Order·Coupon `JAVA_TOOL_OPTIONS`의 `-XX:MaxMetaspaceSize=256m`(heap `-Xmx384m` 유지), memory limits 1Gi(requests 512Mi 그대로 — 스케줄링 불변). 256m은 v1.3·v1.4의 kotlin-reflect·jackson-module-kotlin까지 감안한 값, 1Gi는 상한 합(384+256+코드 캐시·스레드·agent)이 768Mi를 넘어 OOMKill로 원인이 가려지지 않게. "legacy 매니페스트 무변경"은 코드·이미지 고정의 뜻이며 양쪽 공통 JVM·자원 설정은 같이 바뀐다. 변경 뒤 base A/A(`p35-base`, VU=3 ×3)로 게이트 재확인
+- **OOM run 보존**: 실패한 첫 run은 `runs/p35-v1.1-oom-1`로 이름을 바꿔 보존(Evidence 안의 runId는 `p35-v1.1-1` 그대로라 엔진 입력 계약 대상이 아님), 사다리 표에는 넣지 않는다
+- **게이트 run의 이미지 지정**: 레포의 new overlay는 사다리 현재 단계를 가리키고, base A/A는 `kubectl kustomize deploy/k8s/new`의 order 이미지만 `phase3.3-base`로 바꿔 apply한다(레포 무변경 → dirty=false). 실제 이미지는 run-meta `images.order`로 확인
+- **Metaspace 측정**: run이 끝난 뒤(run 중 아님) `jcmd <pid> VM.metaspace`의 Both used. 대상 컨테이너에 JDK가 없어 로컬 빌드 이미지 `jdk-tools:phase3.5`(빌드 스테이지의 JDK)를 ephemeral container로 붙여 `/proc/1/root/tmp/jdk`로 복사한 뒤 대상 컨테이너에서 실행. 참고값(판정과 무관)
 
 끝난 기준
 - v1.1~v1.4 각 3 run, Undelivered 0, degraded 0, **모든 diff가 4분류 중 하나로 설명됨**(0건이어도 통과)
