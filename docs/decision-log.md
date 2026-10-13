@@ -409,3 +409,18 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 **근거**: "1초간 변화 없음"은 완료의 증거가 아님. Legacy의 소비 Evidence도 비동기라 New만 폴링하면 export 전에 빠질 수 있음. settle만 기다리면 한쪽에만 생긴 추가 호출(F9)의 Evidence를 놓칠 수 있음.
 **한계**: 자원 부족 시 공유 브로커 + 토픽 접두사로 후퇴할 수 있으며 그때 Kafka는 스택 축 격리의 예외.
 **보완(2026-10-14, Phase 3.6)**: corpus settle은 k6가 폴링할 힌트이고, 스택별 기대 집합의 근거는 부모 Evidence의 선언(childHopPath)이다. barrier 1단계 = 진입 홉 + 그 스택의 부모가 실제 선언한 settle 홉, 2단계 = 폐포. 부모가 선언하지 않은 settle 홉은 미달이 아니라 행동 차이(엔진 hop_set_equal)로 넘기고, k6의 settle 타임아웃은 degraded가 아니라 settleTimeouts 지표(degraded는 진입 Evidence 실패에만). 이유: F7처럼 New의 결제가 실패하면 0.e1이 New에 오지 않는 것 자체가 결함의 증상이다.
+
+### D20. 세션 검사 위반의 pair 귀속 — Legacy와 다른 기여를 한 pair에만 (2026-10-14, Phase 3.6 D-6)
+**결정**: 세션 범위 검사(`gateway_calls_per_idem_key_le_1`, `coupon_transition_order`)의 위반은 "Legacy와 다른 기여를 한 pair"에만 CV로 붙인다. 귀속할 pair가 없으면 pair 판정을 바꾸지 않는다(키를 공유한 pair 전체에 전파하지 않음). 게이트웨이 검사는 키별 호출 합계가 스택 간 다르면 자기 pair 호출 수가 Legacy와 다른 pair에만 CV, 합계가 같고 양쪽 다 상한(1) 초과면 pair는 SAME이고 `bothStacks: true` 플래그만(변경 전부터 있던 위반 — max_selects의 "Legacy도 넘으면 경고"와 같은 취급) — 차등 판정(CV)과 절대 플래그(bothStacks)의 두 출력. 쿠폰 전이 검사는 선행 조건이 New에서만 깨진 소비 홉 pair에 CV, 양쪽이면 bothStacks. dbstate는 run 단위 그대로. `verdict.json` `summary.sessionViolations`로 세션 단위 뷰를 보존한다. engine-v1.2.
+**근거**: 3.4의 "그 키를 가진 pair(어느 스택이든)에 붙인다"는 F1(멱등 검사 제거)에서 정상 첫 결제 R000007까지 CV로 만들었다 — 위반은 세션에서 울렸지만 R000007의 행동은 Legacy와 같다. 탐지 로직이 아니라 표시 위치의 문제다.
+**한계**: **F1 결과를 본 뒤 일반화했다.** F1의 탐지(R000008 CV)는 v1.1·v1.2에서 같고, 정상 경로 오탐만 1 → 0. F2~F9는 v1.2가 사전 등록 엔진이다. 이전 run 전부(p33·p35·p36-base) 재판정에서 pair 판정·집계 변화 0을 확인했다.
+
+### D21. Order에 Service 계층 추출 — 사다리의 기준 형태 (2026-10-13, Phase 3.2 D-3 (A))
+**결정**: base(Java)에서 `@Transactional`·비즈니스 로직을 `poc.order.OrderService`로 옮기고 컨트롤러는 매핑·DTO·입력 검증만. Service는 `Outcome(kind, OrderView)`를 돌려주고 HTTP 매핑은 컨트롤러가 한다. 응답 본문은 트랜잭션 안에서 만든다(open-in-view off).
+**근거**: 3.1 실측 callTree가 `Controller → Repository/Client`로 Service 계층이 없어, 계획의 v1.3(OrderService Kotlin 전환) 단계와 callTree 기대 형태(`Controller → Service → Repository → Client`)가 성립하지 않았다. 트랜잭션 이름도 `poc.order.OrderService.*`로 고정되어 3.5 사다리·3.6 결함(F1·F4·F5·F8·F9가 OrderService를 건드림)의 기준이 됐다.
+**한계**: Legacy 코드를 Phase 3 중간에 바꾼 것이라, 그 이전 run(3.1)과 이후 run의 callTree·트랜잭션 이름은 직접 비교하지 않는다(A/A 게이트를 다시 통과한 base 이미지부터가 기준).
+
+### D22. Order·Coupon JVM Metaspace 상한 256m, memory limits 1Gi — base 공통 (2026-10-14, Phase 3.5 D-5 (A))
+**결정**: Order·Coupon `JAVA_TOOL_OPTIONS`의 `-XX:MaxMetaspaceSize` 128m → 256m(heap `-Xmx384m` 유지), memory limits 768Mi → 1Gi(requests 512Mi 그대로 — 스케줄링 불변). legacy·new 같은 base 매니페스트. "legacy 매니페스트 무변경"은 코드·이미지 고정의 뜻이며 양쪽 공통 JVM·자원 설정은 같이 바뀐다. 변경 뒤 base A/A(p35-base)로 게이트 재확인.
+**근거**: v1.1 첫 run에서 New Order가 `OutOfMemoryError: Metaspace`(첫 지점 Kafka producer 지연 로딩) → ack failed·5xx·degraded 7. 측정하니 Legacy(Java)도 128m의 99%(125.85 MB)였고 Kotlin 런타임(+약 7 MB, +1,800 클래스)으로 초과. 256m은 v1.3·v1.4의 kotlin-reflect·jackson-module-kotlin까지 감안, 1Gi는 상한 합이 768Mi를 넘어 OOMKill로 원인이 가려지지 않게.
+**한계**: 단일 노드 kind(12GiB)의 자원 상한이다. 운영 크기와 무관하며, Metaspace 수치는 참고값(run 뒤 jcmd 측정)이다.

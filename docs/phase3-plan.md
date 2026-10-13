@@ -363,11 +363,19 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 - **관측 매트릭스**(미리 선언): F8은 B1에서도 보인다(SQL 횟수는 B1 축). C만 잡는 것은 F1·F3·F4·F9(외부 호출·타임라인·트랜잭션·hop). F2는 B1(쓰기 문장)·C 모두. F5·F6·F7은 분류의 문제(B1은 DIFF까지만, C는 Improvement/CV로 가름)
 - 지표 4개: **결함 탐지율** / **수동 검토 감소율**(전체 비교 중 Uncertain 비율, 규칙 전후, **eval 세션 기준**) / **오판정률**(F를 SAME·Improvement로 판정한 비율) / **Rule 재사용 효과**(learn에서 만든 규칙이 eval 세션·v1.3+·F 변형에서 줄인 Uncertain)
 
+구현 시 확정 (3.7)
+- **집계 도구** `engine/metrics.py`(평가 도구 — 판정 엔진 아님, fault_check.py와 같은 위치): 기존 run 산출물만 읽고(재실행 없음, 클러스터 접근 없음) 같은 Evidence를 현재 엔진(engine-v1.2)으로 메모리 안에서 다섯 보기로 판정 — B0, B1, C 규칙 전(`C_norules`: contract.yaml만), C 규칙 후(`C_rules`: learned 3 + 사전 승인 1), C maxSelects(F8). 디스크의 판정 파일(verdict·B0·B1·prelabel·maxselects)이 어느 보기와 같은지 무결성으로 기록(`verdict-engine-v1.1.json`은 다른 버전 기록). 출력 `docs/phase3-metrics.json`(결정론 — 2회 실행 바이트 동일)·`docs/phase3-metrics.md`
+- **지표 정의**(분모·분자 고정): ① 결함 탐지율 = 결함 단위(3 run 모두 target 판정·runCheck 일치) 진짜 결함 6·성능 계약 1·분류 2 / pair 단위 92(+ F8 maxSelects 10; F5는 규칙 전 UNC·후 IMP 둘 다 맞아야 1) ② 수동 검토 감소율 = F1~F9 eval pair Uncertain, 규칙 전(C_norules) → 후(C_rules), run당(세 run 동일), 합계와 F8 제외 합계 두 줄, learn은 참고 열 ③ 오판정률 = 진짜 결함 target 43 pair × 3 run 중 규칙에 의해 SAME·IMPROVEMENT로 바뀐 판정 / 129 ④ Rule 재사용 = learned 규칙 3개가 Uncertain을 바꾼 pair 수 — (a) F5 eval (b) 다른 변형 (c) 사다리 v1.3·v1.4 ⑤ 운영 지표(참고)
+- **3.7 지표 각주(D-6/D20)**: 3.6 구현 시 확정의 각주 그대로 적용
+
 끝난 기준
 - 표: arm × 변형 → diff·Uncertain·탐지율·오탐. 매트릭스와 실제가 일치. 지표 4개가 eval 세션 기준으로 보고됨
 
 ### 3.8 (선택) New v3 — 런타임 교체
 - v3a JDK만 / v3b Spring Boot 4(Jackson 3·Hibernate 7.1). 기대: v3a ∅, v3b 형식 차이 다수 → 규칙 라운드 수. 일정이 밀리면 Phase 4로 — 제외해도 Phase 3 결론에 영향 없음
+
+구현 시 확정 (3.8)
+- **미실시 — Phase 4 이후 선택**(2026-10-14). 3.0 확정 D-1c대로 v3b는 이미 삭제, v3a(JDK 17 → 25)는 Phase 4 전 여유가 있을 때
 
 ### Phase 3 종료 조건
 3.1~3.7 완료 + `docs/phase3-result.md`(스키마 v1 확정, 사다리 결과 표, 결함 탐지율·오판정률·검토 감소율·Rule 재사용, 한계) + `git tag phase3-done`. Phase 4 입력: 단계별 commit·이미지·runs, corpus v2(split 포함), Kotlin v1.4 = 새 기준선.
