@@ -4,6 +4,28 @@
 > 전제: Phase 2 완료(`docs/phase2-result.md`, A/A diff ∅), Call Graph 결정(D14, `docs/call-graph.md`), 단계 완료 보고 규칙(`CLAUDE.md`).
 > `CLAUDE.md`는 방향·확정 사항·단계 요약만, **단계별 세부 작업과 끝난 기준은 이 문서가 기준**. 전체 설계는 `docs/architecture.md`. 다르면 이 문서와 architecture.md가 우선.
 
+### 3.0 확정 (실제 스택 반영)
+
+3.0 사전 점검(`docs/reports/phase3.0.md`)에서 확인한 실제 스택과 그에 따른 결정. **3절·3.1·7절의 Jackson 2·Gradle·Framework < 6.1 폴백 문구는 이 블록이 우선한다.**
+
+| 항목 | 실제 |
+|---|---|
+| 빌드 | Maven |
+| Spring Boot | 4.1.1 |
+| Spring Framework | 7.0.9 (`TransactionExecutionListener` 있음) |
+| Hibernate ORM | 7.4.5.Final |
+| Jackson | 3.1.5 (`tools.jackson`) |
+| JDK | 17 |
+| Kotlin (Boot BOM) | 2.3.21 |
+
+- **D-1a 빌드**: Maven 유지 + `kotlin-maven-plugin`(`spring`·`jpa` 컴파일러 플러그인). 3.5에서 그대로 쓴다. 계획의 "Gradle Kotlin 플러그인"은 이것으로 읽는다
+- **D-1b JSON**: `poc.evidence`는 Jackson 3 `JsonMapper`를 패키지 안 private 고정 인스턴스로 쓴다(앱 빈 공유 금지는 그대로). 계획의 "Jackson 2"는 "Boot 기본 Jackson(현재 3.1.5)"으로 읽는다
+- **D-1c 3.8**: v3b(Spring Boot 4) 삭제 — 이미 Boot 4.1.1. **v3a = JDK 17 → 25(LTS)만** 선택 과제로 남긴다. Legacy가 JDK 17이라 다음 두 변경을 넘어가는 실험이 된다 — v3a의 관찰 포인트:
+  - JDK 18 (JEP 400): 기본 charset이 UTF-8로 고정(`file.encoding` 기본값 변경)
+  - JDK 19: `Double.toString`·`Float.toString`이 최단 표현으로 바뀜(일부 값의 문자열이 달라짐)
+- **D-2 자원**: (A) Docker Desktop 메모리를 3.2 전까지 12GiB로 증설(사용자) + (C) JVM·MySQL 상한과 k8s resources를 base 매니페스트에(양쪽 동일). Order는 3.1에서 `JAVA_TOOL_OPTIONS`에 `-Xmx384m -XX:MaxMetaspaceSize=128m`(실측 후 조정 가능), MySQL `--innodb-buffer-pool-size=64M`, requests·limits. Coupon·Kafka는 3.2·3.3에서 같은 방식. D19(스택별 Kafka) 유지, 공유 브로커는 12GiB에서도 부족할 때만
+- Framework < 6.1 폴백(Hibernate Interceptor)은 불필요 — 7.0.9 실측
+
 ---
 
 ## 0. Phase 3의 목적
