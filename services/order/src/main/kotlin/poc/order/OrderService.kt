@@ -62,7 +62,10 @@ class OrderService(
     @Transactional(readOnly = true)
     fun getByKey(orderKey: String): Outcome =
         orderRepository.findByOrderKey(orderKey)
-            .map { Outcome(Kind.OK, OrderView.from(it)) }
+            .map { order ->
+                order.items.forEach { orderRepository.findItem(order.orderKey, it.lineNo) }
+                Outcome(Kind.OK, OrderView.from(order))
+            }
             .orElseGet { Outcome.of(Kind.NOT_FOUND) }
 
     /** Phase 1 호환용. id는 스택마다 다를 수 있으니 corpus는 이 경로를 쓰지 않는다. */
