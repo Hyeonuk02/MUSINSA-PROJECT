@@ -1,0 +1,49 @@
+{
+  "schemaVersion": "v1",
+  "runId": "p33-1",
+  "replayRequestId": "R000003",
+  "hopPath": "0.e1",
+  "sessionId": "S001",
+  "stack": "legacy",
+  "service": "coupon",
+  "origin": "kafka",
+  "version": "legacy",
+  "request": null,
+  "response": null,
+  "event": {
+    "topic": "order.paid",
+    "key": "ok-R000001",
+    "payloadHash": "sha256:14541388187d3c78fca3efb2f10bd051b786cba4942a9621ec6d5ba85cfac622",
+    "payload": "{\"orderKey\":\"ok-R000001\",\"amount\":10000,\"couponKey\":null}"
+  },
+  "consumeOutcome": "ok",
+  "dbAccess": {
+    "statements": [],
+    "truncated": false
+  },
+  "externalCalls": [],
+  "events": {
+    "published": []
+  },
+  "transactions": [],
+  "callTree": {
+    "nodes": [
+      {
+        "seq": 1,
+        "depth": 0,
+        "class": "poc.coupon.OrderPaidListener",
+        "method": "onOrderPaid",
+        "threw": false
+      }
+    ],
+    "truncated": false
+  },
+  "error": null,
+  "timing": {
+    "arrivedAt": "2026-10-13T11:40:20.112215088Z",
+    "completedAt": "2026-10-13T11:40:20.113015713Z",
+    "arrivedNano": 16304604658804,
+    "completedNano": 16304605459387
+  },
+  "capturedAt": "2026-10-13T11:40:20.113059880Z"
+}

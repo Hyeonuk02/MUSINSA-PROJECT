@@ -385,3 +385,20 @@ Coupon 서비스와 전용 DB(coupon-mysql)를 추가하면서 두 축을 실측
 | 대조 | new pod(app=coupon) → `coupon-mysql.new:3306` | 성공 | 로그인 성공 — `coupon-mysql-7666fc65d6-j72wv` |
 
 **통과**: 교차 스택·교차 서비스 모두 차단, 대조군 성공. 실제 Order → Coupon(같은 스택 직접 호출)·Coupon → Coupon DB 경로는 쿠폰 주문 Evidence로 동작 확인(`docs/reports/phase3.2.md`).
+
+---
+
+# Kafka 격리 — 스택 축·서비스 축 (Phase 3.3)
+
+스택별 Kafka 브로커(D19)를 추가하며 실측했다(2026-10-13). `base/kafka-networkpolicy.yaml`: 9092 ← 같은 ns의 `app in (order, coupon)`만.
+측정: `deploy/k8s/tools/kafka-probe.yaml`(apache/kafka 이미지, sidecar 주입, readiness 항상 실패)에서 `kafka-broker-api-versions.sh --bootstrap-server <대상>:9092`로 실제 Kafka 프로토콜 연결(20s 상한). 로그 `docs/reports/logs/phase3.3-kafka-isolation.txt`.
+
+| 축 | 시도 | 기대 | 결과 |
+|---|---|---|---|
+| 스택 | legacy pod(app=order) → `kafka.new:9092` | 차단 | 차단 — "Bootstrap broker … disconnected" 반복, 응답 없음 |
+| 스택 | new pod(app=order) → `kafka.legacy:9092` | 차단 | 차단 — 동일(new egress) |
+| 서비스 | legacy pod(app=kprobe, 허용 대상 아님) → `kafka.legacy:9092` | 차단 | 차단 — 동일 |
+| 대조 | legacy pod(app=order) → `kafka.legacy:9092` | 성공 | 성공 — `kafka:9092 (id: 1 …) -> (Produce(0) …)` |
+| 대조 | new pod(app=order) → `kafka.new:9092` | 성공 | 성공 — 동일 |
+
+**통과**. 브로커는 sidecar 주입 상태(2/2)로 동작했다 — Kafka는 클라이언트가 먼저 말하는 프로토콜이라 MySQL(server-first)과 달리 PERMISSIVE mTLS와 충돌하지 않는다. run.sh의 토픽 생성·컨슈머 그룹 확인은 브로커 pod 안에서(kubectl exec, localhost) 하므로 이 정책의 영향을 받지 않는다.

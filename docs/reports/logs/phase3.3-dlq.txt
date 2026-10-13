@@ -1,0 +1,15 @@
+# 3.3 소비 실패(임시 유도) — runId t33-dlq. 실제 요청 R990001(주문 생성, hop 0) + 같은 재생 헤더(hop 0.e1)를 단 해석 불가 레코드를
+# 양쪽 브로커 order.paid에 kafka-console-producer로 넣음(헤더 X-Replay-Request-Id:R990001,X-Run-Id:t33-dlq,X-Session-Id:S990,X-Replay-Hop-Path:0.e1, 값 not-json-payload)
+order.paid.dlq 레코드 수(kafka-get-offsets): legacy order.paid.dlq:0:1, new order.paid.dlq:0:1
+Store append-only 기록에서 R990001/0.e1 소비 Evidence POST: legacy 1회, new 1회 (재시도 0 — 재시도가 있었다면 소비가 두 번)
+DLQ 레코드 헤더: kafka_dlt-original-topic=order.paid, kafka_dlt-exception-fqcn=…ListenerExecutionFailedException, X-Replay-Hop-Path=0.e1.e1
+
+legacy R990001/0 origin=http consumeOutcome=None error=None
+new R990001/0 origin=http consumeOutcome=None error=None
+legacy R990001/0.e1 origin=kafka consumeOutcome=failed error={'type': 'tools.jackson.core.exc.StreamReadException', 'where': 'poc.coupon.OrderPaidListener.onOrderPaid'}
+    events.published seq=1 topic=order.paid.dlq ack=ok childHopPath=0.e1.e1 payload=not-json-payload
+new R990001/0.e1 origin=kafka consumeOutcome=failed error={'type': 'tools.jackson.core.exc.StreamReadException', 'where': 'poc.coupon.OrderPaidListener.onOrderPaid'}
+    events.published seq=1 topic=order.paid.dlq ack=ok childHopPath=0.e1.e1 payload=not-json-payload
+
+barrier(관측 토픽 order.paid): 스택당 기대 2(진입 0 + settle 0.e1), 도착 2, 누락 0 → exit 0, 0초 — 0.e1.e1(dlq)을 기다리지 않음
+대조(관측 토픽에 order.paid.dlq 추가): 폐포 라운드 1에서 기대 3, 10초 대기 후 누락 R990001/0.e1.e1 보고

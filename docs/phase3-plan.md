@@ -224,6 +224,24 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 구현 시 확정 (자리)
 - 자원 부족 시 대안: 브로커 1개 공유 + 스택별 토픽 접두사 — 이 경우 Kafka는 스택 축 격리의 예외로 isolation-proof에 명시 / 토픽 리셋 방식
 
+구현 시 확정 (3.3)
+- **커밋 규칙**: A/A 게이트 run은 커밋된 코드로 — 코드를 먼저 커밋하고 run, 보고서·로그는 마지막 별도 커밋. run-meta `git.dirty: false`(p33-1..3 확인). 실행 로그는 run 중 레포 밖에 쓰고 나중에 복사(레포 안에 쓰면 그 자체로 dirty)
+- **브로커**: 스택별 `apache/kafka:4.2.1`(클라이언트 kafka-clients 4.2.1과 같은 버전) KRaft combined 1노드, `CLUSTER_ID` 고정, 스토리지 emptyDir, `KAFKA_HEAP_OPTS=-Xmx256m -Xms128m`, requests 256Mi / limits 768Mi, 포트명 `tcp-kafka`, advertised `PLAINTEXT://kafka:9092`(같은 ns Service 이름), offsets topic replication 1·partition 1, group initial rebalance delay 0. sidecar 주입(2/2) — Kafka는 client-first라 PERMISSIVE mTLS와 충돌 없음. 이미지는 태그(`apache/kafka:4.2.1`) + IfNotPresent로 참조 — Docker Hub index digest로 참조하면 kind load한 arm64 이미지와 digest가 달라 노드가 레지스트리에서 받으려 한다. 실제 imageRef는 run-meta
+- **토픽**: `auto.create.topics.enable=false`. `order.paid`·`order.paid.dlq`(partition 1)는 run.sh가 리셋 뒤에 만든다(앱의 KafkaAdmin에 기대지 않음)
+- **토픽 리셋 방식**(자리 해소): Kafka도 `rollout restart`(emptyDir — 로그·오프셋·컨슈머 그룹 전부 초기화) → 브로커 준비(`kafka-topics.sh --list` 성공) → 토픽 2개 생성 → 양쪽 `coupon-settlement` 그룹이 `order.paid` partition을 할당받았는지 `kafka-consumer-groups.sh --describe`(CONSUMER-ID ≠ "-")로 확인한 뒤 k6. 고정 대기 없음. Coupon consumer `metadata.max.age.ms=2000`(토픽 생성을 빨리 알아채도록). 리셋 소요 46~48s를 run-meta `resetSeconds`에 기록
+- **자원 부족 시 대안**(자리 해소): 불필요 — 12GiB에서 스택별 브로커로 노드 사용 60.5%(available 약 4.1GiB). 공유 브로커로 후퇴하지 않았다
+- **NetworkPolicy**: 9092 ← 같은 ns `app in (order, coupon)`만(스택 축·서비스 축). isolation-proof "Kafka 격리"
+- **발행(Order)**: `OrderPaid`는 결제가 처음 PAID로 바뀔 때만(`ApplicationEventPublisher`), `OrderEventPublisher`의 `@TransactionalEventListener(AFTER_COMMIT)`에서 `KafkaTemplate.send(order.paid, orderKey, json).get(5s)`. 페이로드 `{orderKey, amount, couponKey}`(앱 JsonMapper 빈). producer `retries=0`, `enable.idempotence=false`, `acks=all`, `delivery.timeout.ms=5000`, `request.timeout.ms=4000`, `max.block.ms=5000`. 발행 실패는 요청 결과에 영향 없음(로그, 응답 200) — 응답 축을 깨끗하게 두고 이벤트 축만 시험하기 위해
+- **실측 타임라인**: 결제 `… COMMIT_BEGIN(4) < UPDATE orders(5) < PUBLISH order.paid(6) < COMMITTED(7)` — 3.1 실측(동기화 afterCommit이 리스너 afterCommit보다 먼저)대로 AFTER_COMMIT 발행은 COMMIT_BEGIN과 COMMITTED **사이** seq. callTree에 `OrderEventPublisher.onOrderPaid`가 `OrderService.pay` 아래(depth 2)로 찍힌다
+- **발행 수집(poc.evidence)**: `EvidenceProducerInterceptor`(producer `interceptor.classes`, Boot `DefaultKafkaProducerFactoryCustomizer`)의 `onSend`(호출 스레드)가 자식 hopPath(`<hop>.e<n>`)·재생 헤더 4개(있으면 교체 — DLQ 재발행도 그 소비 홉의 자식이 된다)·발행 기록(seq, topic, key, payloadHash, payload, childHopPath). `KafkaTemplate.send*()` advisor가 반환 future를 그 기록에 붙이고, **ack는 Evidence를 닫을 때(호출 스레드) future 상태로** 정한다(앱이 get()으로 기다린 뒤라 이미 끝나 있음, 안 끝났으면 failed). `onAcknowledgement`는 쓰지 않는다(I/O 스레드)
+- **소비(Coupon)**: `@KafkaListener` record 단위, group `coupon-settlement`, `auto.offset.reset=earliest`. couponKey가 있고 그 주문이 쓴 USED 쿠폰이면 SETTLED(flush UPDATE), 없으면 no-op(Evidence는 남고 dbAccess 빈 배열·transactions 없음). `DefaultErrorHandler(DeadLetterPublishingRecoverer → order.paid.dlq 같은 partition, FixedBackOff(0, 0))` — Boot가 CommonErrorHandler 빈을 컨테이너에 붙인다
+- **소비 수집(poc.evidence)**: `RecordInterceptor` 빈(Boot가 컨테이너에 붙임)이 레코드 헤더의 재생 헤더 4개로 consumer 스레드에 ReplayContext를 연다(없으면 Evidence 없음). **확정 시점은 다음 레코드의 intercept 또는 `clearThreadState` 중 먼저 오는 쪽** — 에러 핸들러의 DLQ 발행까지 그 소비 홉에 들어간다(실측: `events.published`에 `order.paid.dlq`, childHopPath `0.e1.e1`, ack ok). `consumeOutcome`: success → ok, failure → failed, `error{type, where}`는 래핑(ListenerExecutionFailedException) 벗긴 원인. traceparent 등 다른 헤더는 Evidence에 넣지 않는다
+- **스키마 v1 추가**(strict 유지): `events.published[].payload`, `event.payload`(32KB 상한, 초과 시 null), `consumeOutcome`(origin=kafka일 때 필수, http면 없음). 3.1·3.2 run Evidence 418건이 그대로 통과(추가만). 예시 = 실측 결제·소비 Evidence
+- **barrier·verify**: `events.published[].childHopPath` 폐포는 관측 토픽 `OBSERVED_TOPICS=order.paid`만(DLQ는 소비자가 없어 Evidence가 오지 않는다). verify의 Undelivered(internal)도 같은 필터(`--observed-topics`). diff_v0는 origin=kafka 홉을 response 대신 event 축(topic·key·consumeOutcome·payload)으로 비교
+- **corpus v2 갱신**: 처음 PAID가 되는 모든 `/pay`에 settle `{hop: "0.e1", service: "coupon", origin: "kafka"}`(7건), 같은 주문의 두 번째 이후 `/pay`에는 금지 — validate.py 규칙과 음성 fixture 2개. 세션 구성·split 그대로. 기대 집합 = 진입 46 + http settle 5 + kafka settle 7 = 58
+- **소비 실패 유도**: 코드 변경 없이 — 실제 요청 하나를 보내고, 같은 재생 헤더(hop `0.e1`)를 단 해석 불가 레코드를 `kafka-console-producer`로 양쪽 브로커에 넣었다. 재시도 0은 Store의 append-only 기록에서 소비 Evidence POST가 스택당 1회인 것으로 확인
+- **이미지**: `order-app:phase3.3-base`, `coupon-app:phase3.3-base` — 3.5 사다리의 Legacy 고정 이미지(run-meta에 태그·imageRef)
+
 끝난 기준
 - corpus v2 A/A 3회 diff ∅ — `events.published` 1건(`ack: ok`, 호출 스레드에서 기록), **publish seq > COMMIT_BEGIN seq**(타임라인), 소비 Evidence 양쪽 존재, 쿠폰 SETTLED 양쪽 동일. 3.1에서 실측한 콜백 순서와 일치함을 기록
 - Kafka 격리 실측: 교차 스택 9092 차단
