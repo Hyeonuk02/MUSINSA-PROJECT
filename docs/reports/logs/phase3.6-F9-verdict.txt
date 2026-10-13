@@ -1,0 +1,153 @@
+== p36-F9-1  arm C  pairs 60  {'CONTRACT_VIOLATION': 5, 'SAME': 55}
+  split eval   {'CONTRACT_VIOLATION': 3, 'SAME': 32}
+  split learn  {'CONTRACT_VIOLATION': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 5, 'SAME': 5}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000027/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000026/use",200]] new=[["POST","coupon","/api/coupons/ck-R000026/use",200],["POST","coupon","/api/coupons/ck-R000026/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000032/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000031/use",200]] new=[["POST","coupon","/api/coupons/ck-R000031/use",200],["POST","coupon","/api/coupons/ck-R000031/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000036/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000035/use",200]] new=[["POST","coupon","/api/coupons/ck-R000035/use",200],["POST","coupon","/api/coupons/ck-R000035/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000044/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000043/use",200]] new=[["POST","coupon","/api/coupons/ck-R000043/use",200],["POST","coupon","/api/coupons/ck-R000043/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F9-1/verdict.json
+== p36-F9-1  arm B0  pairs 60  {'DIFF': 5, 'SAME': 55}
+  split eval   {'DIFF': 3, 'SAME': 32}
+  split learn  {'DIFF': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 5, 'SAME': 5}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000027/0 order.create: 
+  DIFF               R000032/0 order.create: 
+  DIFF               R000036/0 order.create: 
+  DIFF               R000044/0 order.create: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F9-1/verdict-B0.json
+== p36-F9-1  arm B1  pairs 60  {'DIFF': 1, 'SAME': 59}
+  split eval   {'DIFF': 1, 'SAME': 34}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F9-1/verdict-B1.json
+== p36-F9-2  arm C  pairs 60  {'CONTRACT_VIOLATION': 5, 'SAME': 55}
+  split eval   {'CONTRACT_VIOLATION': 3, 'SAME': 32}
+  split learn  {'CONTRACT_VIOLATION': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 5, 'SAME': 5}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000027/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000026/use",200]] new=[["POST","coupon","/api/coupons/ck-R000026/use",200],["POST","coupon","/api/coupons/ck-R000026/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000032/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000031/use",200]] new=[["POST","coupon","/api/coupons/ck-R000031/use",200],["POST","coupon","/api/coupons/ck-R000031/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000036/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000035/use",200]] new=[["POST","coupon","/api/coupons/ck-R000035/use",200],["POST","coupon","/api/coupons/ck-R000035/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000044/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000043/use",200]] new=[["POST","coupon","/api/coupons/ck-R000043/use",200],["POST","coupon","/api/coupons/ck-R000043/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F9-2/verdict.json
+== p36-F9-2  arm B0  pairs 60  {'DIFF': 5, 'SAME': 55}
+  split eval   {'DIFF': 3, 'SAME': 32}
+  split learn  {'DIFF': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 5, 'SAME': 5}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000027/0 order.create: 
+  DIFF               R000032/0 order.create: 
+  DIFF               R000036/0 order.create: 
+  DIFF               R000044/0 order.create: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F9-2/verdict-B0.json
+== p36-F9-2  arm B1  pairs 60  {'DIFF': 1, 'SAME': 59}
+  split eval   {'DIFF': 1, 'SAME': 34}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F9-2/verdict-B1.json
+== p36-F9-3  arm C  pairs 60  {'CONTRACT_VIOLATION': 5, 'SAME': 55}
+  split eval   {'CONTRACT_VIOLATION': 3, 'SAME': 32}
+  split learn  {'CONTRACT_VIOLATION': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 5, 'SAME': 5}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000027/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000026/use",200]] new=[["POST","coupon","/api/coupons/ck-R000026/use",200],["POST","coupon","/api/coupons/ck-R000026/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000032/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000031/use",200]] new=[["POST","coupon","/api/coupons/ck-R000031/use",200],["POST","coupon","/api/coupons/ck-R000031/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000036/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000035/use",200]] new=[["POST","coupon","/api/coupons/ck-R000035/use",200],["POST","coupon","/api/coupons/ck-R000035/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000044/0 order.create: externalCalls: legacy=[["POST","coupon","/api/coupons/ck-R000043/use",200]] new=[["POST","coupon","/api/coupons/ck-R000043/use",200],["POST","coupon","/api/coupons/ck-R000043/use",200]]; hop_set: legacy만 [] / new만 ['0.h2
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F9-3/verdict.json
+== p36-F9-3  arm B0  pairs 60  {'DIFF': 5, 'SAME': 55}
+  split eval   {'DIFF': 3, 'SAME': 32}
+  split learn  {'DIFF': 2, 'SAME': 23}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 5, 'SAME': 5}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000027/0 order.create: 
+  DIFF               R000032/0 order.create: 
+  DIFF               R000036/0 order.create: 
+  DIFF               R000044/0 order.create: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F9-3/verdict-B0.json
+== p36-F9-3  arm B1  pairs 60  {'DIFF': 1, 'SAME': 59}
+  split eval   {'DIFF': 1, 'SAME': 34}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F9-3/verdict-B1.json

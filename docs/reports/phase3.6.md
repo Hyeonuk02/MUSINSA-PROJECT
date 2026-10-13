@@ -2,7 +2,8 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6 일치 → F7 일치 → F8 일치(두 설정) → F9부터 진행 중
+- 결과: **PASS** — baseline + F1~F9 각 3 run, **9/9 결함이 사전 등록한 기대 판정과 pair 단위로 일치**(target 92 pair + F8 maxSelects 10 pair), 정상 경로 오탐 0(F1은 engine-v1.1 기준 1 → D-6 귀속 규칙 engine-v1.2 기준 0), Undelivered 0·degraded 0(전 run), 오판정 0
+- 진행: 준비·baseline → F1(v1.1에서 기대와 다름 → D-6 → v1.2 재판정 일치) → F2 → F3 → F4 → F5(learn 라벨 3, eval Uncertain 8→0) → F6 → F7 → F8(두 설정) → F9
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -144,3 +145,103 @@
 | B0 / B1 / C | ✔ / ✔ / ✔ | B0 DIFF 10, B1 DIFF 10(SELECT 횟수는 B1 축 — 관측 매트릭스대로 F8은 B1에서도 보인다), C는 선언에 따라 UNC/CV |
 
 해석: 같은 Evidence가 **선언(maxSelects)에 따라** Uncertain(사람이 볼 것)과 CV(계약 위반)로 갈린다 — D18 "판정은 선언된 해상도". F5(2→1)와 F8(2→3·4)은 모두 SELECT 수 변화지만, learn 규칙이 F5 유형만 설명하므로 F8은 Improvement로 새지 않았다. 로그 `logs/phase3.6-F8-*.txt`
+
+### 1.9 F9 — 쿠폰 use 두 번 호출
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브랜치·커밋 1·이미지 | PASS | `fault/F9` = `f9f80ce`, `order-app:phase3.6-F9`. `OrderService.kt` +1(`couponClient.use(...)` 한 번 더) |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS(참고: `0.h2` new만 4건 — 부모가 선언한 행동 차이), settleTimeouts 0, **barrier 2단계 폐포 라운드 1: 기대 new 64**(settle에 없는 `0.h2` 4건을 부모 선언으로 기다림), `dirty: false`(rev `57e99ec`), new=phase3.6-F9 |
+| target 쿠폰 주문 생성 4 pair CV | PASS | 4/4 ×3(R27·R32·R36·R44). 위반: `externalCalls`(use 1회 → 2회), `hop_set new만 ['0.h2']`. 응답·쓰기 집합·dbstate 같음(두 번째 use는 같은 orderKey라 Coupon이 멱등 200, UPDATE 없음). R37(USED 쿠폰)은 첫 use가 409라 두 번째 호출이 없어 SAME |
+| 정상 경로 오탐 0 | PASS | non-target 0 (CV 5 = 4 + F0) |
+| 세 run 판정 동일 | PASS | CV 5 + SAME 55 ×3 |
+| B0 / B1 / C | ✔ / ✘ / ✔ | B0 DIFF 4/4, **B1 DIFF 0/4**(응답·SQL 같음), C CV 4/4 |
+
+로그 `logs/phase3.6-F9-*.txt`
+
+## 1.10 결함 표 (끝난 기준)
+
+engine-v1.2(F1은 v1.1 결과 병기). 탐지 = target pair 실제 판정이 기대와 같음(3 run 모두). 오탐 = baseline과 다른 non-target pair. 가시성 = target pair가 B0·B1에서 DIFF / C에서 기대 판정.
+
+| 결함 | 기대 판정 (target pair) | 실제 판정 | 탐지 | 정상 경로 오탐 | UNC learn/eval | 규칙 수(생성) | eval UNC 규칙 전→후 | B0 / B1 / C |
+|---|---|---|---|---|---|---|---|---|
+| F0 (baseline 기지 차이) | R47 CV, R48 SAME | 같음 | 관측 | — | 0/0 | 0 | 0→0 | ✔ / ✔ / ✔ |
+| F1 멱등 검사 제거 | R8 CV (1) | 1/1 CV | ✔ | v1.1: 1(R7 세션 귀속) / v1.2: 0 | 0/0 | 0 | 0→0 | 1 / 0 / 1 |
+| F2 order_items INSERT 누락 | 27 CV + dbstate | 27/27 CV, dbstate 위반 | ✔ | 0 | 0/0 | 0 | 0→0 | 27 / 27 / 27 |
+| F3 커밋 전 발행 | 7 CV | 7/7 CV | ✔ | 0 | 0/0 | 0 | 0→0 | 7 / 0 / 7 |
+| F4 쿠폰 실패 롤백 누락 | 2 CV + dbstate | 2/2 CV, dbstate 위반 | ✔ | 0 | 0/0 | 0 | 0→0 | 2 / 1 / 2 |
+| F5 JOIN FETCH(정상 리팩터링) | 13 UNC → 라벨 후 IMP | 13/13 UNC → 13/13 IMP | ✔(분류) | 0 | 5/8 → 0/0 | 3 (learned) | **8→0** | 13 / 13 / 13 |
+| F6 itemCount(승인된 개선) | 26 IMP | 26/26 IMP | ✔(분류) | 0 | 0/0 | 1 (사전 승인) | 0→0 | 26 / 26 / 26 |
+| F7 read timeout 1s | 2 CV + dbstate | 2/2 CV, dbstate 위반 | ✔ | 0 | 0/0 | 0 | 0→0 | 2 / 2 / 2 |
+| F8 N+1 | 10 UNC / maxSelects 10 CV | 10/10 UNC / 10/10 CV | ✔ | 0 | 4/6 | 0 | 6→6 | 10 / 10 / 10 |
+| F9 쿠폰 use 두 번 | 4 CV | 4/4 CV | ✔ | 0 | 0/0 | 0 | 0→0 | 4 / 0 / 4 |
+
+**결함 탐지율**: 진짜 결함 6건(F1·F2·F3·F4·F7·F9) **6/6**, 성능 계약 F8 1/1(선언 시 CV, 미선언 시 Uncertain으로 사람에게), 분류 대상 F5·F6 2/2 — 합계 **9/9**. pair 단위 target **92/92**(+ F8 maxSelects 10/10).
+**정상 경로 오탐**: 0 (engine-v1.2). F1만 engine-v1.1 기준 1.
+**오판정률**(learn·사전 규칙이 F를 SAME·Improvement로 가린 건수): **0**. 현재 규칙 세트 전체(F5 learned 3 + F6 사전 1)로 F1~F9 27 run을 다시 판정해도 진짜 결함 target 중 가려진 pair 0, F5를 제외한 판정 변경 0 — `logs/phase3.6-misjudgment-allrules.txt`(파일 덮어쓰기 없이 임시 판정).
+**Rule 재사용(첫 데이터)**: F5 learn 5 pair → 규칙 3 → eval 8 pair Uncertain → Improvement(8→0). F8은 learn 규칙과 맞지 않아 Uncertain 6 그대로(가리지 않음).
+**B1(Normalization만) 미탐**: F1·F3·F9 전부, F4 절반 — 응답·SQL 축에 흔적이 없는 결함. B1은 F5·F6·F8에서 "다르다"까지만 보고 분류는 못 한다(3.7 관측 매트릭스).
+
+## 2. 변경 파일·커밋
+
+| 커밋 | 내용 |
+|---|---|
+| `ba6502b` phase3.6: settle 의미·corpus v2.1·지연 스텁·태그 | `k6/{barrier.py,run.js,run.sh}`, `corpus/{corpus-v2.1.json,schema-v2.json,validate.py,tests/invalid-v2/sku-missing-without-flag.json}`, `deploy/k8s/base/{kustomization.yaml,wiremock.yaml,wiremock-mappings/gateway-charge-slow.json}`, `engine/{ruleset.py,verdict.py,rules/contract-maxselects.yaml,tests/test_engine.py}`, `docs/{decision-log.md,phase3-plan.md}` |
+| `2227518` phase3.6: baseline 결과·결함 기대 사전 등록 | `docs/fault-expectations.json`, `docs/fault-catalog.md`, `engine/fault_check.py`, 보고서·결과 |
+| `c361ec4` phase3.6-F1: 결과·보고서 — 기대와 다름 | F1 중단 보고 |
+| `b70a6b7` phase3.6: engine-v1.2 세션 검사 귀속 규칙(D-6) | `engine/verdict.py`, `engine/rules/contract*.yaml`, `engine/tests/test_engine.py`, docs |
+| `0a7c1f8` · `6f6456d` · `9a6774f` · `800b6f1` · `4e34a7b` · `cb444fd` · `57e99ec` | phase3.6-F2 ~ F8: 결과·보고서(`800b6f1`에 learned 규칙 3) |
+| `9648cf1` phase3.6: improvement.yaml F6 사전 승인 규칙 | `engine/rules/improvement.yaml` |
+| (이 커밋) phase3.6-F9: 결과·보고서 | F9, 1.10 결함 표, `CLAUDE.md`(3.6 상태) |
+| 결함 브랜치(각 1커밋, push) | `fault/F1` `da92b8e` · `F2` `a131294` · `F3` `12482f0` · `F4` `f83e211` · `F5` `1597c73` · `F6` `84bd197` · `F7` `31363ce` · `F8` `60edcda` · `F9` `f9f80ce` — `git rev-list --count phase3.5-v1.4..fault/F<n>` = 1, 클래스 1~2 |
+
+## 3. 실행 명령·주요 출력
+
+```
+git tag phase3.3-base 98c9356; git tag phase3.5-v1.4 120b212; git push origin <tags>
+kubectl apply -k deploy/k8s/{legacy,new}                   # WireMock 지연 스텁 configmap → wiremock 재시작
+k6/run.sh --run-id p36-base --iterations 3 --vus 3         # new = phase3.5-v1.4
+# 결함마다 (워크트리 → 1커밋 → push → 이미지)
+git worktree add <tmp>/wt-F<n> -b fault/F<n> phase3.5-v1.4; (수정); git commit; git push -u origin fault/F<n>
+docker build -f services/order/Dockerfile -t order-app:phase3.6-F<n> <wt>/services/ → docker save → kind load image-archive
+kubectl kustomize deploy/k8s/new | sed 's#order-app:phase3.5-v1.4#order-app:phase3.6-F<n>#' | kubectl apply -f -
+k6/run.sh --run-id p36-F<n> --iterations 3 --vus 3; verify_sameness ×3; verdict.py --arm C|B0|B1 ×3
+.venv/bin/python engine/fault_check.py --fault F<n> --run-base p36-F<n>       # 기대 대조
+# F5: review.py list --split learn → label ×3 → verdict 재판정 → fault_check --expect-key afterLearnLabels
+# F8: verdict.py --contract engine/rules/contract-maxselects.yaml --out verdict-maxselects.json → fault_check --verdict verdict-maxselects.json --expect-key targetsMaxSelects
+```
+결함별 전문: `docs/reports/logs/phase3.6-F<n>-{run,verify,verdict,check,summary}.txt`
+
+## 4. Legacy/New 비교 (run당, 3 run 동일)
+
+| run | pairs | C (SAME/IMP/UNC/CV) | B0 DIFF | B1 DIFF | dbstate | settleTimeouts |
+|---|---|---|---|---|---|---|
+| p36-base | 60 | 59/0/0/1 | 1 | 1 | 일치 | 0 |
+| p36-F1 (v1.2) | 60 | 58/0/0/2 | 2 | 1 | 일치 | 0 |
+| p36-F2 | 60 | 32/0/0/28 | 28 | 28 | 위반 | 0 |
+| p36-F3 | 60 | 52/0/0/8 | 8 | 1 | 일치 | 0 |
+| p36-F4 | 60 | 57/0/0/3 | 3 | 2 | 위반 | 0 |
+| p36-F5 (라벨 후) | 60 | 46/13/0/1 (라벨 전 46/0/13/1) | 14 | 14 | 일치 | 0 |
+| p36-F6 | 60 | 33/26/0/1 | 27 | 27 | 일치 | 0 |
+| p36-F7 | 59 | 56/0/0/3 | 3 | 3 | 위반 | 1 (R41/new/0.e1) |
+| p36-F8 | 60 | 49/0/10/1 (maxSelects 49/0/0/11) | 11 | 11 | 일치 | 0 |
+| p36-F9 | 60 | 55/0/0/5 | 5 | 1 | 일치 | 0 |
+
+## 5. 지시와 다르게 구현한 것
+
+- **F7 "3s→1s"**: 기준선·Legacy의 `PaymentGatewayClient`는 read timeout을 설정하지 않는다(SimpleClientHttpRequestFactory 기본 = 무제한). F7은 "무제한 → 1s" 한 줄 — 2s 지연에서 Legacy 성공·New 실패라는 시험 의미와 기대 판정은 같다
+- **F4 "트랜잭션 안에서 삼켜"**: `@Transactional(noRollbackFor = [CouponFailure])` 한 줄로 구현 — 예외는 컨트롤러까지 가서 400 본문이 그대로이고 트랜잭션은 커밋된다(지시한 효과와 같음). 사전 기대의 축 목록에 있던 writeSet 차이는 없었다(양쪽 모두 INSERT 실행, 차이는 롤백 여부) — 판정(CV)은 기대와 일치
+- **기대 사전 등록 파일**(`docs/fault-expectations.json`)과 대조 도구(`engine/fault_check.py`)를 추가 — 지시의 "기대 판정 = 실제 판정인지 pair 단위로 확인"을 run 전에 고정하기 위해. F0 항목은 baseline 확인용으로 F1 run 전에 추가
+- **결함 run 배포**: 레포 new overlay는 `phase3.5-v1.4` 그대로 두고 렌더링 결과의 order 이미지만 `phase3.6-F<n>`으로 치환해 apply(dirty=false)
+- **커밋 전 스모크**(F2·F5·F8): 결함 브랜치 커밋 전에 이미지를 올려 재생 헤더 없는 요청 1~2건으로 기동·동작만 확인(Evidence 없음, 다음 run의 S0 리셋으로 지워짐)
+- **engine-v1.2(D-6)**: F1 결과를 본 뒤 세션 검사 귀속 규칙을 일반화 — 사용자 결정, 1.0b
+
+## 6. 문제·해결·남은 한계
+
+- **F1 세션 귀속(D-6)** — 1.0b. 탐지에는 영향 없음, 정상 경로 오탐 v1.1 1 → v1.2 0. **귀속 규칙은 F1 결과를 본 뒤 일반화했다**는 점이 평가의 한계로 남는다(F2~F9는 v1.2가 사전 등록 엔진)
+- **F0**: 입력 검증 경로의 Legacy/New 차이(409 vs 400)는 corpus에 해당 입력(S011)을 넣어야 보였다 — 차등 검증은 corpus가 닿는 범위만 본다
+- **settle 보완의 효과**: F7(New가 발행을 안 함)과 F9(New가 settle에 없는 홉을 더 만듦)이 run을 멈추지 않고 엔진까지 왔다 — 보완 전 규칙이었다면 F7은 degraded·barrier 미달로 판정 전에 멈췄다
+- **B1의 한계(3.7 입력)**: F1·F3·F9는 B1에서 DIFF 0, F4는 절반. 응답·SQL만 보는 정규화로는 외부 호출·타임라인·트랜잭션·hop 결함을 못 본다
+- **규칙 학습 데이터가 F5 하나뿐**: Rule 재사용 효과(eval 8→0)는 한 유형의 결과다. 3.7에서 v1.3+·F 변형 전체로 다시 잰다
+- **F5 learned 규칙의 범위**: `callTree.sequenceReplaced`는 from/to 전체 시퀀스 일치라 좁고, `dbRead.countDelta 2→1`은 endpoint order.get 전체에 적용된다 — 같은 횟수 변화를 내는 다른 원인이 order.get에 생기면 Improvement로 분류될 수 있다(이번 F에서는 해당 없음, 오판정 0)
+- `runs/p36-F1-*/verdict-engine-v1.1.json`, `runs/p36-F5-*/verdict-prelabel.json`, `runs/p36-F8-*/verdict-maxselects.json`은 3.7 집계용 보조 판정 파일

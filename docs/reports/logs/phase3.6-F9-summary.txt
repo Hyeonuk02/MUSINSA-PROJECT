@@ -1,0 +1,15 @@
+runs/p36-F9-1 git {'rev': '57e99ec0f5233215e2c98dbc6c143601f608108d', 'dirty': False} new order-app:phase3.6-F9
+   target 4 B0 DIFF 4 B1 DIFF 0
+   violation axes {'externalCalls': 4, 'hop_set': 4} uncertain kinds {'callTree.sequenceReplaced': 4, 'externalCalls.responseHashChanged': 4}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 3, 'SAME': 32}, 'learn': {'CONTRACT_VIOLATION': 2, 'SAME': 23}}
+runs/p36-F9-2 git {'rev': '57e99ec0f5233215e2c98dbc6c143601f608108d', 'dirty': False} new order-app:phase3.6-F9
+   target 4 B0 DIFF 4 B1 DIFF 0
+   violation axes {'externalCalls': 4, 'hop_set': 4} uncertain kinds {'callTree.sequenceReplaced': 4, 'externalCalls.responseHashChanged': 4}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 3, 'SAME': 32}, 'learn': {'CONTRACT_VIOLATION': 2, 'SAME': 23}}
+runs/p36-F9-3 git {'rev': '57e99ec0f5233215e2c98dbc6c143601f608108d', 'dirty': False} new order-app:phase3.6-F9
+   target 4 B0 DIFF 4 B1 DIFF 0
+   violation axes {'externalCalls': 4, 'hop_set': 4} uncertain kinds {'callTree.sequenceReplaced': 4, 'externalCalls.responseHashChanged': 4}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 3, 'SAME': 32}, 'learn': {'CONTRACT_VIOLATION': 2, 'SAME': 23}}

@@ -16,7 +16,7 @@
 | F6 | `fault/F6` `84bd197` | `OrderView`(+2 −1) | 승인된 개선 | 생성 8·조회 10·결제 8 = 26 pair IMP(사전 규칙) | 26/26 IMP ×3 ✔(규칙 `order-view-item-count`, `9648cf1` 사전 커밋), 오탐 0 | response.addedFields `itemCount` | B0 ✔ / B1 ✔(DIFF만) / C ✔(분류) |
 | F7 | `fault/F7` `31363ce` | `PaymentGatewayClient`(1줄 read timeout) | 설정 변경 결함 | R000041·R000042 CV + dbstate | 2/2 CV ×3 ✔, dbstate 위반(orders 상태), 정상 결제 6건 SAME, 오탐 0 | 응답 200→502, externalCalls status 200→0, writeSet, 발행 1→0·hop `0.e1`(Legacy만), 다음 GET status·transactionId, dbstate | B0 ✔ / B1 ✔ / C ✔ |
 | F8 | `fault/F8` `60edcda` | `OrderRepository`(+5), `OrderService`(+4 −1) | 성능 계약 | 조회(있음) 10 pair: 기본 UNC / maxSelects 선언 CV | 기본 10/10 UNC ×3 ✔ / `contract-maxselects.yaml` 10/10 CV ×3 ✔, 오탐 0, learn 규칙 적용 0 | dbRead 횟수 2→3·4, callTree(`findItem`), 선언 시 max_selects | B0 ✔ / B1 ✔ / C ✔(선언에 따라 UNC·CV) |
-| F9 | | | 진짜 결함 | 쿠폰 주문 생성 4 pair CV | | externalCalls, hop `0.h2`(New만) | |
+| F9 | `fault/F9` `f9f80ce` | `OrderService`(+1) | 진짜 결함 | 쿠폰 주문 생성 4 pair CV | 4/4 CV ×3 ✔, 오탐 0, R37(USED 쿠폰)은 SAME | externalCalls(use 1→2), hop `0.h2`(New만, 폐포가 기다림) — 응답·SQL·dbstate 같음 | B0 ✔ / B1 ✘ / C ✔ |
 
 ## F0 — baseline 기지 차이 (S011, 주입 아님)
 
@@ -61,3 +61,12 @@
 
 변경(`fault/F8`): `OrderRepository.findItem(orderKey, lineNo)` 추가, `OrderService.getByKey`가 항목마다 다시 조회. 응답·쓰기 집합 동일, 조회 SELECT가 2 → 2+N.
 실제: 기본 계약에서 조회 10 pair Uncertain(countDelta 2→3·2→4 + callTree), `contract-maxselects.yaml`(order.get: 2)로 같은 run을 재판정하면 10 pair CV. F5 learn 규칙은 맞지 않아 가리지 않음.
+
+## F9 — 쿠폰 use 두 번 호출
+
+변경(`fault/F9`): `OrderService.create`에서 `couponClient.use`를 한 번 더(두 번째 결과를 사용). 두 번째도 같은 orderKey라 Coupon이 멱등 200(UPDATE 없음).
+실제: 쿠폰 주문 생성 4 pair가 externalCalls(1→2)와 hop 집합(`0.h2` New만)으로 CV. 응답·SQL·dbstate는 같아 B1은 못 본다. barrier 2단계 폐포가 settle에 없는 `0.h2` 4건을 부모 선언으로 기다렸다.
+
+## 요약
+
+결함 탐지율 9/9(진짜 결함 6/6 + 성능 계약 1/1 + 분류 2/2), target pair 92/92(+ F8 maxSelects 10/10), 정상 경로 오탐 0(engine-v1.2; F1은 v1.1 기준 1), 오판정 0. 각 결함 commit은 클래스 1~2개(`git diff phase3.5-v1.4..fault/F<n>`).

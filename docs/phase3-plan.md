@@ -347,6 +347,10 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 - **F7 해석**: "설정만, 코드 변경 없음" = 로직 무변경. `PaymentGatewayClient`의 read timeout 한 줄(클래스 1)
 - **D-6 세션 검사 귀속 규칙(engine-v1.2, F1 결과를 본 뒤 일반화)**: 탐지 로직은 그대로, "울린 세션 검사를 어느 pair에 표시하느냐"만 바꾼다. 원칙: 세션 범위 검사의 위반은 **Legacy와 다른 기여를 한 pair에만** CV로 붙이고, 귀속할 pair가 없으면 pair 판정을 바꾸지 않는다(키를 공유한 pair 전체에 전파하지 않음 — 3.4 구현 시 확정의 "그 키를 가진 pair(어느 스택이든)에 붙인다"를 대체). `gateway_calls_per_idem_key_le_1`: 키별 호출 합계가 스택 간 다르면 자기 pair 호출 수가 Legacy와 다른 pair에만 CV / 합계가 같고 양쪽 다 상한(1) 초과면 pair는 SAME, `bothStacks: true` 플래그만(변경 전부터 있던 위반 — max_selects의 "Legacy도 넘으면 경고"와 같은 취급) / 같고 상한 안이면 없음 — "차등 판정(CV) + 절대 플래그(bothStacks)" 두 출력. `coupon_transition_order`: 선행 use 200 없이 SETTLED가 New에서만이면 그 소비 홉 pair에 CV, 양쪽이면 bothStacks만. `dbstate_equal`은 run 단위 그대로. `verdict.json` `summary.sessionViolations[{session, check, key, legacy, new, bothStacks, attributedPairs}]`(gateway는 호출 수, coupon은 스택별 위반 여부). v1.2로 p33·p35(base·v1.1~v1.4)·p36-base 재판정: pair 판정·집계·runChecks 동일, sessionViolations 빈 배열(`docs/reports/logs/phase3.6-rejudge-engine-v1.2.txt`). F2~F9의 사전 등록 엔진은 v1.2
 - **3.7 지표 각주(D-6)**: 세션 검사 위반의 pair 귀속은 engine-v1.2 규칙을 따른다. `bothStacks` 플래그는 오탐·탐지율에 세지 않고 별도 보고한다. 관측 매트릭스의 "C만 잡는다"는 "B1이 못 잡는다(B0은 원문 비교라 DIFF까지는 보지만 분류는 못 함)"로 읽는다
+- **기대 사전 등록·대조**: `docs/fault-expectations.json`(F run 전 커밋 — targets·afterLearnLabels·targetsMaxSelects·runCheck), `engine/fault_check.py`(평가 도구, 판정 엔진 아님): target 판정 일치, non-target = baseline 판정(오탐), pair 집합 차이, 세 run 동일
+- **F4 구현**: `@Transactional(noRollbackFor = [CouponClient.CouponFailure::class])` — 예외는 컨트롤러로 가서 400 그대로, 트랜잭션 커밋
+- **F8 두 설정**: 기본 `verdict.json`(contract.yaml) + `verdict-maxselects.json`(contract-maxselects.yaml), 클러스터 재실행 없음
+- **오판정률 측정**: 마지막 결함 뒤 현재 규칙 세트 전체로 F1~F9 전 run을 임시 재판정(파일 덮어쓰기 없음)해 진짜 결함 target이 SAME·Improvement로 가려지는지 확인
 
 끝난 기준
 - 결함별 3 run, 기대 판정 = 실제 판정 표(**결함 탐지율**), 정상 경로 오탐 0, **오판정률**(learn에서 만든 규칙이 F를 SAME·Improvement로 가린 건수) 0
