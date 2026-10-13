@@ -18,6 +18,7 @@ data class OrderView(
     val status: String,
     val transactionId: String?,
     val createdAt: Instant,
+    val itemCount: Int,
 ) {
 
     data class Item(val sku: String, val qty: Int, val price: Long)
@@ -25,7 +26,7 @@ data class OrderView(
     companion object {
         fun from(order: Order): OrderView = OrderView(
             order.id, order.orderKey, order.items.map { Item(it.sku, it.qty, it.price) }, order.amount,
-            order.couponKey, order.discountAmount, order.status, order.transactionId, order.createdAt,
+            order.couponKey, order.discountAmount, order.status, order.transactionId, order.createdAt, order.items.size,
         )
     }
 }
