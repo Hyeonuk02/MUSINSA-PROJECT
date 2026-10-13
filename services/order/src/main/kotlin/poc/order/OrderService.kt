@@ -53,6 +53,7 @@ class OrderService(
         }
         orderRepository.saveAndFlush(order)
         if (couponKey != null) {
+            couponClient.use(couponKey, orderKey)
             val discount = couponClient.use(couponKey, orderKey)
             order.applyCoupon(couponKey, discount)
         }
