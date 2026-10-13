@@ -6,7 +6,7 @@
 #
 # preflight(루프 전 1회) — 하나라도 실패하면 run을 시작하지 않고 exit 1. 자동 복구는 하지 않는다.
 #   노드 응답 / Istio 인증서(ingressgateway·order legacy·order new의 default NOT AFTER > 지금, fail-closed)
-#   / Store 준비(게이트웨이 /_evidence/count 200) / corpus validate.py
+#   / Store 준비(게이트웨이 /_evidence/count 200) / corpus validate.py / Store에 같은 runId Evidence 없음(3.5)
 # reset: MySQL rollout restart(S0) → order readiness(없는 키 조회 404) → WireMock request journal 비움
 #   WireMock admin은 게이트웨이로 열지 않고 tooling pod(kubectl exec)로 호출한다(게이트웨이 표면은 /api/, /_evidence/뿐)
 # barrier v2(Phase 3.2, D19): spill 회수 → k6/barrier.py — 스택별 기대 집합 = sent의 진입 홉 + corpus settle 홉(최대 30초),
@@ -95,6 +95,17 @@ print(f"VALID CERT={valid} NOT AFTER={not_after} (남은 {int((exp - now).total_
 
   "$PY" corpus/validate.py "$CORPUS" >/dev/null || fail "preflight: corpus/validate.py 실패"
   log "  corpus: validate.py PASS"
+
+  # Phase 3.5: Store에 같은 runId의 Evidence가 남아 있으면 시작하지 않는다(자동 삭제 없음).
+  # 남아 있으면 k6 완료 폴링(exists)이 이전 Evidence를 보고 New 완료 전에 다음 요청을 보낸다 — p35-v1.1-stale-1에서 실측
+  local i rid n
+  for ((i = 1; i <= ITERATIONS; i++)); do
+    rid="$BASE-$i"
+    n=$(curl -s --max-time 5 "$EVIDENCE_URL/count?runId=${rid}" | "$PY" -c 'import json,sys; print(json.load(sys.stdin)["count"])') \
+      || fail "preflight: Store count 조회 실패 — runId=${rid}"
+    [[ "$n" == 0 ]] || fail "preflight: Store에 runId=${rid} Evidence ${n}건이 이미 있다 — 다른 --run-id를 쓰거나 DELETE /runs/${rid} 후 재실행"
+  done
+  log "  store: runId $BASE-1..$ITERATIONS 비어 있음"
 }
 
 # ---------------------------------------------------------------- reset
