@@ -1,0 +1,94 @@
+[10:58:19] preflight
+[10:58:20]   nodes: musinsa-phase1-control-plane(Ready) 
+[10:58:20]   cert istio-system/istio-ingressgateway-7d698f779c-kr6hr: VALID CERT=true NOT AFTER=2026-10-14T05:32:36Z (남은 1114분)
+[10:58:20]   cert legacy/order-79bf5d9759-qtczj: VALID CERT=true NOT AFTER=2026-10-14T10:50:15Z (남은 1431분)
+[10:58:20]   cert new/order-7cb9557c74-z789l: VALID CERT=true NOT AFTER=2026-10-14T10:50:17Z (남은 1431분)
+[10:58:20]   cert legacy/coupon-58cfdbfbf8-lghk6: VALID CERT=true NOT AFTER=2026-10-14T10:50:17Z (남은 1431분)
+[10:58:20]   cert new/coupon-5d5849899f-r5wm7: VALID CERT=true NOT AFTER=2026-10-14T10:50:16Z (남은 1431분)
+[10:58:20]   store: /_evidence/count 200
+[10:58:21]   corpus: validate.py PASS
+[10:58:21] ===== iteration 1/3 runId=p32-1 vus=3
+[10:58:21] reset: MySQL·Coupon MySQL rollout restart (S0)
+[10:58:39]   order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)
+[10:58:39]   wiremock legacy/new: DELETE /__admin/requests 200
+[10:58:39] k6: RUN_ID=p32-1 VUS=3 k6 run k6/run.js
+  
+    runId              p32-1
+    corpus             corpus-v2
+    vus                3
+    sent               46 (R000001 R000002 R000003 R000004 R000005 R000006 R000007 R000008 R000009 R000010 R000011 R000012 R000013 R000014 R000015 R000016 R000017 R000018 R000019 R000020 R000021 R000022 R000023 R000024 R000025 R000026 R000027 R000028 R000029 R000030 R000031 R000032 R000033 R000034 R000035 R000036 R000037 R000038 R000039 R000040 R000041 R000042 R000043 R000044 R000045 R000046)
+    degraded           0
+    newWaitMs          min=1 median=6 max=22
+    iteration_duration {"count":3,"avg":505.33254166666666,"min":450.445583,"med":515.279917,"max":550.272125,"p(90)":543.2736834,"p(95)":546.7729042}
+    summary            runs/p32-1/k6-summary.json
+[10:58:40] barrier: spill 회수
+  [legacy] pod=order-79bf5d9759-qtczj spill=0 recovered=0
+  [new] pod=order-7cb9557c74-z789l spill=0 recovered=0
+  store count runId=p32-1 stack=legacy: {"count":51}
+  store count runId=p32-1 stack=new: {"count":51}
+[10:58:40] barrier: 기대 집합(corpus settle + 자식 홉 폐포, 관측 호스트 order,coupon)
+    1단계 기대: 스택당 51 (진입 46 + settle 5)
+    legacy: 기대 51, 도착 51, 누락 0
+    new: 기대 51, 도착 51, 누락 0
+[10:58:41] export: runs/p32-1/legacy.json (51건), runs/p32-1/new.json (51건)
+  [legacy] dbstate: coupons=6, order_items=10, orders=8
+  [new] dbstate: coupons=6, order_items=10, orders=8
+[10:58:42] export: wiremock journal legacy 7건, new 7건
+[10:58:43] run-meta: runs/p32-1/run-meta.json
+[10:58:43] ===== iteration 2/3 runId=p32-2 vus=3
+[10:58:43] reset: MySQL·Coupon MySQL rollout restart (S0)
+[10:59:00]   order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)
+[10:59:00]   wiremock legacy/new: DELETE /__admin/requests 200
+[10:59:00] k6: RUN_ID=p32-2 VUS=3 k6 run k6/run.js
+  
+    runId              p32-2
+    corpus             corpus-v2
+    vus                3
+    sent               46 (R000001 R000002 R000003 R000004 R000005 R000006 R000007 R000008 R000009 R000010 R000011 R000012 R000013 R000014 R000015 R000016 R000017 R000018 R000019 R000020 R000021 R000022 R000023 R000024 R000025 R000026 R000027 R000028 R000029 R000030 R000031 R000032 R000033 R000034 R000035 R000036 R000037 R000038 R000039 R000040 R000041 R000042 R000043 R000044 R000045 R000046)
+    degraded           0
+    newWaitMs          min=1 median=7 max=116
+    iteration_duration {"p(95)":683.6270253,"count":3,"avg":670.63425,"min":654.654833,"med":672.370125,"max":684.877792,"p(90)":682.3762586}
+    summary            runs/p32-2/k6-summary.json
+[10:59:01] barrier: spill 회수
+  [legacy] pod=order-79bf5d9759-qtczj spill=0 recovered=0
+  [new] pod=order-7cb9557c74-z789l spill=0 recovered=0
+  store count runId=p32-2 stack=legacy: {"count":51}
+  store count runId=p32-2 stack=new: {"count":51}
+[10:59:02] barrier: 기대 집합(corpus settle + 자식 홉 폐포, 관측 호스트 order,coupon)
+    1단계 기대: 스택당 51 (진입 46 + settle 5)
+    legacy: 기대 51, 도착 51, 누락 0
+    new: 기대 51, 도착 51, 누락 0
+[10:59:02] export: runs/p32-2/legacy.json (51건), runs/p32-2/new.json (51건)
+  [legacy] dbstate: coupons=6, order_items=10, orders=8
+  [new] dbstate: coupons=6, order_items=10, orders=8
+[10:59:03] export: wiremock journal legacy 7건, new 7건
+[10:59:04] run-meta: runs/p32-2/run-meta.json
+[10:59:04] ===== iteration 3/3 runId=p32-3 vus=3
+[10:59:04] reset: MySQL·Coupon MySQL rollout restart (S0)
+[10:59:22]   order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)
+[10:59:22]   wiremock legacy/new: DELETE /__admin/requests 200
+[10:59:22] k6: RUN_ID=p32-3 VUS=3 k6 run k6/run.js
+  
+    runId              p32-3
+    corpus             corpus-v2
+    vus                3
+    sent               46 (R000001 R000002 R000003 R000004 R000005 R000006 R000007 R000008 R000009 R000010 R000011 R000012 R000013 R000014 R000015 R000016 R000017 R000018 R000019 R000020 R000021 R000022 R000023 R000024 R000025 R000026 R000027 R000028 R000029 R000030 R000031 R000032 R000033 R000034 R000035 R000036 R000037 R000038 R000039 R000040 R000041 R000042 R000043 R000044 R000045 R000046)
+    degraded           0
+    newWaitMs          min=1 median=5 max=113
+    iteration_duration {"avg":487.1213333333333,"min":420.914583,"med":439.864542,"max":600.584875,"p(90)":568.4408084,"p(95)":584.5128417,"count":3}
+    summary            runs/p32-3/k6-summary.json
+[10:59:23] barrier: spill 회수
+  [legacy] pod=order-79bf5d9759-qtczj spill=0 recovered=0
+  [new] pod=order-7cb9557c74-z789l spill=0 recovered=0
+  store count runId=p32-3 stack=legacy: {"count":51}
+  store count runId=p32-3 stack=new: {"count":51}
+[10:59:24] barrier: 기대 집합(corpus settle + 자식 홉 폐포, 관측 호스트 order,coupon)
+    1단계 기대: 스택당 51 (진입 46 + settle 5)
+    legacy: 기대 51, 도착 51, 누락 0
+    new: 기대 51, 도착 51, 누락 0
+[10:59:24] export: runs/p32-3/legacy.json (51건), runs/p32-3/new.json (51건)
+  [legacy] dbstate: coupons=6, order_items=10, orders=8
+  [new] dbstate: coupons=6, order_items=10, orders=8
+[10:59:25] export: wiremock journal legacy 7건, new 7건
+[10:59:26] run-meta: runs/p32-3/run-meta.json
+[10:59:26] done: 3 run(s) — runs/p32-1 .. runs/p32-3

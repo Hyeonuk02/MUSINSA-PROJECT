@@ -1,0 +1,115 @@
+#!/usr/bin/env python3
+"""Phase 3.2 - flush barrier v2 (D19). run.sh가 k6·spill 회수 뒤에 호출한다.
+
+스택별 기대 집합을 corpus에서 결정론적으로 계산하고, 도착한 Evidence가 선언한 자식 홉까지 넓혀 기다린다.
+안정화 대기(“N초간 변화 없음”) 휴리스틱은 쓰지 않는다.
+
+  1단계  기대 = k6-summary.json의 sent 각각의 진입 홉 "0" + corpus에서 그 요청에 선언된 settle 홉
+         → 양쪽 스택에 모두 도착할 때까지 최대 30초
+  2단계  폐포 = 도착한 Evidence의 externalCalls[].childHopPath(host가 관측 서비스일 때만) + events.published[].childHopPath
+         → 새로 늘어난 기대가 도착할 때까지 최대 10초. 새로 도착한 Evidence가 또 자식을 선언하면 반복
+         settle에 없는 추가 호출(F9의 0.h2처럼 한쪽에만 생긴 호출)의 Evidence도 export 전에 들어오게 하기 위함
+  WireMock 같은 외부 대상(host가 관측 서비스가 아님)은 Evidence를 남기지 않으므로 폐포에 넣지 않는다.
+
+미달이면 누락 (requestId, hopPath)를 스택별로 출력하고 exit 1 (run.sh는 export만 하고 중단).
+결과는 <run 디렉터리>/barrier.json (스택별 기대 집합·도착 수).
+
+사용: barrier.py --run-dir runs/<runId> --corpus corpus/corpus-v2.json --evidence-url http://localhost/_evidence
+             --observed-hosts order,coupon
+"""
+import argparse
+import json
+import sys
+import time
+import urllib.request
+from pathlib import Path
+
+STACKS = ("legacy", "new")
+ENTRY_TIMEOUT_S = 30
+CLOSURE_TIMEOUT_S = 10
+POLL_S = 1
+
+
+def export(evidence_url: str, run_id: str, stack: str) -> list[dict]:
+    with urllib.request.urlopen(f"{evidence_url}/export?runId={run_id}&stack={stack}", timeout=30) as r:
+        return json.load(r)
+
+
+def keys_and_children(records: list[dict], observed: set[str]) -> tuple[set, set]:
+    present, children = set(), set()
+    for rec in records:
+        rid = rec["replayRequestId"]
+        present.add((rid, rec.get("hopPath", "0")))
+        for call in rec.get("externalCalls", []):
+            if call["host"] in observed:
+                children.add((rid, call["childHopPath"]))
+        for pub in rec.get("events", {}).get("published", []):
+            children.add((rid, pub["childHopPath"]))
+    return present, children
+
+
+def main(argv: list[str]) -> int:
+    ap = argparse.ArgumentParser()
+    ap.add_argument("--run-dir", required=True, type=Path)
+    ap.add_argument("--corpus", required=True, type=Path)
+    ap.add_argument("--evidence-url", required=True)
+    ap.add_argument("--observed-hosts", required=True)
+    args = ap.parse_args(argv)
+    run_id = args.run_dir.name
+    observed = {h.strip() for h in args.observed_hosts.split(",") if h.strip()}
+
+    sent = json.loads((args.run_dir / "k6-summary.json").read_text(encoding="utf-8"))["sent"]
+    settle = {r["id"]: [s["hop"] for s in r.get("settle", [])]
+              for s in json.loads(args.corpus.read_text(encoding="utf-8"))["sessions"] for r in s["requests"]}
+    base = {(rid, "0") for rid in sent} | {(rid, hop) for rid in sent for hop in settle.get(rid, [])}
+    expected = {stack: set(base) for stack in STACKS}
+    print(f"  1단계 기대: 스택당 {len(base)} (진입 {len(sent)} + settle {len(base) - len(sent)})")
+
+    def wait(deadline_s: float, phase: str) -> dict[str, set]:
+        """기대가 모두 도착하거나 deadline까지. 반환: 스택별 (present, children)."""
+        end = time.monotonic() + deadline_s
+        while True:
+            state = {stack: keys_and_children(export(args.evidence_url, run_id, stack), observed) for stack in STACKS}
+            missing = {stack: expected[stack] - state[stack][0] for stack in STACKS}
+            if not any(missing.values()) or time.monotonic() >= end:
+                return state, missing
+            time.sleep(POLL_S)
+
+    state, missing = wait(ENTRY_TIMEOUT_S, "1단계")
+    rounds = 0
+    while not any(missing.values()):
+        grown = False
+        for stack in STACKS:
+            new_children = state[stack][1] - expected[stack]
+            if new_children:
+                expected[stack] |= new_children
+                grown = True
+        if not grown:
+            break
+        rounds += 1
+        print(f"  2단계 폐포 라운드 {rounds}: 기대 legacy {len(expected['legacy'])}, new {len(expected['new'])}")
+        state, missing = wait(CLOSURE_TIMEOUT_S, "2단계")
+
+    result = {
+        "runId": run_id,
+        "observedHosts": sorted(observed),
+        "closureRounds": rounds,
+        "stacks": {stack: {
+            "expected": len(expected[stack]),
+            "present": len(state[stack][0]),
+            "unexpected": sorted(f"{r}/{h}" for r, h in state[stack][0] - expected[stack]),
+            "missing": sorted(f"{r}/{h}" for r, h in missing[stack]),
+            "hops": sorted({h for _, h in expected[stack]}),
+        } for stack in STACKS},
+    }
+    (args.run_dir / "barrier.json").write_text(json.dumps(result, ensure_ascii=False, indent=2) + "\n", encoding="utf-8")
+    for stack in STACKS:
+        st = result["stacks"][stack]
+        print(f"  {stack}: 기대 {st['expected']}, 도착 {st['present']}, 누락 {len(st['missing'])}"
+              + (f" {' '.join(st['missing'])}" if st["missing"] else "")
+              + (f", 기대 밖 {len(st['unexpected'])} {' '.join(st['unexpected'])}" if st["unexpected"] else ""))
+    return 1 if any(missing.values()) else 0
+
+
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))

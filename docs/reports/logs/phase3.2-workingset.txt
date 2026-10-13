@@ -1,0 +1,31 @@
+# 3.2 Coupon 추가 후 working set — 2026-10-13 (corpus v2 A/A p32 직후)
+kind 노드: 6.943GiB / 11.67GiB (59.50%)
+legacy  coupon               coupon             408 MiB
+legacy  coupon               istio-proxy         43 MiB
+legacy  coupon-mysql         coupon-mysql       442 MiB
+legacy  coupon-mysql         istio-proxy         37 MiB
+legacy  mesh-check           curl                 0 MiB
+legacy  mesh-check           istio-proxy         60 MiB
+legacy  mysql                istio-proxy         37 MiB
+legacy  mysql                mysql              443 MiB
+legacy  order-79bf5d9759-qtczj istio-proxy         42 MiB
+legacy  order-79bf5d9759-qtczj order              422 MiB
+legacy  wiremock             istio-proxy         53 MiB
+legacy  wiremock             wiremock           237 MiB
+new     coupon               coupon             419 MiB
+new     coupon               istio-proxy         41 MiB
+new     coupon-mysql         coupon-mysql       442 MiB
+new     coupon-mysql         istio-proxy         38 MiB
+new     isolation-injected   curl                 7 MiB
+new     isolation-injected   istio-proxy         38 MiB
+new     isolation-uninjected curl                 1 MiB
+new     mysql                istio-proxy         38 MiB
+new     mysql                mysql              442 MiB
+new     order                istio-proxy         42 MiB
+new     order                order              419 MiB
+new     wiremock             istio-proxy         42 MiB
+new     wiremock             wiremock           245 MiB
+verify  evidence-store-f6b4674b9-ngvkw evidence-store      40 MiB
+전체 컨테이너 합계: 6136 MiB
+               total        used        free      shared  buff/cache   available
+Mem:           11949        7006         482          34        4711        4942

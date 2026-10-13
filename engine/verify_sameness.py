@@ -11,7 +11,11 @@
 검사 (하나라도 실패하면 그 run은 FAIL)
   1. 입력 계약: 모든 레코드가 docs/evidence-schema-v0.json 통과, runId·stack이 run·파일과 일치. 실패 시 즉시 FAIL
   2. 중복 키 없음: 스택별 (replayRequestId, hopPath) 유일. v0 레코드는 hopPath를 "0"으로 본다
-     짝·Undelivered·request 동일성은 진입 홉("0")으로 본다 — 자식 홉 짝 검사는 3.2(verify_sameness v2)
+  v2(Phase 3.2): 짝 키 = (replayRequestId, hopPath). 진입 홉 외 자식 홉도 짝을 짓는다.
+     - hop 집합 불일치(한쪽에만 있는 홉): 그 스택의 부모 Evidence가 그 childHopPath를 선언했으면 "행동 차이(엔진으로)" —
+       verify는 FAIL로 보지 않는다(판정은 엔진). 선언이 없으면 Undelivered(internal)
+     - Undelivered(internal): 어떤 Evidence가 관측 서비스로 나간 호출·이벤트의 childHopPath를 선언했는데 같은 스택에 그 홉이 없음
+       (관측 호스트 = --observed-hosts, 기본 order,coupon — WireMock 같은 외부 대상은 Evidence가 없으므로 제외. run.sh barrier와 같은 필터)
   3. pairing: Undelivered = sent − 레코드 id (스택별), Unexpected = 레코드 id − sent (스택별, 0이어야 함)
   4. request 동일성(짝이 있는 요청): method / path / query / EVIDENCE_HEADERS 5개 / bodyHash
   5. k6 ↔ legacy: k6-summary status[id] == legacy response.status (게이트웨이가 legacy로 라우팅했는지)
@@ -84,7 +88,14 @@ def stats_ms(values: list[float]) -> str:
     return f"min={min(values):.1f} median={statistics.median(values):.1f} max={max(values):.1f} (n={len(values)})"
 
 
-def verify(run_dir: Path, validator: Validators) -> RunReport:
+def declared_children(rec: dict, observed: set[str]) -> set[str]:
+    """이 Evidence가 만든(만들었어야 할) 관측 대상 자식 홉."""
+    hops = {c["childHopPath"] for c in rec.get("externalCalls", []) if c["host"] in observed}
+    hops |= {p["childHopPath"] for p in rec.get("events", {}).get("published", [])}
+    return hops
+
+
+def verify(run_dir: Path, validator: Validators, observed: set[str]) -> RunReport:
     report = RunReport(run_dir)
     try:
         summary, records = load_run(run_dir)
@@ -103,34 +114,59 @@ def verify(run_dir: Path, validator: Validators) -> RunReport:
 
     sent = summary["sent"]
     sent_set = set(sent)
+    by_key = {}
     by_id = {}
     for stack, recs in records.items():
         keys = [key_of(r) for r in recs]
         dups = sorted({f"{k[0]}/{k[1]}" for k in keys if keys.count(k) > 1})
         report.listing(f"중복 키 ({stack})", dups)
+        by_key[stack] = {key_of(r): r for r in recs}
         by_id[stack] = {r["replayRequestId"]: r for r in recs if hop_of(r) == ENTRY_HOP}
-        others = sum(1 for r in recs if hop_of(r) != ENTRY_HOP)
-        if others:
-            report.note(f"참고: {stack}에 진입 홉 외 Evidence {others}건 — 자식 홉 짝 검사는 3.2(verify_sameness v2)")
 
     # 3. pairing — 기준은 k6가 보낸 것(sent)
-    report.lines.append(f"        sent {len(sent)}건 (k6-summary.json)")
+    report.lines.append(f"        sent {len(sent)}건 (k6-summary.json), 관측 호스트 {sorted(observed)}")
     for stack in STACKS:
         report.listing(f"Undelivered ({stack})", [i for i in sent if i not in by_id[stack]])
     for stack in STACKS:
-        report.listing(f"Unexpected ({stack})", sorted(set(by_id[stack]) - sent_set))
+        report.listing(f"Unexpected ({stack})", sorted({k[0] for k in by_key[stack]} - sent_set))
 
-    paired = [i for i in sent if i in by_id["legacy"] and i in by_id["new"]]
+    # 3b. 자식 홉 — Undelivered(internal)와 hop 집합
+    for stack in STACKS:
+        missing = sorted(f"{rec['replayRequestId']}/{h}" for rec in by_key[stack].values()
+                         for h in declared_children(rec, observed) if (rec["replayRequestId"], h) not in by_key[stack])
+        report.listing(f"Undelivered internal ({stack})", missing)
+    one_sided, behavior = [], []
+    for stack, other in (("legacy", "new"), ("new", "legacy")):
+        for rid, hop in sorted(set(by_key[stack]) - set(by_key[other])):
+            if rid not in sent_set or hop == ENTRY_HOP:
+                continue  # 진입 홉 누락은 위 Undelivered에서 본다
+            parent_hop = hop.rsplit(".", 1)[0]
+            parent = by_key[stack].get((rid, parent_hop))
+            other_parent = by_key[other].get((rid, parent_hop))
+            if other_parent is not None and hop in declared_children(other_parent, observed):
+                continue  # 다른 스택도 이 홉을 만들었어야 함 → 그 스택의 Undelivered internal(위)에서 센다
+            label = f"{rid}/{hop}({stack}만)"
+            (behavior if parent is not None and hop in declared_children(parent, observed) else one_sided).append(label)
+    report.listing("hop 집합 불일치 — 선언 없음", one_sided)
+    if behavior:
+        report.note(f"참고: hop 집합 불일치 — 부모가 선언한 행동 차이(엔진으로) {len(behavior)}건 {' '.join(behavior)}")
+    child_pairs = sum(1 for k in by_key["legacy"] if k[1] != ENTRY_HOP and k in by_key["new"])
+    report.note(f"자식 홉 짝 {child_pairs}건")
 
-    # 4. request 동일성
+    paired = [k for k in sorted(by_key["legacy"]) if k in by_key["new"] and k[0] in sent_set]
+
+    # 4. request 동일성 (진입·자식 홉 모두)
     for name in REQUEST_FIELDS:
         diffs = []
-        for rid in paired:
-            a, b = field(by_id["legacy"][rid], name), field(by_id["new"][rid], name)
+        for key in paired:
+            lr, nr = by_key["legacy"][key], by_key["new"][key]
+            if lr.get("request") is None and nr.get("request") is None:
+                continue
+            a, b = field(lr, name), field(nr, name)
             if a != b:
-                diffs.append(f"{rid} request.{name}: legacy={a!r} new={b!r}")
+                diffs.append(f"{key[0]}/{key[1]} request.{name}: legacy={a!r} new={b!r}")
         report.check(f"request.{name}", len(paired) - len(diffs), len(paired), diffs)
-    extra = sorted({h for stack in STACKS for r in by_id[stack].values()
+    extra = sorted({h for stack in STACKS for r in by_key[stack].values() if r.get("request")
                     for h in r["request"]["headers"] if h not in EVIDENCE_HEADERS})
     if extra:
         report.note(f"참고: EVIDENCE_HEADERS 밖의 헤더 키 {extra}")
@@ -147,8 +183,8 @@ def verify(run_dir: Path, validator: Validators) -> RunReport:
 
     # 참고 통계 — 미러 지연
     completed, arrived = [], []
-    for rid in paired:
-        lt, nt = by_id["legacy"][rid]["timing"], by_id["new"][rid]["timing"]
+    for key in paired:
+        lt, nt = by_key["legacy"][key]["timing"], by_key["new"][key]["timing"]
         completed.append((epoch_ns(nt["completedAt"]) - epoch_ns(lt["completedAt"])) / 1e6)
         arrived.append((epoch_ns(nt["arrivedAt"]) - epoch_ns(lt["arrivedAt"])) / 1e6)
     report.lines.append("  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다")
@@ -160,6 +196,8 @@ def verify(run_dir: Path, validator: Validators) -> RunReport:
 def main(argv: list[str]) -> int:
     parser = argparse.ArgumentParser(description="Legacy/New 요청 동일성·pairing 검증 (Phase 2.7)")
     parser.add_argument("--run", action="append", required=True, type=Path, help="runs/<runId> (여러 번 가능)")
+    parser.add_argument("--observed-hosts", default="order,coupon",
+                        help="관측 서비스 호스트(쉼표). 이 호스트로 나간 호출의 childHopPath만 내부 Evidence로 기대한다")
     args = parser.parse_args(argv)
 
     try:
@@ -173,7 +211,7 @@ def main(argv: list[str]) -> int:
         if not run_dir.is_dir():
             print(f"ERROR: run 디렉터리가 없다: {run_dir}", file=sys.stderr)
             return 2
-        report = verify(run_dir, validator)
+        report = verify(run_dir, validator, {h.strip() for h in args.observed_hosts.split(",") if h.strip()})
         print(f"== {run_dir}  {'PASS' if not report.failed else 'FAIL'}")
         print("\n".join(report.lines))
         results.append((run_dir, report.failed))

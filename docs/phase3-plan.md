@@ -186,6 +186,26 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 구현 시 확정 (자리)
 - Coupon 실패 시 Order 상태코드·본문 / Store 인덱스 재구성 / `settle` 스키마
 
+구현 시 확정 (3.2)
+- **OrderService 추출(base, D-3 (A))**: `@Transactional`·비즈니스 로직을 `poc.order.OrderService`로, 컨트롤러는 매핑·DTO·입력 검증만. Service는 `Outcome(kind, OrderView)`를 돌려주고 HTTP 매핑은 컨트롤러가 한다. 응답 본문(`OrderView`)은 트랜잭션 안에서 만든다(open-in-view off — items 지연 로딩). 트랜잭션 이름 `poc.order.OrderService.*`, callTree `Controller → Service → Repository/Client` — 3.5 사다리의 기준 형태. 쿠폰 실패 응답은 컨트롤러 `@ExceptionHandler`가 만들어 callTree에 depth 0 노드로 한 번 더 찍힌다(`OrderController.onCouponFailure`)
+- **쿠폰 주문 흐름**: 선택 `couponKey`. 순서 고정 orders·order_items INSERT(`saveAndFlush`) → Coupon `use {orderKey}` → 할인 반영(`amount = max(0, 항목 합계 − discountAmount)`) → 커밋(flush에서 `UPDATE orders`). 결제 charge 금액 = 할인 후 amount. 응답에 `couponKey`(없으면 null)·`discountAmount`(없으면 0). orders 테이블에 `coupon_key`·`discount_amount`
+- **Coupon 실패 시 Order 상태코드·본문**(자리 해소): 전부 롤백(`transactions ROLLED_BACK`), 본문 고정 — Coupon 404 → 400 `{"code":"COUPON_NOT_FOUND"}` / 409 → 400 `{"code":"COUPON_ALREADY_USED"}` / 5xx·I/O → 502 `{"code":"COUPON_UNAVAILABLE"}`. `CouponClient`는 주입된 `RestClient.Builder`(전파 인터셉터 부착), `SimpleClientHttpRequestFactory` connect 1s·read 3s, `http://coupon:8080`(같은 ns 직접 호출 — 게이트웨이를 거치지 않아 미러 없음)
+- **Coupon API**: `coupons(id, coupon_key UNIQUE, discount_amount, status ISSUED|USED|SETTLED, used_by_order_key, created_at, used_at)`, SETTLED는 3.3 예약, 고정 시각. `use`는 orderKey 기준 멱등 — 같은 (couponKey, orderKey) 재호출은 200(UPDATE 없음), 다른 orderKey면 409(계획의 "이미 USED 409"). F9를 응답 변화 없이 hop 집합(`0.h2`)으로만 잡기 위함. 응답·GET by-key `{couponKey, discountAmount, status, usedByOrderKey}`, 에러 본문 `{"code": ...}` 고정. `EVIDENCE_APP_PACKAGES=poc.coupon`, `EVIDENCE_SERVICE=coupon`
+- **검증 레이어 공유**: `poc.evidence`를 공용 Maven 모듈 `services/evidence-collector`(jar, Spring 의존 provided)로 분리 — 코드 내용 변경 없이 위치만. Order·Coupon이 의존성으로 쓴다. Dockerfile 빌드 컨텍스트는 `services/`(모듈 install → 서비스 package). Coupon에 붙이는 데 `poc.evidence` 수정 0줄(RestClient 쪽은 `@ConditionalOnClass`로 Coupon에서 비활성)
+- **spill 파일명**: Store v1 키에 맞춰 `<replayRequestId>-<hopPath>-<stack>.json`(Order·Coupon이 같은 스택 hostPath를 공유해도, 같은 서비스를 두 번 불러도 충돌 없음). 이것은 Coupon 부착을 위한 수정이 아니라 Store v1 키 변경에 따른 `poc.evidence` 변경이다
+- **Store 인덱스 재구성**(자리 해소): JSONL 한 줄 = `{runId, replayRequestId, stack, hopPath, service, origin, raw}`. 키 `(runId, replayRequestId, stack, hopPath)` last-wins, 컨테이너 재시작 시 파일에서 복원. `exists`는 `hopPath` 필수(기본값 없음), `count`는 `stack`·`service`·`origin` 필터, export는 `(replayRequestId, hopPath, stack)` 순. Coupon Evidence가 Order Evidence를 덮어쓰지 않도록 Store v1은 Coupon과 같은 커밋에 넣었다
+- **`settle` 스키마**(자리 해소): 요청의 `settle: [{hop, service, origin}]`, hop 형식 `^0(\.[he][1-9][0-9]*)+$`. 3.2에서는 쿠폰 주문 생성에만(`{hop: "0.h1", service: "coupon", origin: "http"}` 필수), 3.3에서 이벤트 홉(`0.e1`)이 추가된다
+- **corpus v2**: 세션 10·요청 46. 세션에 `flow`(order|coupon|order-coupon)·`split`(learn|eval) — 흐름 유형마다 learn·eval 각 1개 이상. Order 전용 3(S001 learn, S002·S003 eval) + F7 지연 1(S009, `idem-slow-*` 키만 예약, 지연 스텁은 3.6) / Coupon 전용 2(S004 learn·S005 eval — Order를 거치지 않음, use의 orderKey는 외부 키 `ok-ext-<요청 id>`) / Order+Coupon 3(S006 learn, S007 eval, S008 learn = USED 쿠폰으로 400 + 롤백) + 예비 1(S010 eval, 할인 > 합계 → amount 0). 키 결정론 `ok-<id>`·`ck-<id>`·`idem-<id>`. validate.py v2: settle 형식·쿠폰 주문 settle 필수, split 커버리지, 세션 간 키 공유 금지, 결제 키는 같은 세션 결제 요청의 id(멱등 재결제 포함). 음성 fixture `corpus/tests/invalid-v2/` 7개
+- **k6 v2**: 진입 홉(new, `hopPath=0`) 폴링 후 settle 홉을 legacy·new 양쪽에서 폴링(응답 수신 시각 기준 10초), 타임아웃이면 degraded. summary에 `settleWaitMs`. `CORPUS` env(기본 corpus-v2.json)
+- **barrier v2**(`k6/barrier.py`): 1단계 기대 = sent 진입 홉 + corpus settle(최대 30초), 2단계 = 도착 Evidence의 `externalCalls[].childHopPath`(host ∈ `OBSERVED_HOSTS=order,coupon`) + `events.published[].childHopPath` 폐포(최대 10초, 반복). WireMock 홉은 Evidence가 없으므로 제외. 결과 `runs/<runId>/barrier.json`
+- **verify_sameness v2**: 짝 = `(replayRequestId, hopPath)`. 선언된 관측 자식 홉이 같은 스택에 없으면 Undelivered(internal, FAIL). 한쪽에만 있는 홉은 그 스택 부모가 선언했고 다른 스택 부모는 선언하지 않았으면 "행동 차이(엔진으로)"(verify는 FAIL로 보지 않음), 아무도 선언하지 않았으면 "hop 집합 불일치 — 선언 없음"(FAIL). 관측 호스트 필터는 barrier와 같다
+- **네트워크**: new의 default-deny egress는 이미 같은 ns·verify·DNS를 허용하므로 order→coupon, coupon→coupon-mysql, coupon→Store에 egress 추가가 필요 없었다(실측 동작). 추가한 것은 ingress 두 개 — `coupon-networkpolicy.yaml`(Coupon 8080 ← 같은 ns pod + istio-system; legacy에 egress 제한이 없어 이것이 없으면 legacy가 coupon.new를 부를 수 있다), `coupon-mysql-networkpolicy.yaml`(← `app=coupon`만 3306)
+- **게이트웨이 표면**: `/_evidence/`, `/api/orders`, `/api/coupons`(prefix, 끝 슬래시 없음 — `POST /api/coupons`가 매칭되도록)
+- **dbstate**: 3.2부터 Coupon DB의 `coupons`(coupon_key, discount_amount, status, used_by_order_key; 시각 제외) 포함, orders에 `coupon_key`·`discount_amount`. DB pod 레이블과 컨테이너 이름(`mysql`/`coupon-mysql`)으로 대상 지정
+- **run.sh v2**: preflight 인증서에 legacy·new Coupon 추가, reset에 `coupon-mysql` rollout restart + Coupon readiness(없는 쿠폰 조회 404), run-meta에 Coupon 이미지
+- **이미지**: 단계별 태그 `order-app:phase3.2-base`, `coupon-app:phase3.2-base`, `evidence-store:phase3.2`. 3.3이 끝난 base가 사다리의 Legacy 고정 이미지. 계획의 `phase3-base`는 "현재 base"의 뜻
+- Phase 2 runs(v0)는 `runs/phase2/`로 옮겼다. 엔진의 입력 계약은 v0도 읽지만 Phase 3 run은 v1만
+
 끝난 기준
 - Coupon 양쪽 배포, 격리 실측(교차 차단·대조군 성공)
 - corpus v2 A/A 3회(VU=3) diff ∅ — 스택당 Evidence 수 = 기대 집합 크기, hop 집합 동일, Undelivered 0

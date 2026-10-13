@@ -8,16 +8,19 @@
 // corpus의 expectMissing은 corpus/validate.py 전용이라 무시한다.
 //
 // 요청마다 응답을 받은 뒤 Store에 New Evidence가 도착할 때까지(exists 200) 기다리고 다음 요청을 보낸다.
+// v2(Phase 3.2): corpus의 settle 홉(서비스 간 호출로 생기는 내부 Evidence)도 legacy·new 양쪽에서 도착을 기다린다 —
+// Legacy 쪽 내부 Evidence도 비동기라 New만 보면 export 전에 빠질 수 있다(D19).
 // 10초 안에 오지 않으면 그 세션은 degraded — 상태가 어긋났으므로 남은 요청은 건너뛰고 다음 세션으로.
 //
 // env
 //   RUN_ID        필수. 없으면 즉시 종료
+//   CORPUS        기본 corpus-v2.json (corpus/ 아래 파일명)
 //   VUS           기본 1. VU i(0부터)는 sessions[j] (j % VUS == i)를 순서대로 맡는다
 //   BASE_URL      기본 http://localhost
 //   EVIDENCE_URL  기본 http://localhost/_evidence
 //
 // 결과: runs/<RUN_ID>/k6-summary.json (handleSummary)
-//   k6 VU는 메모리를 공유하지 않으므로, 요청 id별 커스텀 metric(sent_/newwait_/status_/skipped_/degraded_)을
+//   k6 VU는 메모리를 공유하지 않으므로, 요청 id별 커스텀 metric(sent_/newwait_/settlewait_/status_/skipped_/degraded_)을
 //   init 단계에서 corpus로 만들어 두고 handleSummary에서 모아 sent·degraded·newWaitMs로 재구성한다.
 import http from 'k6/http';
 import exec from 'k6/execution';
@@ -34,9 +37,13 @@ const EVIDENCE_URL = (__ENV.EVIDENCE_URL || 'http://localhost/_evidence').replac
 
 const POLL_INTERVAL_S = 0.1;
 const POLL_TIMEOUT_MS = 10000;
-const HELPER_PREFIXES = ['sent_', 'newwait_', 'status_', 'skipped_', 'degraded_'];
+const HELPER_PREFIXES = ['sent_', 'newwait_', 'settlewait_', 'status_', 'skipped_', 'degraded_'];
 
-const corpus = JSON.parse(open('../corpus/corpus-v1.json'));
+const CORPUS = __ENV.CORPUS || 'corpus-v2.json';
+if (!/^corpus-v[0-9]+\.json$/.test(CORPUS)) {
+  throw new Error('CORPUS는 corpus/ 아래 corpus-v<N>.json');
+}
+const corpus = JSON.parse(open(`../corpus/${CORPUS}`));
 
 http.setResponseCallback(http.expectedStatuses({ min: 200, max: 499 }));
 
@@ -47,6 +54,7 @@ for (const session of corpus.sessions) {
   for (const req of session.requests) {
     m[`sent_${req.id}`] = new Counter(`sent_${req.id}`);
     m[`newwait_${req.id}`] = new Trend(`newwait_${req.id}`, true);
+    m[`settlewait_${req.id}`] = new Trend(`settlewait_${req.id}`, true);
     m[`status_${req.id}`] = new Gauge(`status_${req.id}`);
     m[`skipped_${req.id}`] = new Counter(`skipped_${req.id}`);
   }
@@ -64,8 +72,12 @@ export const options = {
 // k6 관점의 대기이며 폴링 해상도 100ms. 미러 지연 자체는 2.7에서 Evidence timing
 // (new.completedAt − legacy.completedAt)으로 계산한다.
 function waitForNew(requestId) {
-  const url = `${EVIDENCE_URL}/exists?runId=${RUN_ID}&requestId=${requestId}&stack=new&hopPath=0`;
-  const started = Date.now();
+  return waitFor(requestId, 'new', '0', Date.now());
+}
+
+// (stack, hopPath) Evidence가 Store에 보일 때까지. started 기준 벽시계 ms, 타임아웃이면 null.
+function waitFor(requestId, stack, hopPath, started) {
+  const url = `${EVIDENCE_URL}/exists?runId=${RUN_ID}&requestId=${requestId}&stack=${stack}&hopPath=${hopPath}`;
   for (;;) {
     const res = http.get(url, { tags: { name: 'evidence_exists' } });
     const waitedMs = Date.now() - started;
@@ -110,6 +122,27 @@ function runSession(session) {
       return;
     }
     m[`newwait_${req.id}`].add(waited);
+
+    // settle: 선언된 내부 홉을 양쪽 스택에서. 시작 시각은 응답 수신 직후(진입 폴링과 같은 기준)
+    if (req.settle) {
+      const started = Date.now() - waited;
+      let settleMax = 0;
+      for (const s of req.settle) {
+        for (const stack of ['legacy', 'new']) {
+          const w = waitFor(req.id, stack, s.hop, started);
+          if (w === null) {
+            console.warn(`DEGRADED session=${session.id} request=${req.id}: settle ${stack}/${s.hop}(${s.service}) Evidence가 ${POLL_TIMEOUT_MS}ms 안에 오지 않음`);
+            m[`degraded_${session.id}`].add(1);
+            for (const skipped of session.requests.slice(i + 1)) {
+              m[`skipped_${skipped.id}`].add(1);
+            }
+            return;
+          }
+          settleMax = Math.max(settleMax, w);
+        }
+      }
+      m[`settlewait_${req.id}`].add(settleMax);
+    }
   }
 }
 
@@ -130,6 +163,7 @@ function count(data, name) {
 export function handleSummary(data) {
   const sent = [];
   const newWaitMs = {};
+  const settleWaitMs = {};
   const status = {};
   const degraded = [];
   for (const session of corpus.sessions) {
@@ -137,6 +171,10 @@ export function handleSummary(data) {
       if (count(data, `sent_${req.id}`) > 0) {
         sent.push(req.id);
         status[req.id] = data.metrics[`status_${req.id}`].values.value;
+      }
+      const sw = data.metrics[`settlewait_${req.id}`];
+      if (sw && sw.values.count > 0) {
+        settleWaitMs[req.id] = Math.round(sw.values.max * 10) / 10;
       }
       const wait = data.metrics[`newwait_${req.id}`];
       if (wait && wait.values.count > 0) {
@@ -170,6 +208,8 @@ export function handleSummary(data) {
     sent,
     degraded,
     newWaitMs,
+    settleWaitMs,
+    settleWaitMsNote: '응답 수신 → 선언된 settle 홉 Evidence가 legacy·new 모두 보일 때까지(벽시계, 최대값)',
     status,
     metrics,
     state: data.state,

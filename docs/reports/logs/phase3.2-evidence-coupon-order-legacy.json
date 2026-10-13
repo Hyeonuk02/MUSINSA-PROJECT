@@ -1,0 +1,131 @@
+{
+  "schemaVersion": "v1",
+  "runId": "p32-1",
+  "replayRequestId": "R000027",
+  "hopPath": "0",
+  "sessionId": "S006",
+  "stack": "legacy",
+  "service": "order",
+  "origin": "http",
+  "version": "legacy",
+  "request": {
+    "method": "POST",
+    "path": "/api/orders",
+    "query": "",
+    "headers": {
+      "x-replay-request-id": "R000027",
+      "x-run-id": "p32-1",
+      "x-session-id": "S006",
+      "x-replay-hop-path": "0",
+      "content-type": "application/json"
+    },
+    "bodyHash": "sha256:8f278cec72d03d318a82e13af9fc61c2df86da1221f16dacd92e520d92f96056"
+  },
+  "response": {
+    "status": 201,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "bodyHash": "sha256:374106f86d0a797be9d55874e858a9a124e552a0dd7b0b4aa086660bf5e43306",
+    "body": "{\"id\":4,\"orderKey\":\"ok-R000027\",\"items\":[{\"sku\":\"D-1\",\"qty\":2,\"price\":5000}],\"amount\":7000,\"couponKey\":\"ck-R000026\",\"discountAmount\":3000,\"status\":\"CREATED\",\"transactionId\":null,\"createdAt\":\"2026-09-01T00:00:00Z\"}"
+  },
+  "event": null,
+  "dbAccess": {
+    "statements": [
+      {
+        "seq": 1,
+        "sql": "select o1_0.id from orders o1_0 where o1_0.order_key=? limit ?"
+      },
+      {
+        "seq": 2,
+        "sql": "insert into orders (amount,coupon_key,created_at,discount_amount,idempotency_key,order_key,status,transaction_id) values (?,?,?,?,?,?,?,?)"
+      },
+      {
+        "seq": 3,
+        "sql": "insert into order_items (line_no,order_id,price,qty,sku) values (?,?,?,?,?)"
+      },
+      {
+        "seq": 6,
+        "sql": "update orders set amount=?,coupon_key=?,created_at=?,discount_amount=?,idempotency_key=?,order_key=?,status=?,transaction_id=? where id=?"
+      }
+    ],
+    "truncated": false
+  },
+  "externalCalls": [
+    {
+      "seq": 4,
+      "method": "POST",
+      "host": "coupon",
+      "path": "/api/coupons/ck-R000026/use",
+      "requestBodyHash": "sha256:b452301e42cc93adb3bef02066ab1f02b57843f5555594fe2d545b93efd3837c",
+      "status": 200,
+      "responseBodyHash": "sha256:abc14f371d104736ead0dfce5b51d48fdf16496eba216e27f0ed07f2262fc93a",
+      "childHopPath": "0.h1"
+    }
+  ],
+  "events": {
+    "published": []
+  },
+  "transactions": [
+    {
+      "seq": 5,
+      "name": "poc.order.OrderService.create",
+      "phase": "COMMIT_BEGIN",
+      "outcome": null
+    },
+    {
+      "seq": 7,
+      "name": "poc.order.OrderService.create",
+      "phase": "COMPLETED",
+      "outcome": "COMMITTED"
+    }
+  ],
+  "callTree": {
+    "nodes": [
+      {
+        "seq": 1,
+        "depth": 0,
+        "class": "poc.order.OrderController",
+        "method": "create",
+        "threw": false
+      },
+      {
+        "seq": 2,
+        "depth": 1,
+        "class": "poc.order.OrderService",
+        "method": "create",
+        "threw": false
+      },
+      {
+        "seq": 3,
+        "depth": 2,
+        "class": "poc.order.OrderRepository",
+        "method": "existsByOrderKey",
+        "threw": false
+      },
+      {
+        "seq": 4,
+        "depth": 2,
+        "class": "poc.order.OrderRepository",
+        "method": "saveAndFlush",
+        "threw": false
+      },
+      {
+        "seq": 5,
+        "depth": 2,
+        "class": "poc.order.CouponClient",
+        "method": "use",
+        "threw": false
+      }
+    ],
+    "truncated": false
+  },
+  "error": null,
+  "timing": {
+    "arrivedAt": "2026-10-13T10:58:39.848117833Z",
+    "completedAt": "2026-10-13T10:58:39.911885167Z",
+    "arrivedNano": 13804363201333,
+    "completedNano": 13804426968500
+  },
+  "capturedAt": "2026-10-13T10:58:39.912099875Z"
+}

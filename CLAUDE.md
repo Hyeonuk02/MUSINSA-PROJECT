@@ -40,7 +40,7 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 |---|---|---|
 | 3.0 | 사전 점검 — 버전·자원·ObjectMapper, Phase 2 잔여 | 완료(결정 대기 2건: 스택 전제·메모리) — docs/reports/phase3.0.md |
 | 3.1 | Evidence v1 — 타임라인·callTree·외부 호출·트랜잭션·error·최종 DB 상태 | 완료 — docs/reports/phase3.1.md |
-| 3.2 | Coupon 서비스 + Store v1 키 + corpus v2 | |
+| 3.2 | Coupon 서비스 + Store v1 키 + corpus v2 | 완료 — docs/reports/phase3.2.md |
 | 3.3 | Kafka — 이벤트 축 | |
 | 3.4 | Normalization v1 + 판정 엔진 v1 + Rule + Human Review | |
 | 3.5 | New v1 사다리 — Order 점진 Kotlin 전환 (v1.1~v1.4) | |
