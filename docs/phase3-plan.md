@@ -297,6 +297,14 @@ Order + Coupon + Kafka          v1.1  Order: PaymentGatewayClient만 Kotlin    �
 
 구현 시 확정 (자리): 혼합 빌드 / Kotlin 버전
 
+구현 시 확정 (3.5)
+- **엔진 소수정(사다리 run 전, 커밋 `94b577b`)**: Normalization의 DB auto `id`를 키 삭제에서 **값 마스킹(`"<id>"`)**으로 — 키 유무는 비교된다(New가 id를 빼먹으면 `response.removedFields` → CV). 3.4 구현 시 확정의 "키 이름 `id` 제거"를 이것으로 대체. `engine.version` = `engine-v1.1`. p33-1..3 B0·B1·C 재판정 전 pair SAME(테스트 `test_real_runs_all_same`, `test_id_value_masked_but_key_compared`)
+- **혼합 빌드(자리 해소)**: Maven `kotlin-maven-plugin` `${kotlin.version}`(Boot BOM 2.3.21) — Kotlin 공식 혼합 레시피(kotlin `compile`을 process-sources에서 `src/main/kotlin`+`src/main/java`로 → `maven-compiler-plugin` default-compile 끄고 `java-compile`). `compilerPlugins` spring + jpa, all-open에 `jakarta.persistence.Entity`·`MappedSuperclass`·`Embeddable` 명시, `-Xjsr305=strict`, `jvmTarget` 17, `javaParameters` true. `kotlin-stdlib`·`kotlin-reflect`는 BOM 버전
+- **Kotlin 버전(자리 해소)**: 2.3.21(Boot 4.1.1 BOM)
+- **jackson-module-kotlin**: v1.1에서 추가 — `PaymentGatewayClient.ChargeResponse`(Kotlin data class)가 Kotlin DTO를 역직렬화하는 첫 지점. 앱 JsonMapper 빈에만 등록, `poc.evidence`는 private JsonMapper
+- **"수집기 수정 0줄" 확인 기준**: `git diff 98c9356 -- services/evidence-collector`(98c9356 = phase3.3 마지막 커밋, phase3.3 태그는 없음)가 비어 있음
+- **이미지·매니페스트**: `deploy/k8s/new/kustomization.yaml`의 `images`(order-app newTag)만 단계마다 바꾼다. legacy overlay·Coupon 무변경
+
 끝난 기준
 - v1.1~v1.4 각 3 run, Undelivered 0, degraded 0, **모든 diff가 4분류 중 하나로 설명됨**(0건이어도 통과)
 - `poc.evidence` 수정 0줄로 Kotlin New에 부착(이식성)
