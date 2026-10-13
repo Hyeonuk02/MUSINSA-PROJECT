@@ -1,0 +1,23 @@
+# Phase 3.2 - Coupon API 스택 간 격리
+#
+# legacy에는 egress 제한이 없어서, 이것이 없으면 legacy pod가 coupon.new를 직접 부를 수 있다.
+# Coupon API(8080)에는 같은 네임스페이스의 pod(Order, tooling)와 istio-system(게이트웨이 route·mirror)만 들어온다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: coupon-ingress-same-stack
+spec:
+  podSelector:
+    matchLabels:
+      app: coupon
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - port: 8080
+          protocol: TCP

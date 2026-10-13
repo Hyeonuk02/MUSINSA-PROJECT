@@ -30,7 +30,8 @@ import java.util.regex.Pattern;
  *   <li>실패 시 재시도 3회(0.5s/1s/1.5s 뒤). 재시도는 스레드에서 잠들지 않고 예약한다 —
  *       Store 장애 중에도 뒤에 들어온 Evidence가 앞 건의 재시도 대기에 막히지 않게
  *   <li>재시도 소진, 대기 건수 상한(1000) 초과, 종료 시 미전송분은
- *       {@code <spillDir>/<runId>/<replayRequestId>-<stack>.json}에 Store로 보낼 바이트 그대로 쓴다.
+ *       {@code <spillDir>/<runId>/<replayRequestId>-<hopPath>-<stack>.json}에 Store로 보낼 바이트 그대로 쓴다
+ *       (Phase 3.2: Store v1 키에 맞춰 hopPath 포함 — 한 요청이 여러 홉·서비스의 Evidence를 남긴다).
  *       spill마저 실패할 때만 EVIDENCE_LOST 로그(마지막 수단)
  *   <li>종료: 웹 서버가 요청을 다 처리하고 멈춘 뒤(낮은 phase) 최대 10초 drain, 남은 것은 spill
  *   <li>EVIDENCE_DELAY_MS(기본 0): 첫 POST를 그만큼 늦게 예약한다. k6 완료 폴링이 실제로 기다리는지 보는 검증용이며
@@ -73,8 +74,8 @@ public class EvidenceSender implements SmartLifecycle {
     }
 
     /** 요청 스레드에서 호출한다. 대기 건수 상한이면 그 자리에서 spill한다(블로킹 POST는 하지 않음). */
-    void enqueue(String runId, String replayRequestId, String stack, byte[] evidence) {
-        Payload payload = new Payload(runId, replayRequestId, stack, evidence);
+    void enqueue(String runId, String replayRequestId, String hopPath, String stack, byte[] evidence) {
+        Payload payload = new Payload(runId, replayRequestId, hopPath, stack, evidence);
         if (!permits.tryAcquire()) {
             spill(payload, "queue full");
             return;
@@ -92,9 +93,9 @@ public class EvidenceSender implements SmartLifecycle {
     }
 
     /** Store로 보낼 바이트와 spill 경로를 정하는 키. 식별은 객체 동일성. */
-    private record Payload(String runId, String replayRequestId, String stack, byte[] evidence) {
+    private record Payload(String runId, String replayRequestId, String hopPath, String stack, byte[] evidence) {
         String label() {
-            return runId + "/" + replayRequestId + "/" + stack;
+            return runId + "/" + replayRequestId + "/" + hopPath + "/" + stack;
         }
 
         @Override
@@ -176,13 +177,14 @@ public class EvidenceSender implements SmartLifecycle {
 
     private void spill(Payload payload, String reason) {
         if (!SAFE_SEGMENT.matcher(payload.runId()).matches() || !SAFE_SEGMENT.matcher(payload.replayRequestId()).matches()
+                || !SAFE_SEGMENT.matcher(payload.hopPath()).matches()
                 || !SAFE_SEGMENT.matcher(payload.stack()).matches()) {
             log.error("EVIDENCE_LOST {} unsafe path segment ({})", payload.label(), reason);
             return;
         }
         try {
             Path dir = Files.createDirectories(spillDir.resolve(payload.runId()));
-            Path target = dir.resolve(payload.replayRequestId() + "-" + payload.stack() + ".json");
+            Path target = dir.resolve(payload.replayRequestId() + "-" + payload.hopPath() + "-" + payload.stack() + ".json");
             Path tmp = Files.createTempFile(dir, ".spill-", ".tmp");
             Files.write(tmp, payload.evidence());
             Files.move(tmp, target, StandardCopyOption.REPLACE_EXISTING, StandardCopyOption.ATOMIC_MOVE);

@@ -51,6 +51,14 @@ public class Order {
     @Column(name = "created_at", nullable = false)
     private Instant createdAt;
 
+    /** Phase 3.2: 주문에 사용한 쿠폰. 없으면 null. */
+    @Column(name = "coupon_key")
+    private String couponKey;
+
+    /** Phase 3.2: 쿠폰 할인액. 쿠폰이 없으면 0. amount = max(0, 항목 합계 − discountAmount). */
+    @Column(name = "discount_amount", nullable = false)
+    private long discountAmount;
+
     @OneToMany(mappedBy = "order", cascade = CascadeType.ALL, orphanRemoval = true)
     @OrderBy("lineNo ASC")
     private List<OrderItem> items = new ArrayList<>();
@@ -70,6 +78,13 @@ public class Order {
         amount += price * qty;
     }
 
+    /** 쿠폰 할인 반영. 항목을 다 넣은 뒤 한 번만 호출한다. */
+    public void applyCoupon(String couponKey, long discountAmount) {
+        this.couponKey = couponKey;
+        this.discountAmount = discountAmount;
+        this.amount = Math.max(0, amount - discountAmount);
+    }
+
     public void markPaid(String transactionId, String idempotencyKey) {
         this.status = PAID;
         this.transactionId = transactionId;
@@ -87,5 +102,7 @@ public class Order {
     public String getTransactionId() { return transactionId; }
     public String getIdempotencyKey() { return idempotencyKey; }
     public Instant getCreatedAt() { return createdAt; }
+    public String getCouponKey() { return couponKey; }
+    public long getDiscountAmount() { return discountAmount; }
     public List<OrderItem> getItems() { return items; }
 }

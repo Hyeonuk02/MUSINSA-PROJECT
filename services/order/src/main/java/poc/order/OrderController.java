@@ -40,7 +40,8 @@ public class OrderController {
         List<OrderService.NewItem> items = request.items().stream()
                 .map(i -> new OrderService.NewItem(i.sku(), i.qty(), i.price()))
                 .toList();
-        return respond(orderService.create(request.orderKey(), items), request.orderKey());
+        String couponKey = request.couponKey() == null || request.couponKey().isBlank() ? null : request.couponKey();
+        return respond(orderService.create(request.orderKey(), items, couponKey), request.orderKey());
     }
 
     @GetMapping("/by-key/{orderKey}")
@@ -74,6 +75,16 @@ public class OrderController {
         return error(HttpStatus.CONFLICT, "ORDER_KEY_EXISTS", null);
     }
 
+    /** 쿠폰 사용 실패 — 주문은 롤백됐다. 본문은 고정 코드만(동적 문자열 없음). */
+    @ExceptionHandler(CouponClient.CouponFailure.class)
+    public ResponseEntity<CodeResponse> onCouponFailure(CouponClient.CouponFailure e) {
+        return switch (e.kind()) {
+            case NOT_FOUND -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new CodeResponse("COUPON_NOT_FOUND"));
+            case ALREADY_USED -> ResponseEntity.status(HttpStatus.BAD_REQUEST).body(new CodeResponse("COUPON_ALREADY_USED"));
+            case UNAVAILABLE -> ResponseEntity.status(HttpStatus.BAD_GATEWAY).body(new CodeResponse("COUPON_UNAVAILABLE"));
+        };
+    }
+
     private static ResponseEntity<?> respond(OrderService.Outcome outcome, String orderKey) {
         return switch (outcome.kind()) {
             case CREATED -> ResponseEntity.status(HttpStatus.CREATED).body(outcome.order());
@@ -90,12 +101,15 @@ public class OrderController {
         return ResponseEntity.status(status).body(new ErrorResponse(code, orderKey));
     }
 
-    public record CreateOrderRequest(String orderKey, List<ItemRequest> items) {
+    public record CreateOrderRequest(String orderKey, List<ItemRequest> items, String couponKey) {
     }
 
     public record ItemRequest(String sku, int qty, long price) {
     }
 
     public record ErrorResponse(String error, String orderKey) {
+    }
+
+    public record CodeResponse(String code) {
     }
 }

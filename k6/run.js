@@ -64,7 +64,7 @@ export const options = {
 // k6 관점의 대기이며 폴링 해상도 100ms. 미러 지연 자체는 2.7에서 Evidence timing
 // (new.completedAt − legacy.completedAt)으로 계산한다.
 function waitForNew(requestId) {
-  const url = `${EVIDENCE_URL}/exists?runId=${RUN_ID}&requestId=${requestId}&stack=new`;
+  const url = `${EVIDENCE_URL}/exists?runId=${RUN_ID}&requestId=${requestId}&stack=new&hopPath=0`;
   const started = Date.now();
   for (;;) {
     const res = http.get(url, { tags: { name: 'evidence_exists' } });

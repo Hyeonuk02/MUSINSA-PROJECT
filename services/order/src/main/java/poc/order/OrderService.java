@@ -22,11 +22,14 @@ public class OrderService {
 
     private final OrderRepository orderRepository;
     private final PaymentGatewayClient paymentGateway;
+    private final CouponClient couponClient;
     private final Clock clock;
 
-    public OrderService(OrderRepository orderRepository, PaymentGatewayClient paymentGateway, Clock clock) {
+    public OrderService(OrderRepository orderRepository, PaymentGatewayClient paymentGateway,
+                        CouponClient couponClient, Clock clock) {
         this.orderRepository = orderRepository;
         this.paymentGateway = paymentGateway;
+        this.couponClient = couponClient;
         this.clock = clock;
     }
 
@@ -41,8 +44,13 @@ public class OrderService {
     public record NewItem(String sku, int qty, long price) {
     }
 
+    /**
+     * 주문 생성. 쿠폰이 있으면 순서 고정(Phase 3.2): orders·order_items INSERT(flush) → Coupon use → 할인 반영 → 커밋(flush에서 UPDATE).
+     * Coupon 실패는 {@link CouponClient.CouponFailure}로 던져 주문 INSERT까지 롤백한다.
+     * "Coupon은 USED인데 주문은 롤백"(보상 누락)은 분산 일관성 문제로 범위 밖이다(phase3-plan 3절).
+     */
     @Transactional
-    public Outcome create(String orderKey, List<NewItem> items) {
+    public Outcome create(String orderKey, List<NewItem> items, String couponKey) {
         if (orderRepository.existsByOrderKey(orderKey)) {
             return Outcome.of(Kind.KEY_EXISTS);
         }
@@ -50,7 +58,12 @@ public class OrderService {
         for (NewItem item : items) {
             order.addItem(item.sku(), item.qty(), item.price());
         }
-        return new Outcome(Kind.CREATED, OrderView.from(orderRepository.save(order)));
+        orderRepository.saveAndFlush(order);
+        if (couponKey != null) {
+            long discount = couponClient.use(couponKey, orderKey);
+            order.applyCoupon(couponKey, discount);
+        }
+        return new Outcome(Kind.CREATED, OrderView.from(order));
     }
 
     @Transactional(readOnly = true)

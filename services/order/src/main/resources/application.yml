@@ -34,6 +34,10 @@ app:
   # 비어 있으면 시스템 시각(개발 편의). k8s에서는 APP_FIXED_CLOCK env로 주입한다.
   fixed-clock: ${APP_FIXED_CLOCK:}
 
+coupon:
+  # Phase 3.2: 같은 네임스페이스의 Coupon 서비스. k8s에서는 COUPON_URL env.
+  url: ${COUPON_URL:http://localhost:8090}
+
 payment:
   # Phase 2.1: 결제 게이트웨이(WireMock). k8s에서는 PAYMENT_GATEWAY_URL env로 같은 네임스페이스의 WireMock을 가리킨다.
   gateway-url: ${PAYMENT_GATEWAY_URL:http://localhost:8089}

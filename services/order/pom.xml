@@ -33,6 +33,12 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-restclient</artifactId>
         </dependency>
+        <!-- Phase 3.2: 검증 레이어(poc.evidence) — 공용 모듈 services/evidence-collector. auto-configuration으로 붙는다 -->
+        <dependency>
+            <groupId>poc</groupId>
+            <artifactId>evidence-collector</artifactId>
+            <version>0.0.1</version>
+        </dependency>
         <!-- Phase 1.3a: Postgres -> MySQL 8. Phase 0(poc/nginx-mirroring)은 Postgres 그대로다. -->
         <dependency>
             <groupId>com.mysql</groupId>

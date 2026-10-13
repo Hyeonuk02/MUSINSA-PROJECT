@@ -156,7 +156,7 @@ public class EvidenceFilter extends OncePerRequestFilter {
         evidence.put("timing", timing);
         evidence.put("capturedAt", Instant.now().toString());
 
-        sender.enqueue(runId, replayRequestId, stack, jsonMapper.writeValueAsBytes(evidence));
+        sender.enqueue(runId, replayRequestId, hopPath, stack, jsonMapper.writeValueAsBytes(evidence));
 
         if (failure instanceof IOException e) {
             throw e;

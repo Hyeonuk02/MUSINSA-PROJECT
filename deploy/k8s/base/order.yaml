@@ -96,6 +96,9 @@ spec:
               # Phase 2.1: 같은 네임스페이스의 WireMock. 상대 이름을 쓰면 overlay 네임스페이스로 풀린다
               # (legacy -> wiremock.legacy, new -> wiremock.new). new의 egress 허용(같은 ns) 안이다.
               value: http://wiremock:8080
+            - name: COUPON_URL
+              # Phase 3.2: 같은 네임스페이스의 Coupon(직접 호출, 게이트웨이를 거치지 않으므로 미러 없음).
+              value: http://coupon:8080
             - name: APP_FIXED_CLOCK
               # legacy/new 모두 같은 값. 시각 차이가 Evidence 비교에 섞이지 않게 한다.
               value: "2026-09-01T00:00:00Z"

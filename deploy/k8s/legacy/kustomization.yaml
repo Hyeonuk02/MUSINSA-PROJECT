@@ -8,3 +8,4 @@ resources:
 
 patches:
   - path: order-otel.yaml
+  - path: coupon-otel.yaml

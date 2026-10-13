@@ -362,3 +362,26 @@ agent 로그에 수 시간씩 빈 구간이 있어 호스트(Docker VM) sleep �
 MySQL Service 포트명은 바꾸지 않는다(3306은 자동 TCP라 불필요).
 
 후속 검토: mysql 포트 PeerAuthentication STRICT(2차 격리 레이어) — Phase 2 종료 후 결정
+
+---
+
+# Coupon 격리 — 스택 축·서비스 축 (Phase 3.2)
+
+Coupon 서비스와 전용 DB(coupon-mysql)를 추가하면서 두 축을 실측했다(2026-10-13).
+- 스택 축(legacy ↔ new): `base/coupon-networkpolicy.yaml`(Coupon API 8080 ← 같은 ns pod + istio-system), `base/coupon-mysql-networkpolicy.yaml`(Coupon DB 3306 ← 같은 ns `app=coupon`), new의 default-deny egress
+- 서비스 축(Order ↔ Coupon DB): `coupon-mysql-networkpolicy.yaml`이 `app=coupon`만 허용 — Order는 쿠폰을 Coupon API로만 다룬다
+
+측정: `deploy/k8s/tools/coupon-probe.yaml`의 probe pod(sidecar 주입, 허용 대상 레이블 `app=order`/`app=coupon`을 흉내 냄, readiness 항상 실패로 Service endpoint 제외). HTTP는 `curl -m 5 GET /api/coupons/by-key/ck-probe`, DB는 `mysql` 실제 로그인(`select @@hostname`).
+
+| 축 | 시도 | 기대 | 결과 |
+|---|---|---|---|
+| 스택 | legacy pod(app=order) → `coupon.new:8080` | 차단 | 차단 — HTTP 000(5s 타임아웃) |
+| 스택 | legacy pod(app=order) → `coupon-mysql.new:3306` | 차단 | 차단 — `ERROR 2013 … (110)` |
+| 스택 | new pod(app=order) → `coupon-mysql.legacy:3306` | 차단 | 차단 — `ERROR 2013 … reading initial communication packet` (new egress) |
+| 서비스 | new pod(app=order) → `coupon-mysql.new:3306` | 차단 | 차단 — `ERROR 2013 … (110)` |
+| 서비스 | legacy pod(app=order) → `coupon-mysql.legacy:3306` | 차단 | 차단 — `ERROR 2013 … (110)` |
+| 대조 | new pod(app=order) → `coupon.new:8080` | 성공 | HTTP 404(없는 쿠폰 조회 = Coupon이 DB 조회까지 정상) |
+| 대조 | legacy pod(app=order) → `coupon.legacy:8080` | 성공 | HTTP 404 |
+| 대조 | new pod(app=coupon) → `coupon-mysql.new:3306` | 성공 | 로그인 성공 — `coupon-mysql-7666fc65d6-j72wv` |
+
+**통과**: 교차 스택·교차 서비스 모두 차단, 대조군 성공. 실제 Order → Coupon(같은 스택 직접 호출)·Coupon → Coupon DB 경로는 쿠폰 주문 Evidence로 동작 확인(`docs/reports/phase3.2.md`).
