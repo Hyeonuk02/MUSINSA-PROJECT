@@ -11,6 +11,7 @@
 #   WireMock admin은 게이트웨이로 열지 않고 tooling pod(kubectl exec)로 호출한다(게이트웨이 표면은 /api/, /_evidence/뿐)
 # barrier: spill 회수 → Store count가 legacy·new 모두 기대 건수(= k6-summary.json의 sent 길이)가 될 때까지 최대 30초.
 #   미달이면 누락 requestId를 출력하고 export(디버깅용)만 한 뒤 exit 1 — 다음 iteration으로 가지 않는다
+# export(3.1): Evidence(legacy.json·new.json) + 최종 DB 상태(dbstate-<stack>.json) + WireMock journal(wiremock-<stack>.json)
 set -euo pipefail
 
 ROOT="$(cd "$(dirname "$0")/.." && pwd)"
@@ -194,6 +195,17 @@ for c in json.load(sys.stdin)["containers"]:
 ' "$1" "$2"
 }
 
+export_wiremock() {  # dir
+  local stack pod
+  for stack in legacy new; do
+    pod=$([[ "$stack" == legacy ]] && echo mesh-check || echo isolation-injected)
+    kubectl exec -n "$stack" "$pod" -c curl -- curl -sf --max-time 10 \
+      "http://wiremock.$stack.svc.cluster.local:8080/__admin/requests" > "$1/wiremock-$stack.json" \
+      || fail "export: WireMock $stack journal 실패"
+  done
+  log "export: wiremock journal legacy $("$PY" -c "import json;print(len(json.load(open('$1/wiremock-legacy.json'))['requests']))")건, new $("$PY" -c "import json;print(len(json.load(open('$1/wiremock-new.json'))['requests']))")건"
+}
+
 write_meta() {  # runId dir started finished
   local fixed_legacy fixed_new
   fixed_legacy=$(kubectl get deploy order -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].env[?(@.name=="APP_FIXED_CLOCK")].value}')
@@ -252,6 +264,8 @@ for ((i = 1; i <= ITERATIONS; i++)); do
   [[ -f "$dir/k6-summary.json" ]] || fail "k6-summary.json 없음: $dir"
   barrier "$run_id" "$dir"
   export_run "$run_id" "$dir"
+  k6/dbstate-export.sh --run-id "$run_id" | sed 's/^/  /' || fail "export: dbstate 실패"
+  export_wiremock "$dir"
   write_meta "$run_id" "$dir" "$started" "$(date -u +%Y-%m-%dT%H:%M:%SZ)"
 done
 log "done: $ITERATIONS run(s) — runs/$BASE-1 .. runs/$BASE-$ITERATIONS"

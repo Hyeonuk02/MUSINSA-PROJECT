@@ -18,7 +18,14 @@ Phase 3 Normalization의 자리표시자다. 아래 규칙 외에는 넣지 않�
       (원문 그대로 비교하지 않는다 — alias 번호는 생성 순서에 따라 바뀔 수 있다)
       이 정규화는 이 스크립트에만 둔다. 앱에는 넣지 않는다
 
-출력: run마다 diff 집합(response / dbAccess requestId 목록)과 차이 난 요청의 정규화 후 legacy·new 값.
+  v1 레코드(Phase 3.1)는 추가로 — 짝 키는 (replayRequestId, hopPath)
+    - callTree: class.method 시퀀스(순서 유지)
+    - externalCalls: 개수·순서·method·path·requestBodyHash·responseBodyHash
+    - transactions: 개수와 (phase, outcome) 순서
+    - events.published: 개수·순서·topic·payloadHash·ack
+  run 단위(파일이 있을 때): dbstate-legacy.json == dbstate-new.json, WireMock journal(정규화: method·url·body 순서 목록) 동일
+
+출력: run마다 diff 집합(축별 requestId[/hopPath] 목록)과 차이 난 요청의 정규화 후 legacy·new 값.
 여러 --run이면 마지막에 diff 집합이 모든 run에서 같은지 PASS/FAIL.
 
 사용: .venv/bin/python engine/diff_v0.py --run runs/<runId> [--run runs/<runId> ...]
@@ -30,7 +37,7 @@ import re
 import sys
 from pathlib import Path
 
-from common import contract_violations, load_run, load_validator
+from common import ENTRY_HOP, contract_violations, key_of, load_run, load_validator
 
 ALIAS = re.compile(r"[a-z]+\d+_\d+")
 WHITESPACE = re.compile(r"\s+")
@@ -95,6 +102,67 @@ def compare_db(legacy: dict, new: dict) -> list[str]:
     return diffs
 
 
+def compare_sequences(name: str, legacy: list, new: list) -> list[str]:
+    if legacy == new:
+        return []
+    diffs = [f"{name}: legacy {len(legacy)}건 / new {len(new)}건"]
+    for i in range(max(len(legacy), len(new))):
+        a = legacy[i] if i < len(legacy) else "(없음)"
+        b = new[i] if i < len(new) else "(없음)"
+        if a != b:
+            diffs.append(f"  ≠ #{i + 1} legacy: {a}")
+            diffs.append(f"     #{i + 1} new:    {b}")
+    return diffs
+
+
+def v1_axes(legacy: dict, new: dict) -> list[tuple[str, list[str]]]:
+    def tree(r):
+        return [f"{n['class']}.{n['method']}" for n in r["callTree"]["nodes"]]
+
+    def calls(r):
+        return [(c["method"], c["path"], c["requestBodyHash"], c["responseBodyHash"]) for c in r["externalCalls"]]
+
+    def txs(r):
+        return [(t["phase"], t["outcome"]) for t in r["transactions"]]
+
+    def events(r):
+        return [(p["topic"], p["payloadHash"], p["ack"]) for p in r["events"]["published"]]
+
+    axes = [("callTree", compare_sequences("callTree", tree(legacy), tree(new)))]
+    if legacy["callTree"]["truncated"] != new["callTree"]["truncated"]:
+        axes[0][1].append(f"callTree.truncated: legacy={legacy['callTree']['truncated']} new={new['callTree']['truncated']}")
+    axes += [("externalCalls", compare_sequences("externalCalls", calls(legacy), calls(new))),
+             ("transactions", compare_sequences("transactions", txs(legacy), txs(new))),
+             ("events", compare_sequences("events.published", events(legacy), events(new)))]
+    return axes
+
+
+def wiremock_requests(path: Path) -> list:
+    journal = json.loads(path.read_text(encoding="utf-8"))
+    rows = [(r["request"].get("method"), r["request"].get("url"), r["request"].get("body", ""))
+            for r in journal.get("requests", [])]
+    return sorted(rows)  # journal은 최신순으로 나온다 — 순서가 아니라 집합(중복 포함)으로 비교
+
+
+def run_level(run_dir: Path) -> tuple[set[tuple[str, str]], list[str]]:
+    diff_set, lines = set(), []
+    pairs = (("dbstate", "dbstate-legacy.json", "dbstate-new.json", lambda p: json.loads(p.read_text(encoding="utf-8"))),
+             ("wiremock", "wiremock-legacy.json", "wiremock-new.json", wiremock_requests))
+    for name, lf, nf, load in pairs:
+        lp, np_ = run_dir / lf, run_dir / nf
+        if not (lp.exists() and np_.exists()):
+            continue
+        a, b = load(lp), load(np_)
+        if a == b:
+            lines.append(f"  PASS  {name:13} legacy == new")
+        else:
+            diff_set.add((name, "run"))
+            lines.append(f"  DIFF  {name:13} legacy != new")
+            lines.append(f"          legacy={json.dumps(a, ensure_ascii=False)[:600]}")
+            lines.append(f"          new   ={json.dumps(b, ensure_ascii=False)[:600]}")
+    return diff_set, lines
+
+
 def diff_run(run_dir: Path, validator) -> tuple[bool, set[tuple[str, str]] | None, list[str]]:
     """(계약 통과, diff 집합 {(kind, requestId)}, 출력 줄)."""
     lines = []
@@ -110,31 +178,45 @@ def diff_run(run_dir: Path, validator) -> tuple[bool, set[tuple[str, str]] | Non
         return False, None, lines
     lines.append(f"  PASS  입력 계약 (schema·runId·stack)  {total}/{total}")
 
-    by_id = {stack: {r["replayRequestId"]: r for r in recs} for stack, recs in records.items()}
+    by_key = {stack: {key_of(r): r for r in recs} for stack, recs in records.items()}
     sent = summary["sent"]
-    paired = [i for i in sent if i in by_id["legacy"] and i in by_id["new"]]
-    lines.append(f"        비교 대상: sent {len(sent)}건 중 짝이 있는 {len(paired)}건"
-                 + ("" if len(paired) == len(sent) else " (짝 없는 요청은 verify_sameness의 Undelivered)"))
+    entry_paired = [(i, ENTRY_HOP) for i in sent if (i, ENTRY_HOP) in by_key["legacy"] and (i, ENTRY_HOP) in by_key["new"]]
+    child_paired = sorted(k for k in by_key["legacy"] if k[1] != ENTRY_HOP and k in by_key["new"] and k[0] in set(sent))
+    paired = entry_paired + child_paired
+    lines.append(f"        비교 대상: sent {len(sent)}건 중 진입 홉 짝 {len(entry_paired)}건 + 자식 홉 짝 {len(child_paired)}건"
+                 + ("" if len(entry_paired) == len(sent) else " (짝 없는 요청은 verify_sameness의 Undelivered)"))
 
     diff_set = set()
     details = []
-    for rid in paired:
-        legacy, new = by_id["legacy"][rid], by_id["new"][rid]
-        for kind, found in (("response", compare_response(legacy["response"], new["response"])),
-                            ("dbAccess", compare_db(legacy["dbAccess"], new["dbAccess"]))):
+    kinds = ["response", "dbAccess"]
+    for key in paired:
+        legacy, new = by_key["legacy"][key], by_key["new"][key]
+        label = key[0] if key[1] == ENTRY_HOP else f"{key[0]}/{key[1]}"
+        axes = [("response", compare_response(legacy["response"], new["response"])),
+                ("dbAccess", compare_db(legacy["dbAccess"], new["dbAccess"]))]
+        if legacy["schemaVersion"] == "v1":
+            axes += v1_axes(legacy, new)
+        for kind, found in axes:
+            if kind not in kinds:
+                kinds.append(kind)
             if found:
-                diff_set.add((kind, rid))
-                details.append(f"        [{kind}] {rid} {legacy['request']['method']} {legacy['request']['path']}")
+                diff_set.add((kind, label))
+                where = (f"{legacy['request']['method']} {legacy['request']['path']}" if legacy.get("request")
+                         else f"event {legacy['event']['topic']}")
+                details.append(f"        [{kind}] {label} {where}")
                 details += [f"          {d}" for d in found]
-    for kind in ("response", "dbAccess"):
+    for kind in kinds:
         ids = sorted(r for k, r in diff_set if k == kind)
-        lines.append(f"  {'PASS' if not ids else 'DIFF'}  {kind:9} diff {len(ids)}건" + (f"  {' '.join(ids)}" if ids else ""))
+        lines.append(f"  {'PASS' if not ids else 'DIFF'}  {kind:13} diff {len(ids)}건" + (f"  {' '.join(ids)}" if ids else ""))
     lines += details
+    run_diffs, run_lines = run_level(run_dir)
+    diff_set |= run_diffs
+    lines += run_lines
     return True, diff_set, lines
 
 
 def main(argv: list[str]) -> int:
-    parser = argparse.ArgumentParser(description="Legacy/New response·dbAccess 최소 비교 (Phase 2.8)")
+    parser = argparse.ArgumentParser(description="Legacy/New 최소 비교 (Phase 2.8, v1 축은 3.1)")
     parser.add_argument("--run", action="append", required=True, type=Path, help="runs/<runId> (여러 번 가능)")
     args = parser.parse_args(argv)
     try:

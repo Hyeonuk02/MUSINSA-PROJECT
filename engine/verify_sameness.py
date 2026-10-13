@@ -10,7 +10,8 @@
 
 검사 (하나라도 실패하면 그 run은 FAIL)
   1. 입력 계약: 모든 레코드가 docs/evidence-schema-v0.json 통과, runId·stack이 run·파일과 일치. 실패 시 즉시 FAIL
-  2. 중복 키 없음: 스택별 replayRequestId 유일
+  2. 중복 키 없음: 스택별 (replayRequestId, hopPath) 유일. v0 레코드는 hopPath를 "0"으로 본다
+     짝·Undelivered·request 동일성은 진입 홉("0")으로 본다 — 자식 홉 짝 검사는 3.2(verify_sameness v2)
   3. pairing: Undelivered = sent − 레코드 id (스택별), Unexpected = 레코드 id − sent (스택별, 0이어야 함)
   4. request 동일성(짝이 있는 요청): method / path / query / EVIDENCE_HEADERS 5개 / bodyHash
   5. k6 ↔ legacy: k6-summary status[id] == legacy response.status (게이트웨이가 legacy로 라우팅했는지)
@@ -28,12 +29,12 @@ import statistics
 import sys
 from pathlib import Path
 
-from jsonschema import Draft202012Validator
-
-from common import STACKS, contract_violations, load_run, load_validator
+from common import ENTRY_HOP, STACKS, Validators, contract_violations, hop_of, key_of, load_run, load_validator
 # deploy/k8s/base/order.yaml의 EVIDENCE_HEADERS와 같은 목록(Evidence에는 소문자 키로 남는다).
-# 엔진은 앱·매니페스트를 import하지 않는다 — 계약은 이 목록과 evidence-schema-v0.json이다.
-EVIDENCE_HEADERS = ("x-replay-request-id", "x-run-id", "x-session-id", "idempotency-key", "content-type")
+# 엔진은 앱·매니페스트를 import하지 않는다 — 계약은 이 목록과 evidence-schema-v*.json이다.
+# x-replay-hop-path는 v1부터(Phase 3.1). v0 레코드에는 없으므로 양쪽 모두 없음으로 같다.
+EVIDENCE_HEADERS = ("x-replay-request-id", "x-run-id", "x-session-id", "x-replay-hop-path", "idempotency-key",
+                    "content-type")
 REQUEST_FIELDS = ("method", "path", "query") + tuple(f"headers.{h}" for h in EVIDENCE_HEADERS) + ("bodyHash",)
 ISO = re.compile(r"^(\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2})(?:\.(\d{1,9}))?Z$")
 
@@ -83,7 +84,7 @@ def stats_ms(values: list[float]) -> str:
     return f"min={min(values):.1f} median={statistics.median(values):.1f} max={max(values):.1f} (n={len(values)})"
 
 
-def verify(run_dir: Path, validator: Draft202012Validator) -> RunReport:
+def verify(run_dir: Path, validator: Validators) -> RunReport:
     report = RunReport(run_dir)
     try:
         summary, records = load_run(run_dir)
@@ -104,10 +105,13 @@ def verify(run_dir: Path, validator: Draft202012Validator) -> RunReport:
     sent_set = set(sent)
     by_id = {}
     for stack, recs in records.items():
-        ids = [r["replayRequestId"] for r in recs]
-        dups = sorted({i for i in ids if ids.count(i) > 1})
+        keys = [key_of(r) for r in recs]
+        dups = sorted({f"{k[0]}/{k[1]}" for k in keys if keys.count(k) > 1})
         report.listing(f"중복 키 ({stack})", dups)
-        by_id[stack] = {r["replayRequestId"]: r for r in recs}
+        by_id[stack] = {r["replayRequestId"]: r for r in recs if hop_of(r) == ENTRY_HOP}
+        others = sum(1 for r in recs if hop_of(r) != ENTRY_HOP)
+        if others:
+            report.note(f"참고: {stack}에 진입 홉 외 Evidence {others}건 — 자식 홉 짝 검사는 3.2(verify_sameness v2)")
 
     # 3. pairing — 기준은 k6가 보낸 것(sent)
     report.lines.append(f"        sent {len(sent)}건 (k6-summary.json)")

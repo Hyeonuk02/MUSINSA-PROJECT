@@ -28,6 +28,11 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
         </dependency>
+        <!-- Phase 3.1: RestClient.Builder 빈(자동 구성) — poc.evidence가 RestClientCustomizer로 재생 헤더 전파·externalCalls 기록 인터셉터를 붙인다 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
         <!-- Phase 1.3a: Postgres -> MySQL 8. Phase 0(poc/nginx-mirroring)은 Postgres 그대로다. -->
         <dependency>
             <groupId>com.mysql</groupId>

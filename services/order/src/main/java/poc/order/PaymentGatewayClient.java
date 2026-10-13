@@ -13,14 +13,18 @@ import org.springframework.web.client.RestClient;
  * 2.4의 Evidence POST는 java.net.http.HttpClient를 쓰고 OTel agent에서 그 계측만 끈다.
  * RestClient 기본값에 맡겨 이 호출도 JDK HttpClient를 타게 되면 비즈니스 외부 호출 span까지
  * 같이 사라지므로, 두 경로의 HTTP 클라이언트를 처음부터 분리해 둔다.
+ *
+ * <p>Phase 3.1: 정적 {@code RestClient.builder()} 대신 Boot가 관리하는 {@link RestClient.Builder}를 주입받는다.
+ * 그래야 검증 레이어(poc.evidence)가 RestClientCustomizer로 재생 헤더 전파 인터셉터를 붙일 수 있다.
+ * 요청 팩토리 고정은 그대로다.
  */
 @Component
 public class PaymentGatewayClient {
 
     private final RestClient restClient;
 
-    public PaymentGatewayClient(@Value("${payment.gateway-url}") String gatewayUrl) {
-        this.restClient = RestClient.builder()
+    public PaymentGatewayClient(RestClient.Builder builder, @Value("${payment.gateway-url}") String gatewayUrl) {
+        this.restClient = builder
                 .baseUrl(gatewayUrl)
                 .requestFactory(new SimpleClientHttpRequestFactory())
                 .build();

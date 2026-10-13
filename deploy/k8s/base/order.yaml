@@ -44,7 +44,7 @@ spec:
             - until nc -z mysql 3306; do echo "waiting for mysql:3306"; sleep 2; done
       containers:
         - name: order
-          image: order-app:phase2-5
+          image: order-app:phase3-base
           # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
           imagePullPolicy: IfNotPresent
           ports:
@@ -62,15 +62,20 @@ spec:
               # x-request-id는 Envoy가 붙인다 — Envoy 액세스 로그·Jaeger와 맞춰 보는 키다.
               # X-Phase1-Smoke-Id·Host는 1.6 미러 스모크용(헤더 복사, -shadow 접미사 확인).
               # Phase 2.4: 재생 헤더 3개를 추가.
-              value: Content-Type,Idempotency-Key,x-request-id,X-Phase1-Smoke-Id,Host,X-Replay-Request-Id,X-Run-Id,X-Session-Id
+              value: Content-Type,Idempotency-Key,x-request-id,X-Phase1-Smoke-Id,Host,X-Replay-Request-Id,X-Run-Id,X-Session-Id,X-Replay-Hop-Path
             - name: EVIDENCE_HEADERS
               # Phase 2.4: Evidence(request/response.headers)에 남길 헤더. 로그용 목록과 분리한다.
               # x-request-id·Host는 넣지 않는다 — 실행 시점 값이라 판정 잡음이 된다.
-              value: X-Replay-Request-Id,X-Run-Id,X-Session-Id,Idempotency-Key,Content-Type
+              # Phase 3.1: X-Replay-Hop-Path 추가(Evidence 키의 일부, D15).
+              value: X-Replay-Request-Id,X-Run-Id,X-Session-Id,X-Replay-Hop-Path,Idempotency-Key,Content-Type
+            - name: EVIDENCE_APP_PACKAGES
+              # Phase 3.1: callTree 수집 대상 패키지(poc.evidence 자신·필터·@Configuration은 제외). error.where 판단에도 쓴다.
+              value: poc.order
             - name: JAVA_TOOL_OPTIONS
               # JVM이 시작할 때 "Picked up JAVA_TOOL_OPTIONS: ..."를 stderr에 찍는다.
               # agent가 실제로 붙었는지 앱 로그로 확인하는 근거다.
-              value: -javaagent:/otel/javaagent.jar
+              # Phase 3.1(D-2): heap·metaspace 상한. Phase 3에서 Coupon·Kafka가 같은 노드에 올라오므로 기본값(컨테이너 메모리의 1/4)에 맡기지 않는다.
+              value: -javaagent:/otel/javaagent.jar -Xmx384m -XX:MaxMetaspaceSize=128m
             - name: OTEL_EXPORTER_OTLP_ENDPOINT
               value: http://otel-collector.observability.svc.cluster.local:4317
             - name: OTEL_EXPORTER_OTLP_PROTOCOL
@@ -100,6 +105,14 @@ spec:
               readOnly: true
             - name: evidence-spill
               mountPath: /var/evidence/spill
+          resources:
+            # Phase 3.1(D-2): legacy/new 동일(base). limits는 heap 384m + metaspace 128m + 코드 캐시·스레드·OTel agent 여유
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 768Mi
           readinessProbe:
             # Tomcat은 기동 마지막에 포트를 연다. actuator를 넣지 않기 위해 TCP로 본다.
             tcpSocket:

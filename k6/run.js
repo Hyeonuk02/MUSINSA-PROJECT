@@ -86,6 +86,7 @@ function runSession(session) {
       'X-Replay-Request-Id': req.id,
       'X-Run-Id': RUN_ID,
       'X-Session-Id': session.id,
+      'X-Replay-Hop-Path': '0',  // 진입 홉. 서비스가 나가는 호출의 자식 hopPath를 계산한다(D15)
     }, req.headers || {});
     let body = null;
     if (req.body !== undefined) {
