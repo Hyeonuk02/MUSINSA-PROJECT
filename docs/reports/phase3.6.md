@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6부터 진행 중
+- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5 일치(learn 라벨 3, eval Uncertain 8→0) → F6 일치 → F7부터 진행 중
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -101,3 +101,17 @@
 | B0 / B1 / C | ✔ / ✔ / ✔(분류) | target 13 중 B0 DIFF 13, B1 DIFF 13(SQL 횟수·fingerprint는 B1 축), C는 DIFF를 UNC → (리뷰 후) IMP로 분류 |
 
 해석: B1도 "다르다"까지는 보지만 결함(CV)인지 개선인지 가르지 못한다. C는 기능 계약 축(응답·쓰기 집합·트랜잭션·이벤트)이 같고 실행 특성 축만 다르다는 것을 근거로 Uncertain으로 올리고, 사람이 learn 5 pair를 본 결과가 eval 8 pair로 재사용됐다. 로그 `logs/phase3.6-F5-*.txt`(리뷰 `logs/phase3.6-F5-review.txt`)
+
+### 1.6 F6 — OrderView에 itemCount 추가 (승인된 개선, 사전 규칙)
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 사전 승인 규칙(F6 run 전) | PASS | `9648cf1` `engine/rules/improvement.yaml` `order-view-item-count`: endpoint `*`, `response.addedFields [itemCount]`, provenance author·approvedBy·date 2026-10-14 |
+| 브랜치·커밋 1·이미지 | PASS | `fault/F6` = `84bd197`, `order-app:phase3.6-F6`. `OrderView.kt` 1 file +2 −1(생성자 끝에 `itemCount: Int`, `from`에서 `items.size`) |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS, settleTimeouts 0, `dirty: false`(rev `9648cf1`), new=phase3.6-F6 |
+| target 26 pair IMPROVEMENT | PASS | 26/26 ×3(생성 8·조회 10·결제 8 — 응답에 OrderView가 있는 pair 전부), 적용 규칙 `order-view-item-count` 26회. 쿠폰 400(R37)·404 조회·취소 409·소비·쿠폰 pair는 SAME |
+| 정상 경로 오탐 0 | PASS | non-target 0 (CV 1 = F0) |
+| 오판정(learn 규칙이 가림) | 0 | F5 learned 규칙 3개가 있는 상태로 판정 — 적용된 것은 사전 규칙뿐, learned 규칙 적용 0 |
+| B0 / B1 / C | ✔ / ✔ / ✔(분류) | B0 DIFF 26/26, B1 DIFF 26/26(응답 body), C IMPROVEMENT 26 — B1은 개선을 결함과 구분하지 못한다 |
+
+로그 `logs/phase3.6-F6-*.txt`
