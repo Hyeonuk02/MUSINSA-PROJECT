@@ -2,7 +2,7 @@
 
 - 작업일: 2026-10-14
 - 기준선: `phase3.5-v1.4`(`120b212`). Legacy `order-app:phase3.3-base`, Coupon 양쪽 `coupon-app:phase3.3-base`, 엔진 `engine-v1.1`, corpus v2.1
-- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4부터 진행 중
+- 진행 상태: 준비·baseline 완료 → F1(engine-v1.1에서 기대와 다름 → D-6 결정 → engine-v1.2 재판정으로 일치) → F2 일치 → F3 일치 → F4 일치 → F5부터 진행 중
 - 결함 표: `docs/fault-catalog.md`, 기대 사전 등록: `docs/fault-expectations.json`, 누적: `docs/phase3-result.md`
 
 ## 0. 결정 필요 사항
@@ -74,3 +74,16 @@
 | B0 / B1 / C | ✔ / ✘ / ✔ | B0 DIFF 7(seq 원문), **B1 DIFF 0**, C CV 7 |
 
 타임라인(p36-F3-1 R000003): Legacy `SELECT(1) < CALL(2) < SELECT(3) < COMMIT_BEGIN(4) < UPDATE(5) < PUBLISH(6) < COMPLETED(7)` / New `SELECT(1) < CALL(2) < **PUBLISH(3)** < SELECT(4) < COMMIT_BEGIN(5) < UPDATE(6) < COMPLETED(7)`. 응답·SQL 집합·callTree·이벤트 내용·ack·소비 Evidence가 모두 같고 **순서만** 다르다 — D16(단일 seq 타임라인 + COMMIT_BEGIN)이 없으면 보이지 않는 결함. 로그 `logs/phase3.6-F3-*.txt`
+
+### 1.4 F4 — 쿠폰 실패 시 롤백 누락
+
+| 기준 | 결과 | 근거 |
+|---|---|---|
+| 브랜치·커밋 1·이미지 | PASS | `fault/F4` = `f83e211`, `order-app:phase3.6-F4`. `OrderService.kt` 1줄 — `create`의 `@Transactional` → `@Transactional(noRollbackFor = [CouponClient.CouponFailure::class])`. 예외는 그대로 컨트롤러로 가서 400 본문은 같고, 트랜잭션은 커밋된다(지시의 "트랜잭션 안에서 삼켜 400은 그대로, 롤백 안 함"을 한 줄 설정 실수로 구현) |
+| 3 run, Undelivered 0, degraded 0 | PASS | run.sh exit 0 ×3, verify 3/3 PASS, settleTimeouts 0, `dirty: false`(rev `6f6456d`), new=phase3.6-F4 |
+| target R000037·R000038 CV + dbstate | PASS | 2/2 ×3. R000037(USED 쿠폰 주문, 응답 400 동일): `transactions.outcomes` legacy `[COMPLETED ROLLED_BACK]` / new `[COMMIT_BEGIN, COMPLETED COMMITTED]`. R000038(그 주문 조회): `response.status` 404 → 200. dbstate 위반: orders 8 → 9, order_items 10 → 11 |
+| 정상 경로 오탐 0 | PASS | non-target 0 (CV 3 = 2 + F0) |
+| 세 run 판정 동일 | PASS | CV 3 + SAME 57 ×3 |
+| B0 / B1 / C | ✔ / △ / ✔ | B0 DIFF 2/2. **B1 DIFF 1/2** — R000038(다음 조회 404→200)만 보이고 R000037은 못 본다(응답 400·SQL 문장이 같고 차이는 트랜잭션 결과뿐). C CV 2/2 |
+
+해석: 결함이 일어난 요청(R000037)은 응답·SQL이 같아 **트랜잭션 outcome 축으로만** 잡히고, 결과는 다음 요청(R000038)의 응답과 dbstate로 번진다. 쓰기 집합은 같다(INSERT는 양쪽 다 실행됐고 롤백 여부만 다름) — writeSet이 아니라 transactions 축이 필요한 이유. 로그 `logs/phase3.6-F4-*.txt`

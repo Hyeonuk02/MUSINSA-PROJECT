@@ -11,7 +11,7 @@
 | F1 | `fault/F1` `da92b8e` | `OrderService`(+1 −3) | 진짜 결함 | R000008 CV | R000008 CV ×3 ✔. 정상 경로: engine-v1.1에서 R000007도 CV(세션 귀속) → D-6 → engine-v1.2 재판정 R000007 SAME(오탐 0), sessionViolations `idem-R000007` legacy 1 / new 2 → R000008 | externalCalls, events, hop `0.e1`(New만), 세션 규칙 `idem-R000007` legacy 1 / new 2 | B0 ✔ / B1 ✘ / C ✔ — 응답·SQL에 흔적이 없어 B1은 놓치고 B0(원문 DIFF)·C(CV)는 잡음 |
 | F2 | `fault/F2` `a131294` | `Order`(+1 −2, cascade 제거) | 진짜 결함 | 주문 생성 9·조회(있음) 10·결제 8 = 27 pair CV + dbstate | 27/27 CV ×3 ✔, dbstate 위반(order_items 10 vs 0), 정상 경로 오탐 0 | writeSet(생성 9), 응답 items(조회·결제 18), dbstate | B0 ✔ / B1 ✔ / C ✔ |
 | F3 | `fault/F3` `12482f0` | `OrderEventPublisher`(애노테이션 1줄) | 진짜 결함 | 첫 결제 7 pair CV | 7/7 CV ×3 ✔, 오탐 0 | 타임라인 publish.seq(3) < COMMIT_BEGIN.seq(5) — 그 밖 축은 전부 같음 | B0 ✔ / B1 ✘ / C ✔ |
-| F4 | | | 진짜 결함 | R000037·R000038 CV + dbstate | | transactions outcome, writeSet, 다음 GET 200 vs 404, dbstate | |
+| F4 | `fault/F4` `f83e211` | `OrderService`(애노테이션 1줄 noRollbackFor) | 진짜 결함 | R000037·R000038 CV + dbstate | 2/2 CV ×3 ✔, dbstate 위반(orders 8→9, order_items 10→11), 오탐 0 | R000037 transactions outcome(ROLLED_BACK → COMMITTED, writeSet은 같음), R000038 응답 404→200, dbstate | B0 ✔ / B1 △(R000038만) / C ✔ |
 | F5 | | | 정상 리팩터링 | 조회 13 pair UNC → learn 라벨 후 IMP | | dbRead 횟수·fingerprint, callTree | |
 | F6 | | | 승인된 개선 | 생성 8·조회 10·결제 8 = 26 pair IMP(사전 규칙) | | response.addedFields itemCount | |
 | F7 | | | 설정 변경 결함 | R000041·R000042 CV + dbstate | | 응답 status, externalCalls status, 발행 없음(hop), 다음 GET 값, dbstate | |
@@ -36,3 +36,8 @@
 
 변경(`fault/F3`): `OrderEventPublisher.onOrderPaid`의 `@TransactionalEventListener(phase = AFTER_COMMIT)` → `@EventListener`. 결제 트랜잭션 안에서 `publishEvent` 호출 시점에 동기 발행된다.
 실제(`p36-F3-1..3`): 첫 결제 7 pair 모두 `publish_after_commit_begin` 위반만으로 CV. 발행 내용·ack·소비·응답·SQL·callTree는 같고 타임라인 순서만 다르다(New `PUBLISH(3) < COMMIT_BEGIN(5)`). B1은 못 본다.
+
+## F4 — 쿠폰 실패 시 롤백 누락
+
+변경(`fault/F4`): `OrderService.create`에 `noRollbackFor = [CouponClient.CouponFailure::class]`. USED 쿠폰으로 주문하면 400 `COUPON_ALREADY_USED`는 그대로지만 주문·항목 INSERT가 커밋된다.
+실제(`p36-F4-1..3`): R000037은 응답·SQL·쓰기 집합이 같고 transactions outcome만 다르다 → CV. R000038(같은 주문 조회)은 404 → 200 → CV. dbstate orders·order_items +1. 사전 기대의 "writeSet"은 해당 없음(양쪽 모두 INSERT 실행 — 차이는 롤백 여부) — 기대 판정(CV)은 일치.
