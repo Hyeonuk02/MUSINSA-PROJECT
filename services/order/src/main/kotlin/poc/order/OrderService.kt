@@ -61,7 +61,7 @@ class OrderService(
 
     @Transactional(readOnly = true)
     fun getByKey(orderKey: String): Outcome =
-        orderRepository.findByOrderKey(orderKey)
+        orderRepository.findWithItemsByOrderKey(orderKey)
             .map { Outcome(Kind.OK, OrderView.from(it)) }
             .orElseGet { Outcome.of(Kind.NOT_FOUND) }
 
