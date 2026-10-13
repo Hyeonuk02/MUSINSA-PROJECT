@@ -383,3 +383,26 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 - 수집 범위(AOP = 빈만, OTel = 계측 라이브러리만, Envoy = 메시 경유 호출만)는 docs/call-graph.md 3절에 명시.
 - Observed-diff Recall은 관측된 차이에 대한 지표이며 미실행 경로는 분모에 없다. 관측 독립 지표는 결함 탐지율뿐.
 - 교수님 확인 필요: "Call Graph"를 동적 수집·합성으로 해석해도 되는지.
+
+### D15. Evidence 키에 hopPath — 같은 서비스 반복 호출을 구분한다 (2026-10-13)
+**결정**: 키 = (runId, replayRequestId, stack, hopPath). service·origin은 필드. hopPath는 진입 "0", 홉 안 n번째 HTTP 호출 "<부모>.h<n>", n번째 이벤트 소비 "<부모>.e<n>" — 종류별 순번(요청 전역 seq 아님).
+**근거**: (…, service, origin) 키는 한 요청이 같은 서비스를 두 번 부르면 last-wins로 첫 기록을 덮어, 중복 사이드이펙트 결함(F1·F9)을 숨긴다. 순번을 종류별로 두는 이유는 쿼리 수가 바뀌어도 짝이 유지되어야 하기 때문.
+**한계**: hopPath는 호출 순서가 결정론적일 때만 안정. 요청 스레드 안 순차 호출만 다룬다.
+
+### D16. 요청 타임라인은 단일 seq, 트랜잭션은 TransactionExecutionListener (2026-10-13)
+**결정**: SQL·외부 호출·이벤트 발행·트랜잭션 단계가 요청 버퍼의 한 카운터로 번호를 받는다. 트랜잭션은 Spring TransactionExecutionListener(6.1+)로 수집해 beforeCommit에서 COMMIT_BEGIN, 완료 시 COMMITTED/ROLLED_BACK/COMMIT_FAILED를 transactions[{seq,name,phase,outcome}]에 기록. 이벤트 발행은 동기이며 ack는 get()이 돌아온 호출 스레드에서 기록(onAcknowledgement는 I/O 스레드라 컨텍스트 없음). "커밋 전 발행"은 publish.seq < 그 트랜잭션의 COMMIT_BEGIN.seq로 판정.
+**근거**: 필터 시점엔 트랜잭션이 없어 동기화 등록이 불가. AFTER_COMMIT 콜백 안에서도 트랜잭션 리소스가 활성으로 보일 수 있어 불리언 판정은 오탐. COMMIT_BEGIN 기준이면 afterCommit 리스너와 AFTER_COMMIT 이벤트 리스너의 호출 순서를 가정하지 않아도 된다. 타임라인이면 롤백 시나리오 없이도 결정론적으로 판정된다.
+**대안**: Hibernate Interceptor.afterTransactionCompletion(Framework < 6.1 폴백). Outbox는 범위 밖.
+
+### D17. New v1은 Order의 점진 Kotlin 전환 사다리 (2026-10-13)
+**결정**: v1.1 클라이언트 → v1.2 엔티티·리포지토리 → v1.3 서비스 → v1.4 컨트롤러. 같은 Boot·JDK, FQCN·API 유지, kotlin-spring·kotlin-jpa 필수, 엔티티 data class 금지, 결함을 섞지 않음. 단계마다 commit·이미지 1개. A/A 게이트는 인프라·엔진 단계와 base에만, A/B 단계의 기준은 "모든 diff가 4분류로 설명됨"(0건 포함).
+**근거**: 교체(새 코드베이스)라는 주제 적합성, 응답엔 없고 DB·트랜잭션에만 보이는 차이가 나오는 영역, 같은 런타임이라 귀속이 깔끔, 작은 commit이 Phase 4 스코핑 입력. JDK만은 차이가 거의 없고 Boot 4는 빌드 변경이라 전역 영향 — v3(선택)로.
+
+### D18. DB 계약은 두 층 — 기능 계약과 실행 특성 (2026-10-13)
+**결정**: 쓰기 문장 집합·최종 DB 상태·불변식 위반은 Contract Violation. 읽기 횟수·순서 차이는 기본 Uncertain(사람 → 규칙), 엔드포인트별 maxSelects가 선언된 경우에만 초과 시 Contract Violation.
+**근거**: 쿼리 통합(F5)과 N+1(F8)이 같은 "SELECT 수 변화"인데 기대가 달랐던 모순. "판정은 선언된 해상도" 원칙의 적용.
+
+### D19. Kafka는 스택별 브로커, 내부 Evidence 완료는 settle 선언으로 (2026-10-13)
+**결정**: 스택별 1브로커·NetworkPolicy·partition 1·재시도 0·DLQ. 내부 Evidence(서비스 간 호출·소비)의 완료는 corpus의 settle 선언을 k6가 양쪽 스택에서 폴링해 확인하고, barrier 기대 집합은 corpus에서 계산한 뒤 도착한 Evidence가 선언한 childHopPath 폐포까지 넓혀 기다린다. 안정화 대기 휴리스틱은 쓰지 않는다. 없는 Evidence는 Undelivered(internal)이며 양쪽에 없어도 SAME이 아니다.
+**근거**: "1초간 변화 없음"은 완료의 증거가 아님. Legacy의 소비 Evidence도 비동기라 New만 폴링하면 export 전에 빠질 수 있음. settle만 기다리면 한쪽에만 생긴 추가 호출(F9)의 Evidence를 놓칠 수 있음.
+**한계**: 자원 부족 시 공유 브로커 + 토픽 접두사로 후퇴할 수 있으며 그때 Kafka는 스택 축 격리의 예외.

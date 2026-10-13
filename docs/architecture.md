@@ -223,7 +223,7 @@ Call Graph는 동적 수집·합성(D14, docs/call-graph.md). 정적 Call Graph�
 | 0 | nginx Mirroring Concept PoC (4.4까지) | 완료·보존 (`poc/nginx-mirroring/`, 배너: 최종 delivery 아님) |
 | 1 | k8s + Istio 기반 | 다음 |
 | 2 | Order(business key API) + Collector/Store/export + k6 + run script + 완료 폴링 + 반복 run 검증 | |
-| 3 | Coupon·Payment(WireMock) + Normalization + Engine(요청 단위 + 집계) + 4분류 + Rule 루프 | |
+| 3 | Coupon·Payment(WireMock) + Normalization + Engine(요청 단위 + 집계) + 4분류 + Rule 루프 | 진행 중 — docs/phase3-plan.md |
 | 4 | Call Graph → Tag/Filter + 사다리(반복 run) + 결함 주입 + (선택) 경합 세션·VS match 시연 | |
 
 ### Phase 1 — k8s + Istio 기반
