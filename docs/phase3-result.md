@@ -19,3 +19,11 @@ Legacy = `order-app:phase3.3-base`(고정), Coupon 양쪽 `coupon-app:phase3.3-b
 Phase 4 입력(스코핑): 단계별 commit = 위 표 commit 열, 이미지 = `order-app:phase3.5-v1.x`, runs = `runs/p35-v1.x-1..3`, 코드 diff = `git diff <이전 단계 commit> <commit> -- services/order`.
 
 사다리 표에서 제외한 run: `runs/p35-v1.1-oom-1`(Metaspace OOM), `runs/p35-v1.1-stale-1`(runId 재사용) — `docs/reports/phase3.5.md` 6절.
+
+## 3.6 결함 카탈로그 v1 + New v2
+
+기준선 `phase3.5-v1.4`, corpus v2.1(60 pair/run, learn 25 · eval 35), VU=3 ×3, 엔진 `engine-v1.1`. 기대 판정은 run 전에 `docs/fault-expectations.json`에 등록. 상세 `docs/fault-catalog.md`, `docs/reports/phase3.6.md`.
+
+| 변형 | 브랜치·commit | 이미지(new) | runs | 변경 클래스 | 기대(target) | 실제(target) | 탐지 | 정상 경로 오탐 | UNC learn/eval | 규칙 수(생성) | eval UNC 규칙 전→후 | B0 / B1 / C 가시성 |
+|---|---|---|---|---|---|---|---|---|---|---|---|---|
+| baseline | `phase3.5-v1.4` | phase3.5-v1.4 | `runs/p36-base-1..3` | — | F0: R000047 CV, R000048 SAME | 59 SAME + R000047 CV ×3 | (F0 관측) | — | 0/0 | 0 | 0→0 | B0 DIFF 1 / B1 DIFF 1 / C CV 1 |
