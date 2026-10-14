@@ -1,0 +1,20 @@
+== p36-F5-1  learn Uncertain 유형 3
+
+[5da05fdb147f] order.get  dbRead  dbRead.countDelta  (4건: R000002/0, R000004/0, R000028/0, R000030/0)
+  detail: {from: 2, to: 1}
+  제안 match: {diffKind: dbRead.countDelta, endpoint: order.get, from: 2, to: 1}
+
+[989c110b103e] order.get  callTree  callTree.sequenceReplaced  (5건: R000002/0, R000004/0, R000028/0, R000030/0, R000038/0)
+  detail: {from: [[poc.order.OrderController.getByKey, poc.order.OrderService.getByKey, poc.order.OrderRepository.findByOrderKey]], to: [[poc.order.OrderController.getByKey, poc.order.OrderService.getByKey, poc.order.OrderRepository.findWithItemsByOrderKey]]}
+  제안 match: {diffKind: callTree.sequenceReplaced, endpoint: order.get, from: [[poc.order.OrderController.getByKey, poc.order.OrderService.getByKey, poc.order.OrderRepository.findByOrderKey]], to: [[poc.order.OrderController.getByKey,
+      poc.order.OrderService.getByKey, poc.order.OrderRepository.findWithItemsByOrderKey]]}
+
+[9a82df6b99b4] order.get  dbRead  dbRead.fingerprintReplaced  (1건: R000038/0)
+  detail: {from: ['select t.id,t.amount,t.coupon_key,t.created_at,t.discount_amount,t.idempotency_key,t.order_key,t.status,t.transaction_id from orders t where t.order_key=?'], to: ['select t.id,t.amount,t.coupon_key,t.created_at,t.discount_amount,t.idempotency_key,t.order_id,t.id,t.line_no,t.price,t.qty,t.sku,t.order_key,t.status,t.transaction_id
+      from orders t join order_items t on t.id=t.order_id where t.order_key=? order by t.line_no']}
+  제안 match: {diffKind: dbRead.fingerprintReplaced, endpoint: order.get, from: ['select\ t\.id,t\.amount,t\.coupon_key,t\.created_at,t\.discount_amount,t\.idempotency_key,t\.order_key,t\.status,t\.transaction_id\ from\
+      orders\ t\ where\ t\.order_key=\?'], to: ['select\ t\.id,t\.amount,t\.coupon_key,t\.created_at,t\.discount_amount,t\.idempotency_key,t\.order_id,t\.id,t\.line_no,t\.price,t\.qty,t\.sku,t\.order_key,t\.status,t\.transaction_id\
+      from\ orders\ t\ join\ order_items\ t\ on\ t\.id=t\.order_id\ where\ t\.order_key=\?\ order\ by\ t\.line_no']}
+→ engine/rules/learned/5da05fdb147f.yaml
+→ engine/rules/learned/989c110b103e.yaml
+→ engine/rules/learned/9a82df6b99b4.yaml

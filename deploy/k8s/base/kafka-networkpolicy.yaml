@@ -1,0 +1,25 @@
+# Phase 3.3 - Kafka 격리 (D19)
+#
+# 9092에는 같은 네임스페이스의 Order(발행)·Coupon(소비·DLQ 발행)만 들어온다.
+# 스택 축: namespaceSelector가 없으므로 다른 스택에서는 들어올 수 없다(legacy에 egress 제한이 없어 이것이 경계).
+# 서비스 축: 같은 스택의 다른 pod(tooling 등)도 브로커에 붙을 수 없다. run.sh의 토픽 생성·그룹 확인은 브로커 pod 안에서(kubectl exec).
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kafka-ingress-order-coupon
+spec:
+  podSelector:
+    matchLabels:
+      app: kafka
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [order, coupon]
+      ports:
+        - port: 9092
+          protocol: TCP

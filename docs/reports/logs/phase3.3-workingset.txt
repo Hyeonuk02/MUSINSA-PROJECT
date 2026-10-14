@@ -1,0 +1,35 @@
+# 3.3 Kafka 추가 후 working set — 2026-10-13 (corpus v2 A/A p33 직후)
+kind 노드: 7.063GiB / 11.67GiB (60.52%)
+legacy  coupon               coupon             442 MiB
+legacy  coupon               istio-proxy         40 MiB
+legacy  coupon-mysql         coupon-mysql       442 MiB
+legacy  coupon-mysql         istio-proxy         36 MiB
+legacy  kafka                istio-proxy         37 MiB
+legacy  kafka                kafka              273 MiB
+legacy  mesh-check           curl                 0 MiB
+legacy  mesh-check           istio-proxy         41 MiB
+legacy  mysql                istio-proxy         36 MiB
+legacy  mysql                mysql              440 MiB
+legacy  order                istio-proxy         42 MiB
+legacy  order                order              435 MiB
+legacy  wiremock             istio-proxy         43 MiB
+legacy  wiremock             wiremock           237 MiB
+new     coupon               coupon             426 MiB
+new     coupon               istio-proxy         31 MiB
+new     coupon-mysql         coupon-mysql       442 MiB
+new     coupon-mysql         istio-proxy         36 MiB
+new     isolation-injected   curl                 1 MiB
+new     isolation-injected   istio-proxy         38 MiB
+new     isolation-uninjected curl                 0 MiB
+new     kafka                istio-proxy         38 MiB
+new     kafka                kafka              301 MiB
+new     mysql                istio-proxy         37 MiB
+new     mysql                mysql              443 MiB
+new     order                istio-proxy         38 MiB
+new     order                order              425 MiB
+new     wiremock             istio-proxy         44 MiB
+new     wiremock             wiremock           261 MiB
+verify  evidence-store       evidence-store      43 MiB
+전체 컨테이너 합계: 6386 MiB
+               total        used        free      shared  buff/cache   available
+Mem:           11949        7836        1434          34        2930        4112

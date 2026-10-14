@@ -2,18 +2,19 @@
 
 Evidence JSON을 받아 runId별 JSON Lines 파일에 저장하고, k6 완료 폴링·flush barrier·export에 응답한다.
 
-- 본문은 해석하지 않는다. 키 (runId, replayRequestId, stack) 세 필드만 읽고, 받은 바이트를 그대로 저장·반환한다.
+- 본문은 해석하지 않는다. 키 (runId, replayRequestId, stack, hopPath) 네 필드와 필터용 service·origin만 읽고,
+  받은 바이트를 그대로 저장·반환한다. (v1, Phase 3.2: 키에 hopPath — 한 요청이 여러 홉·서비스의 Evidence를 남긴다, D15)
   Evidence 형식의 소유자는 docs/evidence-schema-v0.json이다 (Store는 스키마를 검증하지 않는다).
 - 같은 키를 다시 받으면 덮어쓴다(멱등). 파일은 append-only이고 읽을 때 last-wins.
   count는 중복 제거된 키 수, export는 키당 마지막 1건.
 - 저장소: $EVIDENCE_DATA_DIR/<runId>/evidence.jsonl (Phase 2는 emptyDir)
-  한 줄 = {"runId", "replayRequestId", "stack", "raw": "<받은 본문 문자열 그대로>"}
+  한 줄 = {"runId", "replayRequestId", "stack", "hopPath", "service", "origin", "raw": "<받은 본문 문자열 그대로>"}
 
 엔드포인트
   POST   /evidence                              200 {"stored": true, "replaced": bool} / 400
-  GET    /exists?runId=&requestId=&stack=       200 / 404
-  GET    /count?runId=[&stack=]                 200 {"count": n}
-  GET    /export?runId=[&stack=]                200 JSON 배열 (replayRequestId, stack 순)
+  GET    /exists?runId=&requestId=&stack=&hopPath=   200 / 404 (hopPath 필수, 기본값 없음)
+  GET    /count?runId=[&stack=][&service=][&origin=]   200 {"count": n}
+  GET    /export?runId=[&stack=]                200 JSON 배열 (replayRequestId, hopPath, stack 순)
   DELETE /runs/{runId}                          200 {"deleted": n}
 """
 import json
@@ -30,11 +31,11 @@ from fastapi.responses import JSONResponse
 
 DATA_DIR = Path(os.environ.get("EVIDENCE_DATA_DIR", "/data"))
 RUN_ID = re.compile(r"^[A-Za-z0-9._-]{1,128}$")
-KEY_FIELDS = ("runId", "replayRequestId", "stack")
+KEY_FIELDS = ("runId", "replayRequestId", "stack", "hopPath")
 FILE_NAME = "evidence.jsonl"
 
 _lock = threading.Lock()
-# runId -> {(replayRequestId, stack): raw}. 디스크 파일의 last-wins 뷰.
+# runId -> {(replayRequestId, hopPath, stack): (raw, service, origin)}. 디스크 파일의 last-wins 뷰.
 _index: dict[str, dict[tuple[str, str], str]] = {}
 
 
@@ -54,7 +55,7 @@ def _load_existing() -> None:
             for line in f:
                 if line.strip():
                     row = json.loads(line)
-                    records[(row["replayRequestId"], row["stack"])] = row["raw"]
+                    records[(row["replayRequestId"], row["hopPath"], row["stack"])] = (row["raw"], row.get("service"), row.get("origin"))
 
 
 @asynccontextmanager
@@ -89,8 +90,10 @@ async def post_evidence(request: Request):
         raise HTTPException(400, f"missing key fields: {missing}")
 
     run_id = _check_run_id(doc["runId"])
-    key = (doc["replayRequestId"], doc["stack"])
-    line = json.dumps({"runId": run_id, "replayRequestId": key[0], "stack": key[1], "raw": raw},
+    key = (doc["replayRequestId"], doc["hopPath"], doc["stack"])
+    service, origin = doc.get("service"), doc.get("origin")
+    line = json.dumps({"runId": run_id, "replayRequestId": key[0], "stack": key[2], "hopPath": key[1],
+                       "service": service, "origin": origin, "raw": raw},
                       ensure_ascii=False) + "\n"
     with _lock:
         run_dir = DATA_DIR / run_id
@@ -101,24 +104,27 @@ async def post_evidence(request: Request):
             os.fsync(f.fileno())
         records = _index.setdefault(run_id, {})
         replaced = key in records
-        records[key] = raw
+        records[key] = (raw, service, origin)
     return {"stored": True, "replaced": replaced}
 
 
 @app.get("/exists")
-def exists(runId: str = Query(...), requestId: str = Query(...), stack: str = Query(...)):
+def exists(runId: str = Query(...), requestId: str = Query(...), stack: str = Query(...), hopPath: str = Query(...)):
     with _lock:
-        found = (requestId, stack) in _index.get(_check_run_id(runId), {})
+        found = (requestId, hopPath, stack) in _index.get(_check_run_id(runId), {})
     if not found:
         raise HTTPException(404, "not found")
     return {"exists": True}
 
 
 @app.get("/count")
-def count(runId: str = Query(...), stack: str | None = Query(None)):
+def count(runId: str = Query(...), stack: str | None = Query(None), service: str | None = Query(None),
+          origin: str | None = Query(None)):
     with _lock:
-        keys = _index.get(_check_run_id(runId), {}).keys()
-        n = sum(1 for _, s in keys if stack is None or s == stack)
+        items = _index.get(_check_run_id(runId), {}).items()
+        n = sum(1 for (_, _, s), (_, svc, org) in items
+                if (stack is None or s == stack) and (service is None or svc == service)
+                and (origin is None or org == origin))
     return {"count": n}
 
 
@@ -126,7 +132,7 @@ def count(runId: str = Query(...), stack: str | None = Query(None)):
 def export(runId: str = Query(...), stack: str | None = Query(None)):
     with _lock:
         records = _index.get(_check_run_id(runId), {})
-        raws = [records[k] for k in sorted(records) if stack is None or k[1] == stack]
+        raws = [records[k][0] for k in sorted(records) if stack is None or k[2] == stack]
     # 받은 본문을 그대로 이어 붙여 배열로 만든다 (재직렬화하지 않음)
     return Response("[" + ",".join(raws) + "]", media_type="application/json")
 

@@ -24,6 +24,21 @@ spring:
       hibernate:
         dialect: org.hibernate.dialect.MySQLDialect
 
+  kafka:
+    # Phase 3.3: order.paid 발행. 같은 ns의 브로커(kafka:9092). 재시도 없음 — 발행 실패는 ack failed로 드러난다.
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    producer:
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 0
+      properties:
+        enable.idempotence: false        # retries=0과 충돌
+        delivery.timeout.ms: 5000
+        request.timeout.ms: 4000
+        linger.ms: 0
+        max.block.ms: 5000               # 메타데이터를 못 받으면 send() 자체가 5초 안에 실패
+
 server:
   port: 8080
   # Phase 2.4: 진행 중 요청을 끝내고 멈춘다. 그 뒤 EvidenceSender가 큐를 drain(최대 10초)하고 남은 건 spill.
@@ -33,6 +48,10 @@ server:
 app:
   # 비어 있으면 시스템 시각(개발 편의). k8s에서는 APP_FIXED_CLOCK env로 주입한다.
   fixed-clock: ${APP_FIXED_CLOCK:}
+
+coupon:
+  # Phase 3.2: 같은 네임스페이스의 Coupon 서비스. k8s에서는 COUPON_URL env.
+  url: ${COUPON_URL:http://localhost:8090}
 
 payment:
   # Phase 2.1: 결제 게이트웨이(WireMock). k8s에서는 PAYMENT_GATEWAY_URL env로 같은 네임스페이스의 WireMock을 가리킨다.

@@ -363,3 +363,64 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 
 **단서**
 현재 corpus(세션 3개, 세션 간 상태 공유 없음) 조건에서의 결과이며 일반화하지 않는다.
+
+### D14. Call Graph는 동적 수집·합성으로 한다 — 별도 도구 없음 (2026-10-12)
+
+결정
+- 정적 Call Graph 도구는 범위에서 뺀다. 동적 Call Graph = Legacy A/A run의 Evidence `callTree`를 합친 "엔드포인트 → 거친 클래스·메서드" 맵.
+- 수집: Spring AOP `@Around`, 포인트컷 `poc.order..*` 빈(컨트롤러·서비스·리포지토리·클라이언트), `poc.evidence` 제외. 기록 단위는 빈 메서드(seq, depth, class, method, threw), 요청당 상한 500노드, 초과 시 truncated. Evidence 스키마 v1 `callTree`. 서비스 간 간선은 존재 = Envoy access log·span, 요청 귀속 = 재생 헤더 전파·OTel Baggage, 미귀속은 따로 집계.
+- 판정 단위는 클래스: git diff로 바뀐 .java → FQCN → 맵에서 그 클래스를 거친 엔드포인트 = 영향 API. 맵에 없는 변경 클래스는 원인 불문 "미관측"으로 취급: 정적 참조 폐포(참조·implements/extends, 깊이 ≤ 3)가 맵의 클래스에 닿으면 그 엔드포인트로 확장, 닿지 못하거나 모호하면 전역 영향. 비클래스 변경(설정·SQL·빌드)과 삭제·개명 클래스는 전역 영향. 검증 레이어 변경은 제외. 모르면 포함(fail-closed). 산출물에 미관측 변경 클래스 수·전역 영향 발동 여부 기록.
+- callTree는 pre-order + depth. 캡처는 ThreadLocal 스택(진입 push, finally pop, catch에서 threw)으로 depth를 보장하고, 엔진은 `depth[i] ≤ depth[i−1]+1` 불변식을 입력 계약으로 검사.
+- 운용: 기본 Tag 모드(전체 미러 + impactScope 태그). Filter 모드는 평가 arm B2로만 쓴다. 지표는 셋으로 가른다: 결함 탐지율(결함 카탈로그 기준, 관측 독립, 주 지표) / Observed-diff Recall(전체 미러의 관측 diff 기준) / 재생 수 감소율. corpus 커버리지는 맥락 지표.
+- Phase 3 = callTree 기록(스키마 v1), Phase 4 = 합성·diff 대조·Tag/Filter·평가. 세부: docs/call-graph.md
+
+근거
+- 현업 APM은 agent 계측(Pinpoint), 학계는 AspectJ 프로브(Kieker), 영향 분석은 클래스 단위 동적 의존성(Ekstazi)으로 충분하다는 선례. Spring AOP는 빈 경계만 보지만 클래스 단위 판정에는 영향 없고, 비-빈 클래스는 정적 참조로 보정.
+- 정적 분석의 DI/AOP/리플렉션 unsoundness 보정 비용 대비, 이미 돌리는 run에서 실제 경로가 공짜로 나온다.
+
+한계
+- 맵은 corpus가 실행한 경로만 안다. corpus 밖 API는 "정보 없음"이며 Tag 모드에서는 전부 미러된다.
+- 수집 범위(AOP = 빈만, OTel = 계측 라이브러리만, Envoy = 메시 경유 호출만)는 docs/call-graph.md 3절에 명시.
+- Observed-diff Recall은 관측된 차이에 대한 지표이며 미실행 경로는 분모에 없다. 관측 독립 지표는 결함 탐지율뿐.
+- 교수님 확인 필요: "Call Graph"를 동적 수집·합성으로 해석해도 되는지.
+
+### D15. Evidence 키에 hopPath — 같은 서비스 반복 호출을 구분한다 (2026-10-13)
+**결정**: 키 = (runId, replayRequestId, stack, hopPath). service·origin은 필드. hopPath는 진입 "0", 홉 안 n번째 HTTP 호출 "<부모>.h<n>", n번째 이벤트 소비 "<부모>.e<n>" — 종류별 순번(요청 전역 seq 아님).
+**근거**: (…, service, origin) 키는 한 요청이 같은 서비스를 두 번 부르면 last-wins로 첫 기록을 덮어, 중복 사이드이펙트 결함(F1·F9)을 숨긴다. 순번을 종류별로 두는 이유는 쿼리 수가 바뀌어도 짝이 유지되어야 하기 때문.
+**한계**: hopPath는 호출 순서가 결정론적일 때만 안정. 요청 스레드 안 순차 호출만 다룬다.
+
+### D16. 요청 타임라인은 단일 seq, 트랜잭션은 TransactionExecutionListener (2026-10-13)
+**결정**: SQL·외부 호출·이벤트 발행·트랜잭션 단계가 요청 버퍼의 한 카운터로 번호를 받는다. 트랜잭션은 Spring TransactionExecutionListener(6.1+)로 수집해 beforeCommit에서 COMMIT_BEGIN, 완료 시 COMMITTED/ROLLED_BACK/COMMIT_FAILED를 transactions[{seq,name,phase,outcome}]에 기록. 이벤트 발행은 동기이며 ack는 get()이 돌아온 호출 스레드에서 기록(onAcknowledgement는 I/O 스레드라 컨텍스트 없음). "커밋 전 발행"은 publish.seq < 그 트랜잭션의 COMMIT_BEGIN.seq로 판정.
+**근거**: 필터 시점엔 트랜잭션이 없어 동기화 등록이 불가. AFTER_COMMIT 콜백 안에서도 트랜잭션 리소스가 활성으로 보일 수 있어 불리언 판정은 오탐. COMMIT_BEGIN 기준이면 afterCommit 리스너와 AFTER_COMMIT 이벤트 리스너의 호출 순서를 가정하지 않아도 된다. 타임라인이면 롤백 시나리오 없이도 결정론적으로 판정된다.
+**대안**: Hibernate Interceptor.afterTransactionCompletion(Framework < 6.1 폴백). Outbox는 범위 밖.
+(주석, 2026-10-13: Framework < 6.1 폴백은 불필요 — 7.0.9 실측, docs/reports/phase3.0.md)
+실측(3.1): 동기화 afterCommit → 리스너 afterCommit 순서, flush SQL은 COMMIT_BEGIN 뒤 — docs/reports/logs/phase3.1-tx-callback-order.txt
+
+### D17. New v1은 Order의 점진 Kotlin 전환 사다리 (2026-10-13)
+**결정**: v1.1 클라이언트 → v1.2 엔티티·리포지토리 → v1.3 서비스 → v1.4 컨트롤러. 같은 Boot·JDK, FQCN·API 유지, kotlin-spring·kotlin-jpa 필수, 엔티티 data class 금지, 결함을 섞지 않음. 단계마다 commit·이미지 1개. A/A 게이트는 인프라·엔진 단계와 base에만, A/B 단계의 기준은 "모든 diff가 4분류로 설명됨"(0건 포함).
+**근거**: 교체(새 코드베이스)라는 주제 적합성, 응답엔 없고 DB·트랜잭션에만 보이는 차이가 나오는 영역, 같은 런타임이라 귀속이 깔끔, 작은 commit이 Phase 4 스코핑 입력. JDK만은 차이가 거의 없고 Boot 4는 빌드 변경이라 전역 영향 — v3(선택)로.
+
+### D18. DB 계약은 두 층 — 기능 계약과 실행 특성 (2026-10-13)
+**결정**: 쓰기 문장 집합·최종 DB 상태·불변식 위반은 Contract Violation. 읽기 횟수·순서 차이는 기본 Uncertain(사람 → 규칙), 엔드포인트별 maxSelects가 선언된 경우에만 초과 시 Contract Violation.
+**근거**: 쿼리 통합(F5)과 N+1(F8)이 같은 "SELECT 수 변화"인데 기대가 달랐던 모순. "판정은 선언된 해상도" 원칙의 적용.
+
+### D19. Kafka는 스택별 브로커, 내부 Evidence 완료는 settle 선언으로 (2026-10-13)
+**결정**: 스택별 1브로커·NetworkPolicy·partition 1·재시도 0·DLQ. 내부 Evidence(서비스 간 호출·소비)의 완료는 corpus의 settle 선언을 k6가 양쪽 스택에서 폴링해 확인하고, barrier 기대 집합은 corpus에서 계산한 뒤 도착한 Evidence가 선언한 childHopPath 폐포까지 넓혀 기다린다. 안정화 대기 휴리스틱은 쓰지 않는다. 없는 Evidence는 Undelivered(internal)이며 양쪽에 없어도 SAME이 아니다.
+**근거**: "1초간 변화 없음"은 완료의 증거가 아님. Legacy의 소비 Evidence도 비동기라 New만 폴링하면 export 전에 빠질 수 있음. settle만 기다리면 한쪽에만 생긴 추가 호출(F9)의 Evidence를 놓칠 수 있음.
+**한계**: 자원 부족 시 공유 브로커 + 토픽 접두사로 후퇴할 수 있으며 그때 Kafka는 스택 축 격리의 예외.
+**보완(2026-10-14, Phase 3.6)**: corpus settle은 k6가 폴링할 힌트이고, 스택별 기대 집합의 근거는 부모 Evidence의 선언(childHopPath)이다. barrier 1단계 = 진입 홉 + 그 스택의 부모가 실제 선언한 settle 홉, 2단계 = 폐포. 부모가 선언하지 않은 settle 홉은 미달이 아니라 행동 차이(엔진 hop_set_equal)로 넘기고, k6의 settle 타임아웃은 degraded가 아니라 settleTimeouts 지표(degraded는 진입 Evidence 실패에만). 이유: F7처럼 New의 결제가 실패하면 0.e1이 New에 오지 않는 것 자체가 결함의 증상이다.
+
+### D20. 세션 검사 위반의 pair 귀속 — Legacy와 다른 기여를 한 pair에만 (2026-10-14, Phase 3.6 D-6)
+**결정**: 세션 범위 검사(`gateway_calls_per_idem_key_le_1`, `coupon_transition_order`)의 위반은 "Legacy와 다른 기여를 한 pair"에만 CV로 붙인다. 귀속할 pair가 없으면 pair 판정을 바꾸지 않는다(키를 공유한 pair 전체에 전파하지 않음). 게이트웨이 검사는 키별 호출 합계가 스택 간 다르면 자기 pair 호출 수가 Legacy와 다른 pair에만 CV, 합계가 같고 양쪽 다 상한(1) 초과면 pair는 SAME이고 `bothStacks: true` 플래그만(변경 전부터 있던 위반 — max_selects의 "Legacy도 넘으면 경고"와 같은 취급) — 차등 판정(CV)과 절대 플래그(bothStacks)의 두 출력. 쿠폰 전이 검사는 선행 조건이 New에서만 깨진 소비 홉 pair에 CV, 양쪽이면 bothStacks. dbstate는 run 단위 그대로. `verdict.json` `summary.sessionViolations`로 세션 단위 뷰를 보존한다. engine-v1.2.
+**근거**: 3.4의 "그 키를 가진 pair(어느 스택이든)에 붙인다"는 F1(멱등 검사 제거)에서 정상 첫 결제 R000007까지 CV로 만들었다 — 위반은 세션에서 울렸지만 R000007의 행동은 Legacy와 같다. 탐지 로직이 아니라 표시 위치의 문제다.
+**한계**: **F1 결과를 본 뒤 일반화했다.** F1의 탐지(R000008 CV)는 v1.1·v1.2에서 같고, 정상 경로 오탐만 1 → 0. F2~F9는 v1.2가 사전 등록 엔진이다. 이전 run 전부(p33·p35·p36-base) 재판정에서 pair 판정·집계 변화 0을 확인했다.
+
+### D21. Order에 Service 계층 추출 — 사다리의 기준 형태 (2026-10-13, Phase 3.2 D-3 (A))
+**결정**: base(Java)에서 `@Transactional`·비즈니스 로직을 `poc.order.OrderService`로 옮기고 컨트롤러는 매핑·DTO·입력 검증만. Service는 `Outcome(kind, OrderView)`를 돌려주고 HTTP 매핑은 컨트롤러가 한다. 응답 본문은 트랜잭션 안에서 만든다(open-in-view off).
+**근거**: 3.1 실측 callTree가 `Controller → Repository/Client`로 Service 계층이 없어, 계획의 v1.3(OrderService Kotlin 전환) 단계와 callTree 기대 형태(`Controller → Service → Repository → Client`)가 성립하지 않았다. 트랜잭션 이름도 `poc.order.OrderService.*`로 고정되어 3.5 사다리·3.6 결함(F1·F4·F5·F8·F9가 OrderService를 건드림)의 기준이 됐다.
+**한계**: Legacy 코드를 Phase 3 중간에 바꾼 것이라, 그 이전 run(3.1)과 이후 run의 callTree·트랜잭션 이름은 직접 비교하지 않는다(A/A 게이트를 다시 통과한 base 이미지부터가 기준).
+
+### D22. Order·Coupon JVM Metaspace 상한 256m, memory limits 1Gi — base 공통 (2026-10-14, Phase 3.5 D-5 (A))
+**결정**: Order·Coupon `JAVA_TOOL_OPTIONS`의 `-XX:MaxMetaspaceSize` 128m → 256m(heap `-Xmx384m` 유지), memory limits 768Mi → 1Gi(requests 512Mi 그대로 — 스케줄링 불변). legacy·new 같은 base 매니페스트. "legacy 매니페스트 무변경"은 코드·이미지 고정의 뜻이며 양쪽 공통 JVM·자원 설정은 같이 바뀐다. 변경 뒤 base A/A(p35-base)로 게이트 재확인.
+**근거**: v1.1 첫 run에서 New Order가 `OutOfMemoryError: Metaspace`(첫 지점 Kafka producer 지연 로딩) → ack failed·5xx·degraded 7. 측정하니 Legacy(Java)도 128m의 99%(125.85 MB)였고 Kotlin 런타임(+약 7 MB, +1,800 클래스)으로 초과. 256m은 v1.3·v1.4의 kotlin-reflect·jackson-module-kotlin까지 감안, 1Gi는 상한 합이 768Mi를 넘어 OOMKill로 원인이 가려지지 않게.
+**한계**: 단일 노드 kind(12GiB)의 자원 상한이다. 운영 크기와 무관하며, Metaspace 수치는 참고값(run 뒤 jcmd 측정)이다.

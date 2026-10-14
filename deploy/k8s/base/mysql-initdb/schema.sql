@@ -18,6 +18,10 @@
 --   amount          sum(order_items.qty * price)
 --   transaction_id  결제 게이트웨이가 준 값 (PAID일 때)
 --   idempotency_key 결제에 쓰인 Idempotency-Key. 같은 키 재요청은 게이트웨이 재호출 없이 이전 결과
+--
+-- Phase 3.2: 쿠폰 주문
+--   coupon_key      주문에 쓴 쿠폰(Coupon 서비스의 business key). 없으면 NULL
+--   discount_amount 쿠폰 할인액. amount = max(0, 항목 합계 - discount_amount)
 CREATE TABLE IF NOT EXISTS orders (
     id              BIGINT AUTO_INCREMENT PRIMARY KEY,
     order_key       VARCHAR(64)  NOT NULL,
@@ -26,6 +30,8 @@ CREATE TABLE IF NOT EXISTS orders (
     transaction_id  VARCHAR(128) NULL,
     idempotency_key VARCHAR(128) NULL,
     created_at      DATETIME(6)  NOT NULL,
+    coupon_key      VARCHAR(64)  NULL,
+    discount_amount BIGINT       NOT NULL DEFAULT 0,
     CONSTRAINT uk_orders_order_key UNIQUE (order_key)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_0900_ai_ci;
 

@@ -1,0 +1,38 @@
+== runs/p35-v1.1-1
+== runs/p35-v1.1-1  FAIL
+  PASS  입력 계약 (schema·runId·stack)         87/87
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 36건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  FAIL  Undelivered internal (new)         3  R000003/0.e1 R000007/0.e1 R000012/0.e1
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        참고: hop 집합 불일치 — 부모가 선언한 행동 차이(엔진으로) 4건 R000029/0.e1(legacy만) R000033/0.e1(legacy만) R000041/0.e1(legacy만) R000044/0.h1(legacy만)
+        자식 홉 짝 4건
+  PASS  request.method                     40/40
+  PASS  request.path                       40/40
+  PASS  request.query                      40/40
+  PASS  request.headers.x-replay-request-id 40/40
+  PASS  request.headers.x-run-id           40/40
+  PASS  request.headers.x-session-id       40/40
+  PASS  request.headers.x-replay-hop-path  40/40
+  PASS  request.headers.idempotency-key    40/40
+  PASS  request.headers.content-type       40/40
+  PASS  request.bodyHash                   40/40
+  PASS  k6 status == legacy response.status 36/36
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-4.8 median=17.1 max=5241.1 (n=40)
+        arrivedAt:   min=-1.4 median=0.3 max=234.1 (n=40)
+== 요약
+  FAIL  runs/p35-v1.1-1
+verify exit=1
+== runs/p35-v1.1-2
+ERROR: run 디렉터리가 없다: runs/p35-v1.1-2
+verify exit=2
+== runs/p35-v1.1-3
+ERROR: run 디렉터리가 없다: runs/p35-v1.1-3
+verify exit=2

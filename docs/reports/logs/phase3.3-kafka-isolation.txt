@@ -1,0 +1,8 @@
+## 스택 축
+legacy/kprobe-order -> kafka.new.svc.cluster.local:9092 : 실패 — [2026-10-13 11:38:47,197] WARN [LegacyAdminClient clientId=admin-1] Bootstrap broker kafka.new.svc.cluster.local:9092 (id: -1 rack: null isFenced: fal
+new/kprobe-order -> kafka.legacy.svc.cluster.local:9092 : 실패 — [2026-10-13 11:38:48,650] WARN [LegacyAdminClient clientId=admin-1] Bootstrap broker kafka.legacy.svc.cluster.local:9092 (id: -1 rack: null isFenced: 
+## 서비스 축(같은 스택, 허용 대상 아님)
+legacy/kprobe-other -> kafka.legacy.svc.cluster.local:9092 : 실패 — [2026-10-13 11:38:55,067] WARN [LegacyAdminClient clientId=admin-1] Bootstrap broker kafka.legacy.svc.cluster.local:9092 (id: -1 rack: null isFenced: 
+## 대조군
+legacy/kprobe-order -> kafka.legacy.svc.cluster.local:9092 : 연결 성공 — kafka:9092 (id: 1 rack: null isFenced: false) -> ( 	Produce(0): 0 to 13 [usable: 13], 	Fetch(1): 4 to 18 [usable: 18], 
+new/kprobe-order -> kafka.new.svc.cluster.local:9092 : 연결 성공 — kafka:9092 (id: 1 rack: null isFenced: false) -> ( 	Produce(0): 0 to 13 [usable: 13], 	Fetch(1): 4 to 18 [usable: 18], 

@@ -1,0 +1,39 @@
+# kind 노드 자원 — 2026-10-13
+Docker VM: CPUs=10 MemTotal=8218034176
+musinsa-phase1-control-plane mem=4.696GiB / 7.654GiB (61.35%)
+               total        used        free      shared  buff/cache   available
+Mem:            7837        5378         542          29        2143        2458
+Swap:           1023          88         935
+host hw.memsize=17179869184 hw.ncpu=10
+
+# 컨테이너별 working set (crictl stats, ns+container 합산)
+legacy         order                        590 MiB
+new            order                        587 MiB
+kube-system    kube-apiserver               537 MiB
+new            mysql                        474 MiB
+legacy         mysql                        473 MiB
+legacy         wiremock                     236 MiB
+new            wiremock                     233 MiB
+legacy         istio-proxy                  164 MiB
+new            istio-proxy                  161 MiB
+kube-system    kube-controller-manager       88 MiB
+istio-system   discovery                     80 MiB
+kube-system    etcd                          73 MiB
+observability  jaeger                        58 MiB
+observability  otel-collector                43 MiB
+kube-system    coredns                       40 MiB
+verify         evidence-store                39 MiB
+istio-system   istio-proxy                   39 MiB
+kube-system    kube-scheduler                35 MiB
+kube-system    kube-proxy                    29 MiB
+kube-system    kindnet-cni                   22 MiB
+local-path-storage local-path-provisioner        17 MiB
+new            curl                           7 MiB
+legacy         curl                           0 MiB
+legacy         istio-init                     0 MiB
+new            wait-for-mysql                 0 MiB
+new            istio-init                     0 MiB
+new            otel-agent                     0 MiB
+legacy         otel-agent                     0 MiB
+legacy         wait-for-mysql                 0 MiB
+합계 4026 MiB

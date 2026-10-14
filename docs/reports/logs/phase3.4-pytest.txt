@@ -1,0 +1,35 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.0, pytest-8.4.2, pluggy-1.6.0 -- .venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/hyeonuk/workspace/MUSINSA-PROJECT
+plugins: anyio-4.15.1
+collecting ... collected 26 items
+
+engine/tests/test_engine.py::test_fixture_all_same_all_arms PASSED       [  3%]
+engine/tests/test_engine.py::test_real_runs_all_same[p33-1] PASSED       [  7%]
+engine/tests/test_engine.py::test_real_runs_all_same[p33-2] PASSED       [ 11%]
+engine/tests/test_engine.py::test_real_runs_all_same[p33-3] PASSED       [ 15%]
+engine/tests/test_engine.py::test_output_deterministic PASSED            [ 19%]
+engine/tests/test_engine.py::test_response_field_added_is_uncertain PASSED [ 23%]
+engine/tests/test_engine.py::test_amount_change_is_cv PASSED             [ 26%]
+engine/tests/test_engine.py::test_insert_removed_is_cv_write_set PASSED  [ 30%]
+engine/tests/test_engine.py::test_gateway_charged_twice_is_cv_session_rule PASSED [ 34%]
+engine/tests/test_engine.py::test_publish_before_commit_begin_is_cv PASSED [ 38%]
+engine/tests/test_engine.py::test_duplicate_child_hop_is_cv_hop_set PASSED [ 42%]
+engine/tests/test_engine.py::test_select_added_uncertain_when_undeclared PASSED [ 46%]
+engine/tests/test_engine.py::test_select_added_cv_when_max_selects_declared PASSED [ 50%]
+engine/tests/test_engine.py::test_ack_failed_is_cv PASSED                [ 53%]
+engine/tests/test_engine.py::test_consume_outcome_failed_is_cv PASSED    [ 57%]
+engine/tests/test_engine.py::test_call_tree_only_is_uncertain PASSED     [ 61%]
+engine/tests/test_engine.py::test_transaction_name_only_is_uncertain PASSED [ 65%]
+engine/tests/test_engine.py::test_proxy_and_kotlin_names_normalized PASSED [ 69%]
+engine/tests/test_engine.py::test_rule_with_instance_key_rejected[sessionId] PASSED [ 73%]
+engine/tests/test_engine.py::test_rule_with_instance_key_rejected[replayRequestId] PASSED [ 76%]
+engine/tests/test_engine.py::test_rule_with_instance_key_rejected[runId] PASSED [ 80%]
+engine/tests/test_engine.py::test_status_mismatch_never_explained_by_rule PASSED [ 84%]
+engine/tests/test_engine.py::test_settle_without_use_is_cv_session_rule PASSED [ 88%]
+engine/tests/test_review.py::test_response_field_added_uncertain_then_label_improvement PASSED [ 92%]
+engine/tests/test_review.py::test_learn_label_clears_eval_uncertain PASSED [ 96%]
+engine/tests/test_review.py::test_eval_only_uid_cannot_be_labeled PASSED [100%]
+
+============================== 26 passed in 2.40s ==============================

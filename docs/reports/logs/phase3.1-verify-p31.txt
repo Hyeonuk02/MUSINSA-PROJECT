@@ -1,0 +1,73 @@
+== runs/p31-1  PASS
+  PASS  입력 계약 (schema·runId·stack)         28/28
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 14건 (k6-summary.json)
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  request.method                     14/14
+  PASS  request.path                       14/14
+  PASS  request.query                      14/14
+  PASS  request.headers.x-replay-request-id 14/14
+  PASS  request.headers.x-run-id           14/14
+  PASS  request.headers.x-session-id       14/14
+  PASS  request.headers.x-replay-hop-path  14/14
+  PASS  request.headers.idempotency-key    14/14
+  PASS  request.headers.content-type       14/14
+  PASS  request.bodyHash                   14/14
+  PASS  k6 status == legacy response.status 14/14
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-9.8 median=-0.1 max=21.4 (n=14)
+        arrivedAt:   min=-4.0 median=0.0 max=1.7 (n=14)
+== runs/p31-2  PASS
+  PASS  입력 계약 (schema·runId·stack)         28/28
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 14건 (k6-summary.json)
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  request.method                     14/14
+  PASS  request.path                       14/14
+  PASS  request.query                      14/14
+  PASS  request.headers.x-replay-request-id 14/14
+  PASS  request.headers.x-run-id           14/14
+  PASS  request.headers.x-session-id       14/14
+  PASS  request.headers.x-replay-hop-path  14/14
+  PASS  request.headers.idempotency-key    14/14
+  PASS  request.headers.content-type       14/14
+  PASS  request.bodyHash                   14/14
+  PASS  k6 status == legacy response.status 14/14
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-3.0 median=-0.4 max=5.8 (n=14)
+        arrivedAt:   min=-7.5 median=-0.2 max=1.2 (n=14)
+== runs/p31-3  PASS
+  PASS  입력 계약 (schema·runId·stack)         28/28
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 14건 (k6-summary.json)
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  request.method                     14/14
+  PASS  request.path                       14/14
+  PASS  request.query                      14/14
+  PASS  request.headers.x-replay-request-id 14/14
+  PASS  request.headers.x-run-id           14/14
+  PASS  request.headers.x-session-id       14/14
+  PASS  request.headers.x-replay-hop-path  14/14
+  PASS  request.headers.idempotency-key    14/14
+  PASS  request.headers.content-type       14/14
+  PASS  request.bodyHash                   14/14
+  PASS  k6 status == legacy response.status 14/14
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-10.2 median=-2.2 max=4.3 (n=14)
+        arrivedAt:   min=-0.6 median=-0.0 max=0.5 (n=14)
+== 요약
+  PASS  runs/p31-1
+  PASS  runs/p31-2
+  PASS  runs/p31-3

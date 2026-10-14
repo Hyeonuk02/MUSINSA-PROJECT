@@ -1,0 +1,15 @@
+runs/p36-F5-1 git {'rev': '9a6774f33a201f12a31978fef2d783d115e7ad93', 'dirty': False} new order-app:phase3.6-F5
+   target 13 B0 DIFF 13 B1 DIFF 13
+   violation axes {} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'IMPROVEMENT': 8, 'SAME': 26}, 'learn': {'IMPROVEMENT': 5, 'SAME': 20}}
+runs/p36-F5-2 git {'rev': '9a6774f33a201f12a31978fef2d783d115e7ad93', 'dirty': False} new order-app:phase3.6-F5
+   target 13 B0 DIFF 13 B1 DIFF 13
+   violation axes {} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'IMPROVEMENT': 8, 'SAME': 26}, 'learn': {'IMPROVEMENT': 5, 'SAME': 20}}
+runs/p36-F5-3 git {'rev': '9a6774f33a201f12a31978fef2d783d115e7ad93', 'dirty': False} new order-app:phase3.6-F5
+   target 13 B0 DIFF 13 B1 DIFF 13
+   violation axes {} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'IMPROVEMENT': 8, 'SAME': 26}, 'learn': {'IMPROVEMENT': 5, 'SAME': 20}}

@@ -1,0 +1,98 @@
+{
+  "schemaVersion": "v1",
+  "runId": "p32-1",
+  "replayRequestId": "R000027",
+  "hopPath": "0.h1",
+  "sessionId": "S006",
+  "stack": "legacy",
+  "service": "coupon",
+  "origin": "http",
+  "version": "legacy",
+  "request": {
+    "method": "POST",
+    "path": "/api/coupons/ck-R000026/use",
+    "query": "",
+    "headers": {
+      "x-replay-request-id": "R000027",
+      "x-run-id": "p32-1",
+      "x-session-id": "S006",
+      "x-replay-hop-path": "0.h1",
+      "content-type": "application/json"
+    },
+    "bodyHash": "sha256:b452301e42cc93adb3bef02066ab1f02b57843f5555594fe2d545b93efd3837c"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "content-type": "application/json"
+    },
+    "bodyHash": "sha256:abc14f371d104736ead0dfce5b51d48fdf16496eba216e27f0ed07f2262fc93a",
+    "body": "{\"couponKey\":\"ck-R000026\",\"discountAmount\":3000,\"status\":\"USED\",\"usedByOrderKey\":\"ok-R000027\"}"
+  },
+  "event": null,
+  "dbAccess": {
+    "statements": [
+      {
+        "seq": 1,
+        "sql": "select c1_0.id,c1_0.coupon_key,c1_0.created_at,c1_0.discount_amount,c1_0.status,c1_0.used_at,c1_0.used_by_order_key from coupons c1_0 where c1_0.coupon_key=?"
+      },
+      {
+        "seq": 3,
+        "sql": "update coupons set coupon_key=?,created_at=?,discount_amount=?,status=?,used_at=?,used_by_order_key=? where id=?"
+      }
+    ],
+    "truncated": false
+  },
+  "externalCalls": [],
+  "events": {
+    "published": []
+  },
+  "transactions": [
+    {
+      "seq": 2,
+      "name": "poc.coupon.CouponService.use",
+      "phase": "COMMIT_BEGIN",
+      "outcome": null
+    },
+    {
+      "seq": 4,
+      "name": "poc.coupon.CouponService.use",
+      "phase": "COMPLETED",
+      "outcome": "COMMITTED"
+    }
+  ],
+  "callTree": {
+    "nodes": [
+      {
+        "seq": 1,
+        "depth": 0,
+        "class": "poc.coupon.CouponController",
+        "method": "use",
+        "threw": false
+      },
+      {
+        "seq": 2,
+        "depth": 1,
+        "class": "poc.coupon.CouponService",
+        "method": "use",
+        "threw": false
+      },
+      {
+        "seq": 3,
+        "depth": 2,
+        "class": "poc.coupon.CouponRepository",
+        "method": "findByCouponKey",
+        "threw": false
+      }
+    ],
+    "truncated": false
+  },
+  "error": null,
+  "timing": {
+    "arrivedAt": "2026-10-13T10:58:39.871018958Z",
+    "completedAt": "2026-10-13T10:58:39.900261Z",
+    "arrivedNano": 13804386102417,
+    "completedNano": 13804415344958
+  },
+  "capturedAt": "2026-10-13T10:58:39.901109958Z"
+}

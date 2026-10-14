@@ -1,0 +1,85 @@
+== runs/p32-1  PASS
+  PASS  입력 계약 (schema·runId·stack)         102/102
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 46건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        자식 홉 짝 5건
+  PASS  request.method                     51/51
+  PASS  request.path                       51/51
+  PASS  request.query                      51/51
+  PASS  request.headers.x-replay-request-id 51/51
+  PASS  request.headers.x-run-id           51/51
+  PASS  request.headers.x-session-id       51/51
+  PASS  request.headers.x-replay-hop-path  51/51
+  PASS  request.headers.idempotency-key    51/51
+  PASS  request.headers.content-type       51/51
+  PASS  request.bodyHash                   51/51
+  PASS  k6 status == legacy response.status 46/46
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-31.6 median=-1.6 max=10.6 (n=51)
+        arrivedAt:   min=-16.6 median=0.1 max=9.5 (n=51)
+== runs/p32-2  PASS
+  PASS  입력 계약 (schema·runId·stack)         102/102
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 46건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        자식 홉 짝 5건
+  PASS  request.method                     51/51
+  PASS  request.path                       51/51
+  PASS  request.query                      51/51
+  PASS  request.headers.x-replay-request-id 51/51
+  PASS  request.headers.x-run-id           51/51
+  PASS  request.headers.x-session-id       51/51
+  PASS  request.headers.x-replay-hop-path  51/51
+  PASS  request.headers.idempotency-key    51/51
+  PASS  request.headers.content-type       51/51
+  PASS  request.bodyHash                   51/51
+  PASS  k6 status == legacy response.status 46/46
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-10.1 median=0.1 max=27.6 (n=51)
+        arrivedAt:   min=-2.1 median=0.1 max=2.6 (n=51)
+== runs/p32-3  PASS
+  PASS  입력 계약 (schema·runId·stack)         102/102
+  PASS  중복 키 (legacy)                      0
+  PASS  중복 키 (new)                         0
+        sent 46건 (k6-summary.json), 관측 호스트 ['coupon', 'order']
+  PASS  Undelivered (legacy)               0
+  PASS  Undelivered (new)                  0
+  PASS  Unexpected (legacy)                0
+  PASS  Unexpected (new)                   0
+  PASS  Undelivered internal (legacy)      0
+  PASS  Undelivered internal (new)         0
+  PASS  hop 집합 불일치 — 선언 없음                 0
+        자식 홉 짝 5건
+  PASS  request.method                     51/51
+  PASS  request.path                       51/51
+  PASS  request.query                      51/51
+  PASS  request.headers.x-replay-request-id 51/51
+  PASS  request.headers.x-run-id           51/51
+  PASS  request.headers.x-session-id       51/51
+  PASS  request.headers.x-replay-hop-path  51/51
+  PASS  request.headers.idempotency-key    51/51
+  PASS  request.headers.content-type       51/51
+  PASS  request.bodyHash                   51/51
+  PASS  k6 status == legacy response.status 46/46
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-5.5 median=-0.2 max=9.5 (n=51)
+        arrivedAt:   min=-1.9 median=0.0 max=2.2 (n=51)
+== 요약
+  PASS  runs/p32-1
+  PASS  runs/p32-2
+  PASS  runs/p32-3

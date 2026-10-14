@@ -1,0 +1,2067 @@
+{
+  "arms": {
+    "F0": {
+      "B0_DIFF": 1,
+      "B1_DIFF": 1,
+      "C": {
+        "CONTRACT_VIOLATION": 1,
+        "SAME": 59
+      },
+      "C_norules": {
+        "CONTRACT_VIOLATION": 1,
+        "SAME": 59
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true
+    },
+    "F1": {
+      "B0_DIFF": 2,
+      "B0_targetsDIFF": 1,
+      "B1_DIFF": 1,
+      "B1_missed": [
+        "R000008/0"
+      ],
+      "B1_targetsDIFF": 0,
+      "C": {
+        "CONTRACT_VIOLATION": 2,
+        "SAME": 58
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 2,
+        "SAME": 58
+      },
+      "matrix": {
+        "actual": "B1 미탐(C만)",
+        "declared": "C만",
+        "match": "일치"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 1
+    },
+    "F2": {
+      "B0_DIFF": 28,
+      "B0_targetsDIFF": 27,
+      "B1_DIFF": 28,
+      "B1_missed": [],
+      "B1_targetsDIFF": 27,
+      "C": {
+        "CONTRACT_VIOLATION": 28,
+        "SAME": 32
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 28,
+        "SAME": 32
+      },
+      "matrix": {
+        "actual": "B1 가시",
+        "declared": "B1·C",
+        "match": "일치"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 27
+    },
+    "F3": {
+      "B0_DIFF": 8,
+      "B0_targetsDIFF": 7,
+      "B1_DIFF": 1,
+      "B1_missed": [
+        "R000003/0",
+        "R000007/0",
+        "R000012/0",
+        "R000029/0",
+        "R000033/0",
+        "R000041/0",
+        "R000045/0"
+      ],
+      "B1_targetsDIFF": 0,
+      "C": {
+        "CONTRACT_VIOLATION": 8,
+        "SAME": 52
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 8,
+        "SAME": 52
+      },
+      "matrix": {
+        "actual": "B1 미탐(C만)",
+        "declared": "C만",
+        "match": "일치"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 7
+    },
+    "F4": {
+      "B0_DIFF": 3,
+      "B0_targetsDIFF": 2,
+      "B1_DIFF": 2,
+      "B1_missed": [
+        "R000037/0"
+      ],
+      "B1_targetsDIFF": 1,
+      "C": {
+        "CONTRACT_VIOLATION": 3,
+        "SAME": 57
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 3,
+        "SAME": 57
+      },
+      "matrix": {
+        "actual": "B1 일부(1/2)",
+        "declared": "C만",
+        "match": "반 칸(결함 요청 B1 미탐, 후속 조회 가시)"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 2
+    },
+    "F5": {
+      "B0_DIFF": 14,
+      "B0_targetsDIFF": 13,
+      "B1_DIFF": 14,
+      "B1_missed": [],
+      "B1_targetsDIFF": 13,
+      "C": {
+        "CONTRACT_VIOLATION": 1,
+        "IMPROVEMENT": 13,
+        "SAME": 46
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 1,
+        "SAME": 46,
+        "UNCERTAIN": 13
+      },
+      "matrix": {
+        "actual": "B1 가시",
+        "declared": "분류(B1 DIFF, C 분류)",
+        "match": "일치"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 13
+    },
+    "F6": {
+      "B0_DIFF": 27,
+      "B0_targetsDIFF": 26,
+      "B1_DIFF": 27,
+      "B1_missed": [],
+      "B1_targetsDIFF": 26,
+      "C": {
+        "CONTRACT_VIOLATION": 1,
+        "IMPROVEMENT": 26,
+        "SAME": 33
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 1,
+        "SAME": 33,
+        "UNCERTAIN": 26
+      },
+      "matrix": {
+        "actual": "B1 가시",
+        "declared": "분류(B1 DIFF, C 분류)",
+        "match": "일치"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 26
+    },
+    "F7": {
+      "B0_DIFF": 3,
+      "B0_targetsDIFF": 2,
+      "B1_DIFF": 3,
+      "B1_missed": [],
+      "B1_targetsDIFF": 2,
+      "C": {
+        "CONTRACT_VIOLATION": 3,
+        "SAME": 56
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 3,
+        "SAME": 56
+      },
+      "matrix": {
+        "actual": "B1 가시",
+        "declared": "분류(B1 DIFF, C 분류)",
+        "match": "일치"
+      },
+      "pairs": 59,
+      "sameAcrossRuns": true,
+      "targets": 2
+    },
+    "F8": {
+      "B0_DIFF": 11,
+      "B0_targetsDIFF": 10,
+      "B1_DIFF": 11,
+      "B1_missed": [],
+      "B1_targetsDIFF": 10,
+      "C": {
+        "CONTRACT_VIOLATION": 1,
+        "SAME": 49,
+        "UNCERTAIN": 10
+      },
+      "C_caught": true,
+      "C_maxsel": {
+        "CONTRACT_VIOLATION": 11,
+        "SAME": 49
+      },
+      "C_norules": {
+        "CONTRACT_VIOLATION": 1,
+        "SAME": 49,
+        "UNCERTAIN": 10
+      },
+      "matrix": {
+        "actual": "B1 가시",
+        "declared": "B1에서도",
+        "match": "일치"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 10
+    },
+    "F9": {
+      "B0_DIFF": 5,
+      "B0_targetsDIFF": 4,
+      "B1_DIFF": 1,
+      "B1_missed": [
+        "R000027/0",
+        "R000032/0",
+        "R000036/0",
+        "R000044/0"
+      ],
+      "B1_targetsDIFF": 0,
+      "C": {
+        "CONTRACT_VIOLATION": 5,
+        "SAME": 55
+      },
+      "C_caught": true,
+      "C_norules": {
+        "CONTRACT_VIOLATION": 5,
+        "SAME": 55
+      },
+      "matrix": {
+        "actual": "B1 미탐(C만)",
+        "declared": "C만",
+        "match": "일치"
+      },
+      "pairs": 60,
+      "sameAcrossRuns": true,
+      "targets": 4
+    },
+    "base": {
+      "B0_DIFF": 0,
+      "B1_DIFF": 0,
+      "C": {
+        "SAME": 58
+      },
+      "C_norules": {
+        "SAME": 58
+      },
+      "pairs": 58,
+      "sameAcrossRuns": true
+    },
+    "v1.1": {
+      "B0_DIFF": 0,
+      "B1_DIFF": 0,
+      "C": {
+        "SAME": 58
+      },
+      "C_norules": {
+        "SAME": 58
+      },
+      "pairs": 58,
+      "sameAcrossRuns": true
+    },
+    "v1.2": {
+      "B0_DIFF": 0,
+      "B1_DIFF": 0,
+      "C": {
+        "SAME": 58
+      },
+      "C_norules": {
+        "SAME": 58
+      },
+      "pairs": 58,
+      "sameAcrossRuns": true
+    },
+    "v1.3": {
+      "B0_DIFF": 0,
+      "B1_DIFF": 0,
+      "C": {
+        "SAME": 58
+      },
+      "C_norules": {
+        "SAME": 58
+      },
+      "pairs": 58,
+      "sameAcrossRuns": true
+    },
+    "v1.4": {
+      "B0_DIFF": 0,
+      "B1_DIFF": 0,
+      "C": {
+        "SAME": 58
+      },
+      "C_norules": {
+        "SAME": 58
+      },
+      "pairs": 58,
+      "sameAcrossRuns": true
+    }
+  },
+  "detection": {
+    "perFault": {
+      "F0": {
+        "category": "baseline",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 2,
+        "pairsOk": 2,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 2,
+            "ok": 2
+          }
+        }
+      },
+      "F1": {
+        "category": "real",
+        "detected": true,
+        "falsePositives": [],
+        "falsePositivesEngineV11": [
+          "R000007/0"
+        ],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 1,
+        "pairsOk": 1,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 1,
+            "ok": 1
+          }
+        }
+      },
+      "F2": {
+        "category": "real",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 27,
+        "pairsOk": 27,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 27,
+            "ok": 27
+          }
+        }
+      },
+      "F3": {
+        "category": "real",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 7,
+        "pairsOk": 7,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 7,
+            "ok": 7
+          }
+        }
+      },
+      "F4": {
+        "category": "real",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 2,
+        "pairsOk": 2,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 2,
+            "ok": 2
+          }
+        }
+      },
+      "F5": {
+        "category": "classify",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 13,
+        "pairsOk": 13,
+        "runCheckOk": true,
+        "views": {
+          "post(C_rules)": {
+            "n": 13,
+            "ok": 13
+          },
+          "pre(C_norules)": {
+            "n": 13,
+            "ok": 13
+          }
+        }
+      },
+      "F6": {
+        "category": "classify",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 26,
+        "pairsOk": 26,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 26,
+            "ok": 26
+          }
+        }
+      },
+      "F7": {
+        "category": "real",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 2,
+        "pairsOk": 2,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 2,
+            "ok": 2
+          }
+        }
+      },
+      "F8": {
+        "category": "perf",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": 10,
+        "maxSelOk": 10,
+        "pairsN": 10,
+        "pairsOk": 10,
+        "runCheckOk": true,
+        "views": {
+          "C_maxsel": {
+            "n": 10,
+            "ok": 10
+          },
+          "C_rules": {
+            "n": 10,
+            "ok": 10
+          }
+        }
+      },
+      "F9": {
+        "category": "real",
+        "detected": true,
+        "falsePositives": [],
+        "maxSelN": null,
+        "maxSelOk": null,
+        "pairsN": 4,
+        "pairsOk": 4,
+        "runCheckOk": true,
+        "views": {
+          "C_rules": {
+            "n": 4,
+            "ok": 4
+          }
+        }
+      }
+    },
+    "summary": {
+      "all": {
+        "detected": 9,
+        "n": 9
+      },
+      "classify": {
+        "detected": 2,
+        "faults": [
+          "F5",
+          "F6"
+        ],
+        "n": 2
+      },
+      "pairs": {
+        "maxSelN": 10,
+        "maxSelOk": 10,
+        "n": 92,
+        "ok": 92
+      },
+      "perf": {
+        "detected": 1,
+        "faults": [
+          "F8"
+        ],
+        "n": 1
+      },
+      "real": {
+        "detected": 6,
+        "faults": [
+          "F1",
+          "F2",
+          "F3",
+          "F4",
+          "F7",
+          "F9"
+        ],
+        "n": 6
+      }
+    }
+  },
+  "engine": {
+    "rules": {
+      "C_maxsel": {
+        "contract-maxselects.yaml": "sha256:6d4b3c071c72c0a1d906c18b0490edf02c17a5064aebfc6a1eb7732178503cd9",
+        "improvement.yaml": "sha256:4fbf502f476201283d6ebcf3bfaf1d13d0ad9dafc1e8fc32e7076e333916c9f3",
+        "learned/5da05fdb147f.yaml": "sha256:70b03a544b99d3c65f223a51f36bf89d1cddfa11d45082a26968386c9d7deac9",
+        "learned/989c110b103e.yaml": "sha256:1beaba8531e7d221136228cd2ea3faa54923f9285da9fef0a92fbd4e96f7015b",
+        "learned/9a82df6b99b4.yaml": "sha256:d7c3c071318db6a888dada1c23f989a0de8646dabae56a8423d621254e37dd7a"
+      },
+      "C_norules": {
+        "contract.yaml": "sha256:983e555a12cd0fc2a329668855a10c9a615874be488e906d8a08a24b88ee8d65",
+        "improvement.yaml": "sha256:e0dfa70eb69d47fe9cb2be8a4fcd53e74cf7fe26fcbb1f06912b57a9c028e4e0"
+      },
+      "C_rules": {
+        "contract.yaml": "sha256:983e555a12cd0fc2a329668855a10c9a615874be488e906d8a08a24b88ee8d65",
+        "improvement.yaml": "sha256:4fbf502f476201283d6ebcf3bfaf1d13d0ad9dafc1e8fc32e7076e333916c9f3",
+        "learned/5da05fdb147f.yaml": "sha256:70b03a544b99d3c65f223a51f36bf89d1cddfa11d45082a26968386c9d7deac9",
+        "learned/989c110b103e.yaml": "sha256:1beaba8531e7d221136228cd2ea3faa54923f9285da9fef0a92fbd4e96f7015b",
+        "learned/9a82df6b99b4.yaml": "sha256:d7c3c071318db6a888dada1c23f989a0de8646dabae56a8423d621254e37dd7a"
+      }
+    },
+    "version": "engine-v1.2 (phase3.6: 세션 검사 귀속 규칙)"
+  },
+  "inputs": {
+    "aa": [
+      "p33-1",
+      "p33-2",
+      "p33-3"
+    ],
+    "expectations": "docs/fault-expectations.json",
+    "faults": {
+      "F0": [
+        "p36-base-1",
+        "p36-base-2",
+        "p36-base-3"
+      ],
+      "F1": [
+        "p36-F1-1",
+        "p36-F1-2",
+        "p36-F1-3"
+      ],
+      "F2": [
+        "p36-F2-1",
+        "p36-F2-2",
+        "p36-F2-3"
+      ],
+      "F3": [
+        "p36-F3-1",
+        "p36-F3-2",
+        "p36-F3-3"
+      ],
+      "F4": [
+        "p36-F4-1",
+        "p36-F4-2",
+        "p36-F4-3"
+      ],
+      "F5": [
+        "p36-F5-1",
+        "p36-F5-2",
+        "p36-F5-3"
+      ],
+      "F6": [
+        "p36-F6-1",
+        "p36-F6-2",
+        "p36-F6-3"
+      ],
+      "F7": [
+        "p36-F7-1",
+        "p36-F7-2",
+        "p36-F7-3"
+      ],
+      "F8": [
+        "p36-F8-1",
+        "p36-F8-2",
+        "p36-F8-3"
+      ],
+      "F9": [
+        "p36-F9-1",
+        "p36-F9-2",
+        "p36-F9-3"
+      ]
+    },
+    "ladder": {
+      "base": [
+        "p35-base-1",
+        "p35-base-2",
+        "p35-base-3"
+      ],
+      "v1.1": [
+        "p35-v1.1-1",
+        "p35-v1.1-2",
+        "p35-v1.1-3"
+      ],
+      "v1.2": [
+        "p35-v1.2-1",
+        "p35-v1.2-2",
+        "p35-v1.2-3"
+      ],
+      "v1.3": [
+        "p35-v1.3-1",
+        "p35-v1.3-2",
+        "p35-v1.3-3"
+      ],
+      "v1.4": [
+        "p35-v1.4-1",
+        "p35-v1.4-2",
+        "p35-v1.4-3"
+      ]
+    }
+  },
+  "integrity": {
+    "p33-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p33-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p33-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-base-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-base-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-base-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.1-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.1-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.1-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.2-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.2-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.2-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.3-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.3-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.3-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.4-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.4-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p35-v1.4-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F1-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-engine-v1.1.json": [
+        "(없음 — 다른 엔진 버전의 기록)"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F1-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-engine-v1.1.json": [
+        "(없음 — 다른 엔진 버전의 기록)"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F1-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-engine-v1.1.json": [
+        "(없음 — 다른 엔진 버전의 기록)"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F2-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F2-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F2-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F3-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F3-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F3-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F4-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F4-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F4-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F5-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-prelabel.json": [
+        "C_norules"
+      ],
+      "verdict.json": [
+        "C_rules"
+      ]
+    },
+    "p36-F5-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-prelabel.json": [
+        "C_norules"
+      ],
+      "verdict.json": [
+        "C_rules"
+      ]
+    },
+    "p36-F5-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-prelabel.json": [
+        "C_norules"
+      ],
+      "verdict.json": [
+        "C_rules"
+      ]
+    },
+    "p36-F6-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_rules"
+      ]
+    },
+    "p36-F6-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_rules"
+      ]
+    },
+    "p36-F6-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_rules"
+      ]
+    },
+    "p36-F7-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F7-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F7-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F8-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-maxselects.json": [
+        "C_maxsel"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F8-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-maxselects.json": [
+        "C_maxsel"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F8-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict-maxselects.json": [
+        "C_maxsel"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F9-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F9-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-F9-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-base-1": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-base-2": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    },
+    "p36-base-3": {
+      "verdict-B0.json": [
+        "B0"
+      ],
+      "verdict-B1.json": [
+        "B1"
+      ],
+      "verdict.json": [
+        "C_norules",
+        "C_rules"
+      ]
+    }
+  },
+  "misjudgment": {
+    "hidden": [],
+    "rate": 0.0,
+    "realTargetPairRuns": 129,
+    "realTargetPairs": 43,
+    "ruleApplicationsRun1": {
+      "F0": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F1": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F2": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F3": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F4": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F5": {
+        "approved": 0,
+        "learned": 26,
+        "sameAcrossRuns": true
+      },
+      "F6": {
+        "approved": 26,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F7": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F8": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "F9": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "base": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "v1.1": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "v1.2": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "v1.3": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      },
+      "v1.4": {
+        "approved": 0,
+        "learned": 0,
+        "sameAcrossRuns": true
+      }
+    }
+  },
+  "ops": {
+    "filtered": [
+      "p35-v1.1-oom-1",
+      "p35-v1.1-stale-1"
+    ],
+    "runs": [
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p31-1",
+        "sent": 14,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p31-2",
+        "sent": 14,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p31-3",
+        "sent": 14,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p32-1",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p32-2",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p32-3",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p32a-1",
+        "sent": 14,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p33-1",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p33-2",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p33-3",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-base-1",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-base-2",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-base-3",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.1-1",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.1-2",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.1-3",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 7,
+        "filtered": true,
+        "run": "p35-v1.1-oom-1",
+        "sent": 36,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 4,
+        "filtered": true,
+        "run": "p35-v1.1-stale-1",
+        "sent": 40,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.2-1",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.2-2",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.2-3",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.3-1",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.3-2",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.3-3",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.4-1",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.4-2",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p35-v1.4-3",
+        "sent": 46,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F1-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F1-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F1-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F2-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F2-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F2-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F3-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F3-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F3-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F4-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F4-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F4-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F5-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F5-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F5-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F6-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F6-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F6-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F7-1",
+        "sent": 48,
+        "settleTimeouts": 1,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F7-2",
+        "sent": 48,
+        "settleTimeouts": 1,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F7-3",
+        "sent": 48,
+        "settleTimeouts": 1,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F8-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F8-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F8-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F9-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F9-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-F9-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-base-1",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-base-2",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      },
+      {
+        "degraded": 0,
+        "filtered": false,
+        "run": "p36-base-3",
+        "sent": 48,
+        "settleTimeouts": 0,
+        "undelivered": 0
+      }
+    ],
+    "sessionViolations": {
+      "attributed": 3,
+      "bothStacks": 0,
+      "items": [
+        {
+          "attributedPairs": [
+            "R000008/0"
+          ],
+          "bothStacks": false,
+          "check": "gateway_calls_per_idem_key_le_1",
+          "key": "idem-R000007",
+          "legacy": 1,
+          "new": 2,
+          "run": "p36-F1-1",
+          "session": "S002"
+        },
+        {
+          "attributedPairs": [
+            "R000008/0"
+          ],
+          "bothStacks": false,
+          "check": "gateway_calls_per_idem_key_le_1",
+          "key": "idem-R000007",
+          "legacy": 1,
+          "new": 2,
+          "run": "p36-F1-2",
+          "session": "S002"
+        },
+        {
+          "attributedPairs": [
+            "R000008/0"
+          ],
+          "bothStacks": false,
+          "check": "gateway_calls_per_idem_key_le_1",
+          "key": "idem-R000007",
+          "legacy": 1,
+          "new": 2,
+          "run": "p36-F1-3",
+          "session": "S002"
+        }
+      ],
+      "total": 3
+    },
+    "threeRunAgreement": {
+      "agreed": 16,
+      "groups": {
+        "A/A p33": true,
+        "F0": true,
+        "F1": true,
+        "F2": true,
+        "F3": true,
+        "F4": true,
+        "F5": true,
+        "F6": true,
+        "F7": true,
+        "F8": true,
+        "F9": true,
+        "base": true,
+        "v1.1": true,
+        "v1.2": true,
+        "v1.3": true,
+        "v1.4": true
+      },
+      "n": 16
+    },
+    "totals": {
+      "degraded": 0,
+      "filteredRuns": 2,
+      "judgedOrGateRuns": 55,
+      "runs": 57,
+      "settleTimeouts": 3,
+      "undelivered": 0
+    }
+  },
+  "review": {
+    "note": "run당 값(세 run 동일). 3 run 합계는 ×3. F8의 eval Uncertain 6은 maxSelects 미선언 시 의도된 결과",
+    "perFault": {
+      "F1": {
+        "perRun": {
+          "evalClearedBy": {},
+          "evalPairs": 35,
+          "evalUncAfter": 0,
+          "evalUncBefore": 0,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 0
+        },
+        "sameAcrossRuns": true
+      },
+      "F2": {
+        "perRun": {
+          "evalClearedBy": {},
+          "evalPairs": 35,
+          "evalUncAfter": 0,
+          "evalUncBefore": 0,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 0
+        },
+        "sameAcrossRuns": true
+      },
+      "F3": {
+        "perRun": {
+          "evalClearedBy": {},
+          "evalPairs": 35,
+          "evalUncAfter": 0,
+          "evalUncBefore": 0,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 0
+        },
+        "sameAcrossRuns": true
+      },
+      "F4": {
+        "perRun": {
+          "evalClearedBy": {},
+          "evalPairs": 35,
+          "evalUncAfter": 0,
+          "evalUncBefore": 0,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 0
+        },
+        "sameAcrossRuns": true
+      },
+      "F5": {
+        "perRun": {
+          "evalClearedBy": {
+            "learned": 8
+          },
+          "evalPairs": 35,
+          "evalUncAfter": 0,
+          "evalUncBefore": 8,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 5
+        },
+        "sameAcrossRuns": true
+      },
+      "F6": {
+        "perRun": {
+          "evalClearedBy": {
+            "approved": 17
+          },
+          "evalPairs": 35,
+          "evalUncAfter": 0,
+          "evalUncBefore": 17,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 9
+        },
+        "sameAcrossRuns": true
+      },
+      "F7": {
+        "perRun": {
+          "evalClearedBy": {},
+          "evalPairs": 34,
+          "evalUncAfter": 0,
+          "evalUncBefore": 0,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 0
+        },
+        "sameAcrossRuns": true
+      },
+      "F8": {
+        "perRun": {
+          "evalClearedBy": {},
+          "evalPairs": 35,
+          "evalUncAfter": 6,
+          "evalUncBefore": 6,
+          "learnPairs": 25,
+          "learnUncAfter": 4,
+          "learnUncBefore": 4
+        },
+        "sameAcrossRuns": true
+      },
+      "F9": {
+        "perRun": {
+          "evalClearedBy": {},
+          "evalPairs": 35,
+          "evalUncAfter": 0,
+          "evalUncBefore": 0,
+          "learnPairs": 25,
+          "learnUncAfter": 0,
+          "learnUncBefore": 0
+        },
+        "sameAcrossRuns": true
+      }
+    },
+    "total": {
+      "evalPairs": 314,
+      "evalUncAfter": 6,
+      "evalUncBefore": 31,
+      "learnPairs": 225,
+      "learnUncAfter": 4,
+      "learnUncBefore": 18,
+      "reduction": 0.8065
+    },
+    "totalExclF8": {
+      "evalPairs": 279,
+      "evalUncAfter": 0,
+      "evalUncBefore": 25,
+      "learnPairs": 200,
+      "learnUncAfter": 0,
+      "learnUncBefore": 14,
+      "reduction": 1.0
+    }
+  },
+  "ruleReuse": {
+    "a_F5_eval": 8,
+    "b_otherVariants": 0,
+    "c_ladder_v13_v14": 0,
+    "ladder_all": 0,
+    "perVariantRun1": {
+      "F0": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F1": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F2": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F3": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F4": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F5": {
+        "eval": 8,
+        "learn": 5
+      },
+      "F6": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F7": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F8": {
+        "eval": 0,
+        "learn": 0
+      },
+      "F9": {
+        "eval": 0,
+        "learn": 0
+      },
+      "base": {
+        "eval": 0,
+        "learn": 0
+      },
+      "v1.1": {
+        "eval": 0,
+        "learn": 0
+      },
+      "v1.2": {
+        "eval": 0,
+        "learn": 0
+      },
+      "v1.3": {
+        "eval": 0,
+        "learn": 0
+      },
+      "v1.4": {
+        "eval": 0,
+        "learn": 0
+      }
+    }
+  }
+}

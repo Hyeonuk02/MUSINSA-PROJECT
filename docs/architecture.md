@@ -190,6 +190,8 @@ timestamp·UUID·auto-increment id·key 순서 정규화. 정규화 대상은 �
 
 ## 7. Layer 1 스코핑
 
+Call Graph는 동적 수집·합성(D14, docs/call-graph.md). 정적 Call Graph는 범위 밖.
+
 | 모드 | 동작 | 용도 |
 |---|---|---|
 | **Tag (기본, C)** | 전체 corpus 미러 + 영향 API 포함 요청/세션에 `impactScope=true`. Engine이 검토 우선순위·사전 확률로 사용 | FN 없음 |
@@ -197,7 +199,7 @@ timestamp·UUID·auto-increment id·key 순서 정규화. 정규화 대상은 �
 | B2-S | 같은 세션 수 무작위 | Call Graph의 랜덤 대비 정당성 |
 | 운영 서사 | Layer 1 결과 → VirtualService `match` 렌더링 → `kubectl apply` (선택적 미러) | 시연 |
 
-정적 Call Graph의 unsoundness(DI/AOP/reflection)는 어노테이션 보정 + 확신 없는 지점은 클래스/엔드포인트 단위로 넓힘 + run 트레이스로 보정. 놓친 범위는 B1↔B2에서 실측.
+(참고: 정적 방식을 택했을 때의 보정 — 현재는 동적 방식) 정적 Call Graph의 unsoundness(DI/AOP/reflection)는 어노테이션 보정 + 확신 없는 지점은 클래스/엔드포인트 단위로 넓힘 + run 트레이스로 보정. 놓친 범위는 B1↔B2에서 실측.
 
 ---
 
@@ -221,7 +223,7 @@ timestamp·UUID·auto-increment id·key 순서 정규화. 정규화 대상은 �
 | 0 | nginx Mirroring Concept PoC (4.4까지) | 완료·보존 (`poc/nginx-mirroring/`, 배너: 최종 delivery 아님) |
 | 1 | k8s + Istio 기반 | 다음 |
 | 2 | Order(business key API) + Collector/Store/export + k6 + run script + 완료 폴링 + 반복 run 검증 | |
-| 3 | Coupon·Payment(WireMock) + Normalization + Engine(요청 단위 + 집계) + 4분류 + Rule 루프 | |
+| 3 | Coupon·Payment(WireMock) + Normalization + Engine(요청 단위 + 집계) + 4분류 + Rule 루프 | 진행 중 — docs/phase3-plan.md |
 | 4 | Call Graph → Tag/Filter + 사다리(반복 run) + 결함 주입 + (선택) 경합 세션·VS match 시연 | |
 
 ### Phase 1 — k8s + Istio 기반

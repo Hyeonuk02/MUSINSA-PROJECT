@@ -1,0 +1,26 @@
+id: learned-989c110b103e
+scope: request
+verdict: improvement
+reason: JOIN FETCH로 조회 통합, 쓰기 집합·응답 동일 — fault/F5(1597c73) OrderRepository.findWithItemsByOrderKey(@Query
+  join fetch o.items)·OrderService.getByKey
+provenance:
+  author: Hyeonuk02
+  date: '2026-10-14'
+  runId: p36-F5-1
+  split: learn
+  sessions:
+  - S001
+  - S006
+  - S008
+  uid: 989c110b103e
+match:
+  endpoint: order.get
+  diffKind: callTree.sequenceReplaced
+  from:
+  - - poc.order.OrderController.getByKey
+    - poc.order.OrderService.getByKey
+    - poc.order.OrderRepository.findByOrderKey
+  to:
+  - - poc.order.OrderController.getByKey
+    - poc.order.OrderService.getByKey
+    - poc.order.OrderRepository.findWithItemsByOrderKey

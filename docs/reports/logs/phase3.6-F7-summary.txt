@@ -1,0 +1,15 @@
+runs/p36-F7-1 git {'rev': '4e34a7bea8d99ad13455140edbd53f54ef17a87b', 'dirty': False} new order-app:phase3.6-F7
+   target 2 B0 DIFF 2 B1 DIFF 2
+   violation axes {'response.status': 1, 'writeSet': 1, 'externalCalls': 1, 'events.published': 1, 'hop_set': 1, 'response_body_compatible': 3} uncertain kinds {'response.addedFields': 1, 'dbRead.countDelta': 1, 'callTree.sequenceReplaced': 1, 'externalCalls.responseHashChanged': 1}
+   sessionViolations [] runChecks [('dbstate_equal', False, ["orders: legacy={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b'} new={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:3a85eb132c1cfcc0dce6b53f3043d48e25400538dda973e99f8b2a0da06c3f2a'}"])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 3, 'SAME': 31}, 'learn': {'SAME': 25}}
+runs/p36-F7-2 git {'rev': '4e34a7bea8d99ad13455140edbd53f54ef17a87b', 'dirty': False} new order-app:phase3.6-F7
+   target 2 B0 DIFF 2 B1 DIFF 2
+   violation axes {'response.status': 1, 'writeSet': 1, 'externalCalls': 1, 'events.published': 1, 'hop_set': 1, 'response_body_compatible': 3} uncertain kinds {'response.addedFields': 1, 'dbRead.countDelta': 1, 'callTree.sequenceReplaced': 1, 'externalCalls.responseHashChanged': 1}
+   sessionViolations [] runChecks [('dbstate_equal', False, ["orders: legacy={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b'} new={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:3a85eb132c1cfcc0dce6b53f3043d48e25400538dda973e99f8b2a0da06c3f2a'}"])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 3, 'SAME': 31}, 'learn': {'SAME': 25}}
+runs/p36-F7-3 git {'rev': '4e34a7bea8d99ad13455140edbd53f54ef17a87b', 'dirty': False} new order-app:phase3.6-F7
+   target 2 B0 DIFF 2 B1 DIFF 2
+   violation axes {'response.status': 1, 'writeSet': 1, 'externalCalls': 1, 'events.published': 1, 'hop_set': 1, 'response_body_compatible': 3} uncertain kinds {'response.addedFields': 1, 'dbRead.countDelta': 1, 'callTree.sequenceReplaced': 1, 'externalCalls.responseHashChanged': 1}
+   sessionViolations [] runChecks [('dbstate_equal', False, ["orders: legacy={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b'} new={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:3a85eb132c1cfcc0dce6b53f3043d48e25400538dda973e99f8b2a0da06c3f2a'}"])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 3, 'SAME': 31}, 'learn': {'SAME': 25}}

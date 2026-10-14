@@ -2,3 +2,6 @@
 #   python3 -m venv .venv && .venv/bin/pip install -r requirements.txt
 # evidence-store는 컨테이너 이미지라 evidence-store/requirements.txt를 따로 쓴다.
 jsonschema==4.25.1
+# Phase 3.4: 엔진 규칙 파일(YAML)과 테스트
+PyYAML==6.0.3
+pytest==8.4.2

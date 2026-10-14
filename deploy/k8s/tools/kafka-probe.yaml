@@ -1,0 +1,58 @@
+# Phase 3.3 - Kafka 격리 실측용 probe pod (mysql-probe·coupon-probe와 같은 방식)
+#
+# apache/kafka 이미지(노드에 이미 있음)의 kafka-broker-api-versions.sh로 실제 Kafka 프로토콜 연결을 시도한다.
+# app=order는 kafka-networkpolicy의 허용 대상을 흉내 낸 것, app=kprobe는 허용 대상이 아닌 같은 스택 pod.
+# app=order Service endpoint에 들어가지 않도록 readinessProbe를 항상 실패시킨다.
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kprobe-order
+  namespace: legacy
+  labels:
+    app: order
+    role: kprobe
+spec:
+  containers:
+    - name: client
+      image: apache/kafka:4.2.1
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      readinessProbe:
+        exec:
+          command: ["false"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kprobe-order
+  namespace: new
+  labels:
+    app: order
+    role: kprobe
+spec:
+  containers:
+    - name: client
+      image: apache/kafka:4.2.1
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      readinessProbe:
+        exec:
+          command: ["false"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: kprobe-other
+  namespace: legacy
+  labels:
+    app: kprobe
+    role: kprobe
+spec:
+  containers:
+    - name: client
+      image: apache/kafka:4.2.1
+      imagePullPolicy: IfNotPresent
+      command: ["sleep", "infinity"]
+      readinessProbe:
+        exec:
+          command: ["false"]

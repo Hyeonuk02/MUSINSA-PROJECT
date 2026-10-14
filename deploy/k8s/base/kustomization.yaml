@@ -10,12 +10,24 @@ resources:
   - order.yaml
   - wiremock.yaml
   - mysql-networkpolicy.yaml
+  # Phase 3.2 - Coupon 서비스와 전용 DB
+  - coupon.yaml
+  - coupon-mysql.yaml
+  - coupon-mysql-networkpolicy.yaml
+  - coupon-networkpolicy.yaml
+  # Phase 3.3 - Kafka(스택별 1브로커)
+  - kafka.yaml
+  - kafka-networkpolicy.yaml
 
 configMapGenerator:
   - name: mysql-initdb
     files:
       - mysql-initdb/schema.sql
+  - name: coupon-mysql-initdb
+    files:
+      - coupon-mysql-initdb/schema.sql
   - name: wiremock-mappings
     files:
       - wiremock-mappings/ping.json
       - wiremock-mappings/gateway-charge.json
+      - wiremock-mappings/gateway-charge-slow.json

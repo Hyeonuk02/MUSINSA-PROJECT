@@ -26,6 +26,15 @@ spec:
       containers:
         - name: mysql
           image: mysql:8.4
+          # Phase 3.1(D-2): InnoDB 버퍼 풀 상한(기본 128M). 데이터가 수십 행이라 64M로 충분하다.
+          args: ["--innodb-buffer-pool-size=64M"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
           ports:
             - name: mysql
               containerPort: 3306

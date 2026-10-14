@@ -1,0 +1,19 @@
+id: learned-5da05fdb147f
+scope: request
+verdict: improvement
+reason: JOIN FETCH로 조회 통합, 쓰기 집합·응답 동일 — fault/F5(1597c73) OrderRepository.findWithItemsByOrderKey(@Query
+  join fetch o.items)·OrderService.getByKey
+provenance:
+  author: Hyeonuk02
+  date: '2026-10-14'
+  runId: p36-F5-1
+  split: learn
+  sessions:
+  - S001
+  - S006
+  uid: 5da05fdb147f
+match:
+  endpoint: order.get
+  diffKind: dbRead.countDelta
+  from: 2
+  to: 1

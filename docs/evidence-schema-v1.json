@@ -1,0 +1,815 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "evidence-schema-v1.json",
+  "title": "Evidence JSON v1",
+  "description": "요청 1건의 한 홉(hop) × 스택 1개의 실행 Evidence. Phase 3 엔진의 입력 계약. 키는 (runId, replayRequestId, stack, hopPath)이고 service·origin은 필드다(D15). SQL·외부 호출·이벤트 발행·트랜잭션 단계는 하나의 seq 카운터를 공유하는 타임라인이다(D16) — 각 배열 안의 seq는 연속이 아니다. callTree는 별도 카운터. Evidence Store는 이 스키마를 검증하지 않고 본문을 그대로 저장·반환한다. Phase 3.3 추가(strict 유지, 추가만): events.published[].payload, event.payload, consumeOutcome(origin=kafka일 때 필수).",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "runId",
+    "replayRequestId",
+    "hopPath",
+    "sessionId",
+    "stack",
+    "service",
+    "origin",
+    "version",
+    "request",
+    "response",
+    "event",
+    "dbAccess",
+    "externalCalls",
+    "events",
+    "transactions",
+    "callTree",
+    "error",
+    "timing",
+    "capturedAt"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": "v1"
+    },
+    "runId": {
+      "type": "string",
+      "pattern": "^[A-Za-z0-9._-]{1,128}$"
+    },
+    "replayRequestId": {
+      "type": "string",
+      "pattern": "^R[0-9]{6}$"
+    },
+    "hopPath": {
+      "description": "진입 요청 \"0\". 홉 안 n번째 HTTP 호출 \"<부모>.h<n>\", n번째 이벤트 소비 \"<부모>.e<n>\" — 종류별 순번(D15).",
+      "type": "string",
+      "pattern": "^0(\\.[he][1-9][0-9]*)*$"
+    },
+    "sessionId": {
+      "type": "string",
+      "pattern": "^S[0-9]{3}$"
+    },
+    "stack": {
+      "enum": [
+        "legacy",
+        "new"
+      ]
+    },
+    "service": {
+      "type": "string",
+      "minLength": 1
+    },
+    "origin": {
+      "description": "http = HTTP 요청으로 생긴 홉, kafka = 이벤트 소비로 생긴 홉.",
+      "enum": [
+        "http",
+        "kafka"
+      ]
+    },
+    "version": {
+      "type": "string",
+      "minLength": 1
+    },
+    "request": {
+      "description": "origin=http일 때 객체, origin=kafka일 때 null.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "method",
+            "path",
+            "query",
+            "headers",
+            "bodyHash"
+          ],
+          "properties": {
+            "method": {
+              "type": "string",
+              "pattern": "^[A-Z]+$"
+            },
+            "path": {
+              "type": "string",
+              "pattern": "^/"
+            },
+            "query": {
+              "type": "string"
+            },
+            "headers": {
+              "$ref": "#/$defs/headers"
+            },
+            "bodyHash": {
+              "$ref": "#/$defs/sha256"
+            }
+          }
+        }
+      ]
+    },
+    "response": {
+      "description": "origin=http일 때 객체, origin=kafka일 때 null. 필터 밖으로 예외가 나간 경우(error != null) status 0, headers {}, body \"\".",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "status",
+            "headers",
+            "bodyHash",
+            "body"
+          ],
+          "properties": {
+            "status": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 599
+            },
+            "headers": {
+              "$ref": "#/$defs/headers"
+            },
+            "bodyHash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "body": {
+              "description": "UTF-8 원문. 32KB 초과 시 null(bodyHash 유지).",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 32768
+            }
+          }
+        }
+      ]
+    },
+    "event": {
+      "description": "origin=kafka일 때 소비한 레코드, origin=http일 때 null.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "topic",
+            "key",
+            "payloadHash",
+            "payload"
+          ],
+          "properties": {
+            "topic": {
+              "type": "string",
+              "minLength": 1
+            },
+            "key": {
+              "type": [
+                "string",
+                "null"
+              ]
+            },
+            "payloadHash": {
+              "$ref": "#/$defs/sha256"
+            },
+            "payload": {
+              "description": "UTF-8 원문. 32KB 초과 시 null(payloadHash 유지) — response.body와 같은 상한. 3.4 엔진이 차이를 분류할 수 있도록(Phase 3.3).",
+              "type": [
+                "string",
+                "null"
+              ],
+              "maxLength": 32768
+            }
+          }
+        }
+      ]
+    },
+    "consumeOutcome": {
+      "description": "origin=kafka일 때 소비 결과(RecordInterceptor success → ok, failure → failed). origin=http면 필드 없음(Phase 3.3 추가).",
+      "enum": [
+        "ok",
+        "failed"
+      ]
+    },
+    "dbAccess": {
+      "description": "Hibernate StatementInspector가 본 SQL 원문(바인딩 전). 가공 없음. 문장당 2,048자·200건 상한.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "statements",
+        "truncated"
+      ],
+      "properties": {
+        "statements": {
+          "type": "array",
+          "maxItems": 200,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "seq",
+              "sql"
+            ],
+            "properties": {
+              "seq": {
+                "$ref": "#/$defs/seq"
+              },
+              "sql": {
+                "type": "string",
+                "maxLength": 2048
+              }
+            }
+          }
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "externalCalls": {
+      "description": "이 홉에서 나간 HTTP 호출. seq는 호출이 나간 시점의 타임라인 번호. childHopPath는 호출 대상이 남길 Evidence의 hopPath.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "seq",
+          "method",
+          "host",
+          "path",
+          "requestBodyHash",
+          "status",
+          "responseBodyHash",
+          "childHopPath"
+        ],
+        "properties": {
+          "seq": {
+            "$ref": "#/$defs/seq"
+          },
+          "method": {
+            "type": "string",
+            "pattern": "^[A-Z]+$"
+          },
+          "host": {
+            "type": "string",
+            "minLength": 1
+          },
+          "path": {
+            "type": "string",
+            "pattern": "^/"
+          },
+          "requestBodyHash": {
+            "$ref": "#/$defs/sha256"
+          },
+          "status": {
+            "description": "I/O 실패면 0.",
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 599
+          },
+          "responseBodyHash": {
+            "$ref": "#/$defs/sha256"
+          },
+          "childHopPath": {
+            "type": "string",
+            "pattern": "^0(\\.[he][1-9][0-9]*)*\\.h[1-9][0-9]*$"
+          }
+        }
+      }
+    },
+    "events": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "published"
+      ],
+      "properties": {
+        "published": {
+          "description": "동기 발행(send().get()). ack는 get()이 돌아온 호출 스레드에서 기록.",
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "seq",
+              "topic",
+              "key",
+              "payloadHash",
+              "payload",
+              "ack",
+              "childHopPath"
+            ],
+            "properties": {
+              "seq": {
+                "$ref": "#/$defs/seq"
+              },
+              "topic": {
+                "type": "string",
+                "minLength": 1
+              },
+              "key": {
+                "type": [
+                  "string",
+                  "null"
+                ]
+              },
+              "payloadHash": {
+                "$ref": "#/$defs/sha256"
+              },
+              "payload": {
+                "description": "UTF-8 원문. 32KB 초과 시 null(payloadHash 유지) — response.body와 같은 상한. 3.4 엔진이 차이를 분류할 수 있도록(Phase 3.3).",
+                "type": [
+                  "string",
+                  "null"
+                ],
+                "maxLength": 32768
+              },
+              "ack": {
+                "enum": [
+                  "ok",
+                  "failed"
+                ]
+              },
+              "childHopPath": {
+                "type": "string",
+                "pattern": "^0(\\.[he][1-9][0-9]*)*\\.e[1-9][0-9]*$"
+              }
+            }
+          }
+        }
+      }
+    },
+    "transactions": {
+      "description": "TransactionExecutionListener: beforeCommit → COMMIT_BEGIN, afterCommit/afterRollback → COMPLETED(outcome). 한 트랜잭션이 두 번 찍힌다.",
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "seq",
+          "name",
+          "phase",
+          "outcome"
+        ],
+        "properties": {
+          "seq": {
+            "$ref": "#/$defs/seq"
+          },
+          "name": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "phase": {
+            "enum": [
+              "COMMIT_BEGIN",
+              "COMPLETED"
+            ]
+          },
+          "outcome": {
+            "enum": [
+              "COMMITTED",
+              "ROLLED_BACK",
+              "COMMIT_FAILED",
+              null
+            ]
+          }
+        },
+        "if": {
+          "properties": {
+            "phase": {
+              "const": "COMMIT_BEGIN"
+            }
+          }
+        },
+        "then": {
+          "properties": {
+            "outcome": {
+              "const": null
+            }
+          }
+        },
+        "else": {
+          "properties": {
+            "outcome": {
+              "enum": [
+                "COMMITTED",
+                "ROLLED_BACK",
+                "COMMIT_FAILED"
+              ]
+            }
+          }
+        }
+      }
+    },
+    "callTree": {
+      "description": "빈 메서드 호출 pre-order + depth(call-graph.md 5절). 별도 seq 카운터. 불변식: 첫 노드 depth 0, depth[i] <= depth[i-1] + 1(엔진 입력 계약). 요청당 500노드 상한.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "nodes",
+        "truncated"
+      ],
+      "properties": {
+        "nodes": {
+          "type": "array",
+          "maxItems": 500,
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "seq",
+              "depth",
+              "class",
+              "method",
+              "threw"
+            ],
+            "properties": {
+              "seq": {
+                "$ref": "#/$defs/seq"
+              },
+              "depth": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "class": {
+                "type": "string",
+                "minLength": 1
+              },
+              "method": {
+                "type": "string",
+                "minLength": 1
+              },
+              "threw": {
+                "type": "boolean"
+              }
+            }
+          }
+        },
+        "truncated": {
+          "type": "boolean"
+        }
+      }
+    },
+    "error": {
+      "description": "필터 밖으로 예외가 나간 경우. type = 원인 예외(ServletException 래핑 제거), where = 앱 패키지 안 첫 스택 프레임의 class.method.",
+      "oneOf": [
+        {
+          "type": "null"
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "type",
+            "where"
+          ],
+          "properties": {
+            "type": {
+              "type": "string",
+              "minLength": 1
+            },
+            "where": {
+              "type": [
+                "string",
+                "null"
+              ]
+            }
+          }
+        }
+      ]
+    },
+    "timing": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "arrivedAt",
+        "completedAt",
+        "arrivedNano",
+        "completedNano"
+      ],
+      "properties": {
+        "arrivedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "completedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "arrivedNano": {
+          "type": "integer"
+        },
+        "completedNano": {
+          "type": "integer"
+        }
+      }
+    },
+    "capturedAt": {
+      "type": "string",
+      "format": "date-time"
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "origin": {
+            "const": "http"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "request": {
+            "type": "object"
+          },
+          "response": {
+            "type": "object"
+          },
+          "event": {
+            "type": "null"
+          }
+        },
+        "not": {
+          "required": [
+            "consumeOutcome"
+          ]
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "origin": {
+            "const": "kafka"
+          }
+        }
+      },
+      "then": {
+        "properties": {
+          "request": {
+            "type": "null"
+          },
+          "response": {
+            "type": "null"
+          },
+          "event": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "consumeOutcome"
+        ]
+      }
+    }
+  ],
+  "$defs": {
+    "seq": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sha256": {
+      "type": "string",
+      "pattern": "^sha256:[0-9a-f]{64}$"
+    },
+    "headers": {
+      "description": "지정 목록(EVIDENCE_HEADERS)에 있는 헤더만. 이름은 소문자.",
+      "type": "object",
+      "propertyNames": {
+        "pattern": "^[a-z0-9-]+$"
+      },
+      "additionalProperties": {
+        "type": "string"
+      }
+    }
+  },
+  "examples": [
+    {
+      "schemaVersion": "v1",
+      "runId": "p33-1",
+      "replayRequestId": "R000029",
+      "hopPath": "0",
+      "sessionId": "S006",
+      "stack": "legacy",
+      "service": "order",
+      "origin": "http",
+      "version": "legacy",
+      "request": {
+        "method": "POST",
+        "path": "/api/orders/ok-R000027/pay",
+        "query": "",
+        "headers": {
+          "x-replay-request-id": "R000029",
+          "x-run-id": "p33-1",
+          "x-session-id": "S006",
+          "x-replay-hop-path": "0",
+          "idempotency-key": "idem-R000029"
+        },
+        "bodyHash": "sha256:e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      },
+      "response": {
+        "status": 200,
+        "headers": {
+          "content-type": "application/json"
+        },
+        "bodyHash": "sha256:dc19296cc1508deba1f6031848c0e656a8b74a92fd4ddb446b01400bdd8dbefb",
+        "body": "{\"id\":4,\"orderKey\":\"ok-R000027\",\"items\":[{\"sku\":\"D-1\",\"qty\":2,\"price\":5000}],\"amount\":7000,\"couponKey\":\"ck-R000026\",\"discountAmount\":3000,\"status\":\"PAID\",\"transactionId\":\"tx-idem-R000029\",\"createdAt\":\"2026-09-01T00:00:00Z\"}"
+      },
+      "event": null,
+      "dbAccess": {
+        "statements": [
+          {
+            "seq": 1,
+            "sql": "select o1_0.id,o1_0.amount,o1_0.coupon_key,o1_0.created_at,o1_0.discount_amount,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from orders o1_0 where o1_0.order_key=?"
+          },
+          {
+            "seq": 3,
+            "sql": "select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from order_items i1_0 where i1_0.order_id=? order by i1_0.line_no"
+          },
+          {
+            "seq": 5,
+            "sql": "update orders set amount=?,coupon_key=?,created_at=?,discount_amount=?,idempotency_key=?,order_key=?,status=?,transaction_id=? where id=?"
+          }
+        ],
+        "truncated": false
+      },
+      "externalCalls": [
+        {
+          "seq": 2,
+          "method": "POST",
+          "host": "wiremock",
+          "path": "/gateway/charge",
+          "requestBodyHash": "sha256:9c8f75762be881c0a0781b87cd0e382f6f7fa9d51351e5035925371de715a33c",
+          "status": 200,
+          "responseBodyHash": "sha256:5b45367fee9c5ec928350f77ab384a08338c1d0ff9b8f70782ba9189d60cb8e3",
+          "childHopPath": "0.h1"
+        }
+      ],
+      "events": {
+        "published": [
+          {
+            "seq": 6,
+            "topic": "order.paid",
+            "key": "ok-R000027",
+            "payloadHash": "sha256:e4a7a2858707721eaa2feb2900e9a735e59c7c58ebe10eed67743213d147a72d",
+            "payload": "{\"orderKey\":\"ok-R000027\",\"amount\":7000,\"couponKey\":\"ck-R000026\"}",
+            "ack": "ok",
+            "childHopPath": "0.e1"
+          }
+        ]
+      },
+      "transactions": [
+        {
+          "seq": 4,
+          "name": "poc.order.OrderService.pay",
+          "phase": "COMMIT_BEGIN",
+          "outcome": null
+        },
+        {
+          "seq": 7,
+          "name": "poc.order.OrderService.pay",
+          "phase": "COMPLETED",
+          "outcome": "COMMITTED"
+        }
+      ],
+      "callTree": {
+        "nodes": [
+          {
+            "seq": 1,
+            "depth": 0,
+            "class": "poc.order.OrderController",
+            "method": "pay",
+            "threw": false
+          },
+          {
+            "seq": 2,
+            "depth": 1,
+            "class": "poc.order.OrderService",
+            "method": "pay",
+            "threw": false
+          },
+          {
+            "seq": 3,
+            "depth": 2,
+            "class": "poc.order.OrderRepository",
+            "method": "findByOrderKey",
+            "threw": false
+          },
+          {
+            "seq": 4,
+            "depth": 2,
+            "class": "poc.order.PaymentGatewayClient",
+            "method": "charge",
+            "threw": false
+          },
+          {
+            "seq": 5,
+            "depth": 2,
+            "class": "poc.order.OrderEventPublisher",
+            "method": "onOrderPaid",
+            "threw": false
+          }
+        ],
+        "truncated": false
+      },
+      "error": null,
+      "timing": {
+        "arrivedAt": "2026-10-13T11:40:20.848530588Z",
+        "completedAt": "2026-10-13T11:40:20.937757713Z",
+        "arrivedNano": 16305340974679,
+        "completedNano": 16305430203971
+      },
+      "capturedAt": "2026-10-13T11:40:20.939072505Z"
+    },
+    {
+      "schemaVersion": "v1",
+      "runId": "p33-1",
+      "replayRequestId": "R000029",
+      "hopPath": "0.e1",
+      "sessionId": "S006",
+      "stack": "legacy",
+      "service": "coupon",
+      "origin": "kafka",
+      "version": "legacy",
+      "request": null,
+      "response": null,
+      "event": {
+        "topic": "order.paid",
+        "key": "ok-R000027",
+        "payloadHash": "sha256:e4a7a2858707721eaa2feb2900e9a735e59c7c58ebe10eed67743213d147a72d",
+        "payload": "{\"orderKey\":\"ok-R000027\",\"amount\":7000,\"couponKey\":\"ck-R000026\"}"
+      },
+      "consumeOutcome": "ok",
+      "dbAccess": {
+        "statements": [
+          {
+            "seq": 1,
+            "sql": "select c1_0.id,c1_0.coupon_key,c1_0.created_at,c1_0.discount_amount,c1_0.status,c1_0.used_at,c1_0.used_by_order_key from coupons c1_0 where c1_0.coupon_key=?"
+          },
+          {
+            "seq": 3,
+            "sql": "update coupons set coupon_key=?,created_at=?,discount_amount=?,status=?,used_at=?,used_by_order_key=? where id=?"
+          }
+        ],
+        "truncated": false
+      },
+      "externalCalls": [],
+      "events": {
+        "published": []
+      },
+      "transactions": [
+        {
+          "seq": 2,
+          "name": "poc.coupon.CouponService.settle",
+          "phase": "COMMIT_BEGIN",
+          "outcome": null
+        },
+        {
+          "seq": 4,
+          "name": "poc.coupon.CouponService.settle",
+          "phase": "COMPLETED",
+          "outcome": "COMMITTED"
+        }
+      ],
+      "callTree": {
+        "nodes": [
+          {
+            "seq": 1,
+            "depth": 0,
+            "class": "poc.coupon.OrderPaidListener",
+            "method": "onOrderPaid",
+            "threw": false
+          },
+          {
+            "seq": 2,
+            "depth": 1,
+            "class": "poc.coupon.CouponService",
+            "method": "settle",
+            "threw": false
+          },
+          {
+            "seq": 3,
+            "depth": 2,
+            "class": "poc.coupon.CouponRepository",
+            "method": "findByCouponKey",
+            "threw": false
+          }
+        ],
+        "truncated": false
+      },
+      "error": null,
+      "timing": {
+        "arrivedAt": "2026-10-13T11:40:20.934522838Z",
+        "completedAt": "2026-10-13T11:40:20.969888297Z",
+        "arrivedNano": 16305426967096,
+        "completedNano": 16305462334221
+      },
+      "capturedAt": "2026-10-13T11:40:20.970061797Z"
+    }
+  ]
+}

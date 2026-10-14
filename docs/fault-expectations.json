@@ -1,0 +1,239 @@
+{
+  "_doc": "Phase 3.6 결함별 기대 판정 사전 등록(F run 전 커밋). targets = 결함이 겨냥한 pair와 기대 판정(arm C, 기본 contract). 그 밖의 pair는 baseline(p36-base) 판정과 같아야 한다(정상 경로 오탐 0). missingPairs = 한쪽 스택에만 생겨 pair에서 빠지는 홉(hop 집합 차이로 부모 pair에 나타남). axes = 보일 것으로 예상하는 축(검사 이름).",
+  "F1": {
+    "targets": {
+      "R000008/0": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "external_calls_equal",
+      "events_equal",
+      "gateway_calls_per_idem_key_le_1",
+      "hop_set_equal"
+    ],
+    "newOnlyHops": [
+      "R000008/0.e1"
+    ]
+  },
+  "F2": {
+    "targets": {
+      "R000001/0": "CONTRACT_VIOLATION",
+      "R000005/0": "CONTRACT_VIOLATION",
+      "R000010/0": "CONTRACT_VIOLATION",
+      "R000027/0": "CONTRACT_VIOLATION",
+      "R000032/0": "CONTRACT_VIOLATION",
+      "R000036/0": "CONTRACT_VIOLATION",
+      "R000040/0": "CONTRACT_VIOLATION",
+      "R000044/0": "CONTRACT_VIOLATION",
+      "R000037/0": "CONTRACT_VIOLATION",
+      "R000002/0": "CONTRACT_VIOLATION",
+      "R000004/0": "CONTRACT_VIOLATION",
+      "R000006/0": "CONTRACT_VIOLATION",
+      "R000009/0": "CONTRACT_VIOLATION",
+      "R000014/0": "CONTRACT_VIOLATION",
+      "R000028/0": "CONTRACT_VIOLATION",
+      "R000030/0": "CONTRACT_VIOLATION",
+      "R000034/0": "CONTRACT_VIOLATION",
+      "R000042/0": "CONTRACT_VIOLATION",
+      "R000046/0": "CONTRACT_VIOLATION",
+      "R000003/0": "CONTRACT_VIOLATION",
+      "R000007/0": "CONTRACT_VIOLATION",
+      "R000012/0": "CONTRACT_VIOLATION",
+      "R000029/0": "CONTRACT_VIOLATION",
+      "R000033/0": "CONTRACT_VIOLATION",
+      "R000041/0": "CONTRACT_VIOLATION",
+      "R000045/0": "CONTRACT_VIOLATION",
+      "R000008/0": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "write_set_equal",
+      "response_body_compatible",
+      "dbstate_equal"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    }
+  },
+  "F3": {
+    "targets": {
+      "R000003/0": "CONTRACT_VIOLATION",
+      "R000007/0": "CONTRACT_VIOLATION",
+      "R000012/0": "CONTRACT_VIOLATION",
+      "R000029/0": "CONTRACT_VIOLATION",
+      "R000033/0": "CONTRACT_VIOLATION",
+      "R000041/0": "CONTRACT_VIOLATION",
+      "R000045/0": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "publish_after_commit_begin"
+    ]
+  },
+  "F4": {
+    "targets": {
+      "R000037/0": "CONTRACT_VIOLATION",
+      "R000038/0": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "tx_outcome_sequence_equal",
+      "write_set_equal",
+      "response.status",
+      "dbstate_equal"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    }
+  },
+  "F5": {
+    "targets": {
+      "R000002/0": "UNCERTAIN",
+      "R000004/0": "UNCERTAIN",
+      "R000006/0": "UNCERTAIN",
+      "R000009/0": "UNCERTAIN",
+      "R000014/0": "UNCERTAIN",
+      "R000028/0": "UNCERTAIN",
+      "R000030/0": "UNCERTAIN",
+      "R000034/0": "UNCERTAIN",
+      "R000042/0": "UNCERTAIN",
+      "R000046/0": "UNCERTAIN",
+      "R000011/0": "UNCERTAIN",
+      "R000038/0": "UNCERTAIN",
+      "R000048/0": "UNCERTAIN"
+    },
+    "afterLearnLabels": {
+      "R000002/0": "IMPROVEMENT",
+      "R000004/0": "IMPROVEMENT",
+      "R000006/0": "IMPROVEMENT",
+      "R000009/0": "IMPROVEMENT",
+      "R000014/0": "IMPROVEMENT",
+      "R000028/0": "IMPROVEMENT",
+      "R000030/0": "IMPROVEMENT",
+      "R000034/0": "IMPROVEMENT",
+      "R000042/0": "IMPROVEMENT",
+      "R000046/0": "IMPROVEMENT",
+      "R000011/0": "IMPROVEMENT",
+      "R000038/0": "IMPROVEMENT",
+      "R000048/0": "IMPROVEMENT"
+    },
+    "axes": [
+      "dbRead.countDelta",
+      "dbRead.fingerprintReplaced",
+      "callTree.sequenceReplaced"
+    ],
+    "note": "learn 세션(S001 R2·R4, S006 R28·R30, S008 R38)의 Uncertain만 라벨. after는 같은 run 재판정"
+  },
+  "F6": {
+    "targets": {
+      "R000001/0": "IMPROVEMENT",
+      "R000005/0": "IMPROVEMENT",
+      "R000010/0": "IMPROVEMENT",
+      "R000027/0": "IMPROVEMENT",
+      "R000032/0": "IMPROVEMENT",
+      "R000036/0": "IMPROVEMENT",
+      "R000040/0": "IMPROVEMENT",
+      "R000044/0": "IMPROVEMENT",
+      "R000002/0": "IMPROVEMENT",
+      "R000004/0": "IMPROVEMENT",
+      "R000006/0": "IMPROVEMENT",
+      "R000009/0": "IMPROVEMENT",
+      "R000014/0": "IMPROVEMENT",
+      "R000028/0": "IMPROVEMENT",
+      "R000030/0": "IMPROVEMENT",
+      "R000034/0": "IMPROVEMENT",
+      "R000042/0": "IMPROVEMENT",
+      "R000046/0": "IMPROVEMENT",
+      "R000003/0": "IMPROVEMENT",
+      "R000007/0": "IMPROVEMENT",
+      "R000012/0": "IMPROVEMENT",
+      "R000029/0": "IMPROVEMENT",
+      "R000033/0": "IMPROVEMENT",
+      "R000041/0": "IMPROVEMENT",
+      "R000045/0": "IMPROVEMENT",
+      "R000008/0": "IMPROVEMENT"
+    },
+    "axes": [
+      "response.addedFields(itemCount) + improvement.yaml 사전 규칙"
+    ]
+  },
+  "F7": {
+    "targets": {
+      "R000041/0": "CONTRACT_VIOLATION",
+      "R000042/0": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "response.status",
+      "external_calls_equal",
+      "events_equal",
+      "hop_set_equal",
+      "response_body_compatible",
+      "dbstate_equal"
+    ],
+    "legacyOnlyHops": [
+      "R000041/0.e1"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    }
+  },
+  "F8": {
+    "targets": {
+      "R000002/0": "UNCERTAIN",
+      "R000004/0": "UNCERTAIN",
+      "R000006/0": "UNCERTAIN",
+      "R000009/0": "UNCERTAIN",
+      "R000014/0": "UNCERTAIN",
+      "R000028/0": "UNCERTAIN",
+      "R000030/0": "UNCERTAIN",
+      "R000034/0": "UNCERTAIN",
+      "R000042/0": "UNCERTAIN",
+      "R000046/0": "UNCERTAIN"
+    },
+    "targetsMaxSelects": {
+      "R000002/0": "CONTRACT_VIOLATION",
+      "R000004/0": "CONTRACT_VIOLATION",
+      "R000006/0": "CONTRACT_VIOLATION",
+      "R000009/0": "CONTRACT_VIOLATION",
+      "R000014/0": "CONTRACT_VIOLATION",
+      "R000028/0": "CONTRACT_VIOLATION",
+      "R000030/0": "CONTRACT_VIOLATION",
+      "R000034/0": "CONTRACT_VIOLATION",
+      "R000042/0": "CONTRACT_VIOLATION",
+      "R000046/0": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "dbRead.countDelta",
+      "callTree.sequenceReplaced",
+      "max_selects(선언 시)"
+    ],
+    "note": "404 조회(R11·R38·R48)는 항목이 없어 추가 SELECT 없음 → baseline과 같음"
+  },
+  "F9": {
+    "targets": {
+      "R000027/0": "CONTRACT_VIOLATION",
+      "R000032/0": "CONTRACT_VIOLATION",
+      "R000036/0": "CONTRACT_VIOLATION",
+      "R000044/0": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "external_calls_equal",
+      "hop_set_equal"
+    ],
+    "newOnlyHops": [
+      "R000027/0.h2",
+      "R000032/0.h2",
+      "R000036/0.h2",
+      "R000044/0.h2"
+    ],
+    "note": "R37(USED 쿠폰)은 첫 use가 409로 실패해 두 번째 호출이 없음 → baseline과 같음"
+  },
+  "F0": {
+    "targets": {
+      "R000047/0": "CONTRACT_VIOLATION",
+      "R000048/0": "SAME"
+    },
+    "axes": [
+      "response.status",
+      "writeSet",
+      "transactions.outcomes"
+    ],
+    "note": "baseline 기지 차이(주입 아님). 3.5 보고서의 잠재 차이(sku 없음)를 corpus v2.1 S011로 실측"
+  }
+}

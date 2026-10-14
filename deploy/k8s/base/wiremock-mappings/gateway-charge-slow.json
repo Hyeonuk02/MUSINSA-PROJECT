@@ -1,0 +1,16 @@
+{
+  "priority": 1,
+  "request": {
+    "method": "POST",
+    "urlPath": "/gateway/charge",
+    "headers": { "Idempotency-Key": { "matches": ".+" } },
+    "bodyPatterns": [ { "matchesJsonPath": { "expression": "$.idempotencyKey", "matches": "^idem-slow-.+$" } } ]
+  },
+  "response": {
+    "status": 200,
+    "fixedDelayMilliseconds": 2000,
+    "headers": { "Content-Type": "application/json" },
+    "body": "{\"transactionId\":\"tx-{{request.headers.Idempotency-Key}}\",\"status\":\"APPROVED\"}",
+    "transformers": ["response-template"]
+  }
+}

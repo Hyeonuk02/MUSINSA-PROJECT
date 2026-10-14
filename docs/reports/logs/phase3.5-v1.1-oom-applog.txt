@@ -1,0 +1,80 @@
+2026-10-13T15:24:32.610Z  INFO 1 --- [order-app] [nio-8080-exec-9] o.a.kafka.common.utils.AppInfoParser     : Kafka startTimeMs: 1791905072575
+2026-10-13T15:24:33.035Z ERROR 1 --- [order-app] [-app-producer-1] o.apache.kafka.common.utils.KafkaThread  : Uncaught exception in thread 'kafka-producer-network-thread | order-app-producer-1':
+
+java.lang.OutOfMemoryError: Metaspace
+	at java.base/java.lang.ClassLoader.defineClass1(Native Method) ~[na:na]
+	at java.base/java.lang.ClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.security.SecureClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader.defineClass(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+	at java.base/java.net.URLClassLoader$1.run(Unknown Source) ~[na:na]
+--
+
+org.apache.kafka.common.errors.TimeoutException: Topic order.paid not present in metadata after 5000 ms.
+
+2026-10-13T15:24:37.654Z ERROR 1 --- [order-app] [nio-8080-exec-8] o.s.k.support.LoggingProducerListener    : Exception thrown when sending a message with key='ok-R000010' and payload='{"orderKey":"ok-R000010","amount":6000,"couponKey":null}' to topic order.paid:
+
+org.apache.kafka.common.errors.TimeoutException: Topic order.paid not present in metadata after 5000 ms.
+
+2026-10-13T15:24:37.654Z ERROR 1 --- [order-app] [nio-8080-exec-7] o.s.k.support.LoggingProducerListener    : Exception thrown when sending a message with key='ok-R000001' and payload='{"orderKey":"ok-R000001","amount":10000,"couponKey":null}' to topic order.paid:
+
+org.apache.kafka.common.errors.TimeoutException: Topic order.paid not present in metadata after 5000 ms.
+
+2026-10-13T15:24:37.666Z  WARN 1 --- [order-app] [nio-8080-exec-7] poc.order.OrderEventPublisher            : order.paid publish failed orderKey=ok-R000001: org.springframework.kafka.KafkaException: Send failed
+2026-10-13T15:24:37.666Z  WARN 1 --- [order-app] [nio-8080-exec-9] poc.order.OrderEventPublisher            : order.paid publish failed orderKey=ok-R000005: org.springframework.kafka.KafkaException: Send failed
+2026-10-13T15:24:37.666Z  WARN 1 --- [order-app] [nio-8080-exec-8] poc.order.OrderEventPublisher            : order.paid publish failed orderKey=ok-R000010: org.springframework.kafka.KafkaException: Send failed
+2026-10-13T15:24:43.513Z ERROR 1 --- [order-app] [nio-8080-exec-4] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler processing failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:43.513Z ERROR 1 --- [order-app] [nio-8080-exec-3] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler processing failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:43.513Z ERROR 1 --- [order-app] [nio-8080-exec-6] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler processing failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:43.706Z ERROR 1 --- [order-app] [nio-8080-exec-4] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:43.800Z ERROR 1 --- [order-app] [nio-8080-exec-6] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:43.800Z ERROR 1 --- [order-app] [nio-8080-exec-3] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:44.065Z ERROR 1 --- [order-app] [nio-8080-exec-2] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler processing failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:44.265Z ERROR 1 --- [order-app] [nio-8080-exec-2] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:44.518Z ERROR 1 --- [order-app] [nio-8080-exec-8] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler processing failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:44.613Z ERROR 1 --- [order-app] [nio-8080-exec-8] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:44.918Z ERROR 1 --- [order-app] [nio-8080-exec-9] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler processing failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:45.019Z ERROR 1 --- [order-app] [nio-8080-exec-9] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:54.158Z ERROR 1 --- [order-app] [nio-8080-exec-4] o.a.c.c.C.[.[.[/].[dispatcherServlet]    : Servlet.service() for servlet [dispatcherServlet] in context with path [] threw exception [Handler processing failed: java.lang.OutOfMemoryError: Metaspace] with root cause
+
+java.lang.OutOfMemoryError: Metaspace
+
+2026-10-13T15:24:54.251Z ERROR 1 --- [order-app] [nio-8080-exec-4] o.a.coyote.http11.Http11NioProtocol      : Failed to complete processing of a request
+
+java.lang.OutOfMemoryError: Metaspace

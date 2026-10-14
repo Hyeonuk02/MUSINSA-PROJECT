@@ -8,3 +8,9 @@ resources:
 
 patches:
   - path: order-otel.yaml
+  - path: coupon-otel.yaml
+
+# Phase 3.5: New 사다리 — Order 이미지만 바꾼다(legacy·Coupon은 phase3.3-base 고정)
+images:
+  - name: order-app
+    newTag: phase3.5-v1.4

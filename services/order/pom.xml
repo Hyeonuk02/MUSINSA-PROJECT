@@ -17,6 +17,7 @@
 
     <properties>
         <java.version>17</java.version>
+        <!-- Phase 3.5 (D-1a): Kotlin 혼합 빌드. kotlin.version은 Boot BOM(2.3.21)을 그대로 쓴다 -->
     </properties>
 
     <dependencies>
@@ -24,9 +25,40 @@
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-webmvc</artifactId>
         </dependency>
+        <!-- Phase 3.3: order.paid 발행 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-kafka</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-data-jpa</artifactId>
+        </dependency>
+        <!-- Phase 3.1: RestClient.Builder 빈(자동 구성) — poc.evidence가 RestClientCustomizer로 재생 헤더 전파·externalCalls 기록 인터셉터를 붙인다 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-restclient</artifactId>
+        </dependency>
+        <!-- Phase 3.2: 검증 레이어(poc.evidence) — 공용 모듈 services/evidence-collector. auto-configuration으로 붙는다 -->
+        <dependency>
+            <groupId>poc</groupId>
+            <artifactId>evidence-collector</artifactId>
+            <version>0.0.1</version>
+        </dependency>
+        <!-- Phase 3.5: Kotlin 표준 라이브러리·리플렉션(버전은 Boot BOM) -->
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-stdlib</artifactId>
+        </dependency>
+        <dependency>
+            <groupId>org.jetbrains.kotlin</groupId>
+            <artifactId>kotlin-reflect</artifactId>
+        </dependency>
+        <!-- Phase 3.5-v1.1: Kotlin DTO(PaymentGatewayClient.ChargeResponse)를 역직렬화하는 첫 단계라 추가.
+             앱 JsonMapper 빈에만 등록된다 — poc.evidence는 private JsonMapper라 영향 없음 -->
+        <dependency>
+            <groupId>tools.jackson.module</groupId>
+            <artifactId>jackson-module-kotlin</artifactId>
         </dependency>
         <!-- Phase 1.3a: Postgres -> MySQL 8. Phase 0(poc/nginx-mirroring)은 Postgres 그대로다. -->
         <dependency>
@@ -42,6 +74,94 @@
             <plugin>
                 <groupId>org.springframework.boot</groupId>
                 <artifactId>spring-boot-maven-plugin</artifactId>
+            </plugin>
+            <!-- Phase 3.5 (D-1a·D17): Kotlin 공식 Maven 혼합 컴파일 레시피 — kotlin compile(Kotlin+Java 소스 참조) → javac.
+                 compilerPlugins spring(all-open: Spring 스테레오타입) + jpa(no-arg: @Entity 등).
+                 all-open에 jakarta.persistence.Entity·MappedSuperclass·Embeddable를 명시 — Hibernate 프록시(lazy)가
+                 final 클래스·메서드에서 깨지면 SQL이 달라진다. "흔한 실수를 남기지 않는다"(D17)라 처음부터 넣는다 -->
+            <plugin>
+                <groupId>org.jetbrains.kotlin</groupId>
+                <artifactId>kotlin-maven-plugin</artifactId>
+                <version>${kotlin.version}</version>
+                <configuration>
+                    <jvmTarget>${java.version}</jvmTarget>
+                    <javaParameters>true</javaParameters>
+                    <args>
+                        <arg>-Xjsr305=strict</arg>
+                    </args>
+                    <compilerPlugins>
+                        <plugin>spring</plugin>
+                        <plugin>jpa</plugin>
+                    </compilerPlugins>
+                    <pluginOptions>
+                        <option>all-open:annotation=jakarta.persistence.Entity</option>
+                        <option>all-open:annotation=jakarta.persistence.MappedSuperclass</option>
+                        <option>all-open:annotation=jakarta.persistence.Embeddable</option>
+                    </pluginOptions>
+                </configuration>
+                <executions>
+                    <execution>
+                        <id>compile</id>
+                        <phase>process-sources</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                        <configuration>
+                            <sourceDirs>
+                                <sourceDir>${project.basedir}/src/main/kotlin</sourceDir>
+                                <sourceDir>${project.basedir}/src/main/java</sourceDir>
+                            </sourceDirs>
+                        </configuration>
+                    </execution>
+                    <execution>
+                        <id>test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>test-compile</goal>
+                        </goals>
+                    </execution>
+                </executions>
+                <dependencies>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-allopen</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                    <dependency>
+                        <groupId>org.jetbrains.kotlin</groupId>
+                        <artifactId>kotlin-maven-noarg</artifactId>
+                        <version>${kotlin.version}</version>
+                    </dependency>
+                </dependencies>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <executions>
+                    <!-- 기본 javac 실행을 끄고 kotlin compile 뒤에 다시 건다(공식 레시피) -->
+                    <execution>
+                        <id>default-compile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>default-testCompile</id>
+                        <phase>none</phase>
+                    </execution>
+                    <execution>
+                        <id>java-compile</id>
+                        <phase>compile</phase>
+                        <goals>
+                            <goal>compile</goal>
+                        </goals>
+                    </execution>
+                    <execution>
+                        <id>java-test-compile</id>
+                        <phase>test-compile</phase>
+                        <goals>
+                            <goal>testCompile</goal>
+                        </goals>
+                    </execution>
+                </executions>
             </plugin>
         </plugins>
     </build>

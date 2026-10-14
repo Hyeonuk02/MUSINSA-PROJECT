@@ -1,0 +1,88 @@
+# Phase 3.2 - Coupon MySQL 8 (Coupon 서비스 전용 DB, mysql.yaml과 같은 구성)
+#
+# 서비스 축 격리: Coupon은 이 DB만, Order는 mysql(orders)만 쓴다(coupon-mysql-networkpolicy.yaml).
+#
+# 데이터는 emptyDir에만 있다. pod가 새로 뜨면 데이터 디렉터리가 비고 MySQL 이미지가
+# /docker-entrypoint-initdb.d를 다시 실행하므로, `kubectl rollout restart deployment/coupon-mysql`
+# 한 번이 곧 S0(시드 상태) 리셋이다.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coupon-mysql
+  labels:
+    app: coupon-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coupon-mysql
+  strategy:
+    # RollingUpdate면 rollout restart 때 새 pod가 먼저 뜨면서 Service 뒤에 MySQL이
+    # 잠깐 둘 공존한다. 그러면 "리셋 = 깨끗한 인스턴스 하나"가 깨진다.
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: coupon-mysql
+    spec:
+      containers:
+        - name: coupon-mysql
+          image: mysql:8.4
+          # Phase 3.1(D-2): InnoDB 버퍼 풀 상한(기본 128M). 데이터가 수십 행이라 64M로 충분하다.
+          args: ["--innodb-buffer-pool-size=64M"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 512Mi
+          ports:
+            - name: coupon-mysql
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: coupons
+            - name: MYSQL_USER
+              value: poc
+            - name: MYSQL_PASSWORD
+              value: poc
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              # -h 127.0.0.1로 TCP를 강제한다. MySQL 이미지는 초기화 중에
+              # --skip-networking으로 임시 서버를 띄우므로, init SQL이 끝나기 전에는
+              # 이 ping이 실패한다. 즉 readiness = "스키마까지 준비됨".
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" --silent
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 3
+            failureThreshold: 40
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: initdb
+          configMap:
+            name: coupon-mysql-initdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coupon-mysql
+spec:
+  selector:
+    app: coupon-mysql
+  ports:
+    - name: coupon-mysql
+      port: 3306
+      targetPort: 3306

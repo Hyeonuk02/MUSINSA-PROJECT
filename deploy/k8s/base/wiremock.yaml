@@ -9,6 +9,8 @@
 #   POST /gateway/charge  2.1 결제. transactionId = "tx-" + Idempotency-Key 헤더.
 #                         random 금지 -- legacy/new가 같은 키로 같은 값을 받아야 한다.
 #                         stub 단위 "transformers": ["response-template"]로 템플릿을 켠다.
+#   POST /gateway/charge  3.6 지연 스텁(gateway-charge-slow.json): 본문 idempotencyKey가 idem-slow-*면 2000ms 지연,
+#                         priority 1로 기본 스텁보다 우선. 응답 본문은 기본 스텁과 같다(S009 — F7 시험용)
 apiVersion: apps/v1
 kind: Deployment
 metadata:

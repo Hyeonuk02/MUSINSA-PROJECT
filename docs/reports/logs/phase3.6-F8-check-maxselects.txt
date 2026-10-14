@@ -1,0 +1,17 @@
+== p36-F8-1 (verdict-maxselects.json, 기대 targetsMaxSelects) verdicts {'CONTRACT_VIOLATION': 11, 'SAME': 49}
+   targets 일치 10/10
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p36-F8-2 (verdict-maxselects.json, 기대 targetsMaxSelects) verdicts {'CONTRACT_VIOLATION': 11, 'SAME': 49}
+   targets 일치 10/10
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p36-F8-3 (verdict-maxselects.json, 기대 targetsMaxSelects) verdicts {'CONTRACT_VIOLATION': 11, 'SAME': 49}
+   targets 일치 10/10
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+세 run 판정 동일: True
+결과: 기대와 일치

@@ -31,7 +31,7 @@ spec:
     spec:
       containers:
         - name: evidence-store
-          image: evidence-store:phase2
+          image: evidence-store:phase3.2
           # 이미지는 kind load로 노드 안에만 있다. 레지스트리에서 받으려 하면 안 된다.
           imagePullPolicy: IfNotPresent
           ports:

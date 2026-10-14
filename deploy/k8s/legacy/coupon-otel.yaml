@@ -1,0 +1,31 @@
+# Phase 3.2 - legacy 스택의 Coupon 식별자·Evidence 설정 (order-otel.yaml과 같은 형태)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coupon
+spec:
+  template:
+    spec:
+      containers:
+        - name: coupon
+          env:
+            - name: OTEL_SERVICE_NAME
+              value: coupon-legacy
+            - name: OTEL_RESOURCE_ATTRIBUTES
+              value: service.namespace=legacy
+            - name: EVIDENCE_STORE_URL
+              value: http://evidence-store.verify.svc.cluster.local:8080
+            - name: EVIDENCE_STACK
+              value: legacy
+            - name: EVIDENCE_SERVICE
+              value: coupon
+            - name: EVIDENCE_VERSION
+              value: legacy
+            - name: OTEL_INSTRUMENTATION_JAVA_HTTP_CLIENT_ENABLED
+              value: "false"
+      volumes:
+        # spill은 스택별 hostPath — 같은 스택의 order와 같은 디렉터리(파일명에 hopPath·stack이 있어 충돌 없음)
+        - name: evidence-spill
+          hostPath:
+            path: /var/evidence/spill/legacy
+            type: DirectoryOrCreate

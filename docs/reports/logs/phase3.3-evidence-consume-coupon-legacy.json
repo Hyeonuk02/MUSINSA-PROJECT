@@ -1,0 +1,85 @@
+{
+  "schemaVersion": "v1",
+  "runId": "p33-1",
+  "replayRequestId": "R000029",
+  "hopPath": "0.e1",
+  "sessionId": "S006",
+  "stack": "legacy",
+  "service": "coupon",
+  "origin": "kafka",
+  "version": "legacy",
+  "request": null,
+  "response": null,
+  "event": {
+    "topic": "order.paid",
+    "key": "ok-R000027",
+    "payloadHash": "sha256:e4a7a2858707721eaa2feb2900e9a735e59c7c58ebe10eed67743213d147a72d",
+    "payload": "{\"orderKey\":\"ok-R000027\",\"amount\":7000,\"couponKey\":\"ck-R000026\"}"
+  },
+  "consumeOutcome": "ok",
+  "dbAccess": {
+    "statements": [
+      {
+        "seq": 1,
+        "sql": "select c1_0.id,c1_0.coupon_key,c1_0.created_at,c1_0.discount_amount,c1_0.status,c1_0.used_at,c1_0.used_by_order_key from coupons c1_0 where c1_0.coupon_key=?"
+      },
+      {
+        "seq": 3,
+        "sql": "update coupons set coupon_key=?,created_at=?,discount_amount=?,status=?,used_at=?,used_by_order_key=? where id=?"
+      }
+    ],
+    "truncated": false
+  },
+  "externalCalls": [],
+  "events": {
+    "published": []
+  },
+  "transactions": [
+    {
+      "seq": 2,
+      "name": "poc.coupon.CouponService.settle",
+      "phase": "COMMIT_BEGIN",
+      "outcome": null
+    },
+    {
+      "seq": 4,
+      "name": "poc.coupon.CouponService.settle",
+      "phase": "COMPLETED",
+      "outcome": "COMMITTED"
+    }
+  ],
+  "callTree": {
+    "nodes": [
+      {
+        "seq": 1,
+        "depth": 0,
+        "class": "poc.coupon.OrderPaidListener",
+        "method": "onOrderPaid",
+        "threw": false
+      },
+      {
+        "seq": 2,
+        "depth": 1,
+        "class": "poc.coupon.CouponService",
+        "method": "settle",
+        "threw": false
+      },
+      {
+        "seq": 3,
+        "depth": 2,
+        "class": "poc.coupon.CouponRepository",
+        "method": "findByCouponKey",
+        "threw": false
+      }
+    ],
+    "truncated": false
+  },
+  "error": null,
+  "timing": {
+    "arrivedAt": "2026-10-13T11:40:20.934522838Z",
+    "completedAt": "2026-10-13T11:40:20.969888297Z",
+    "arrivedNano": 16305426967096,
+    "completedNano": 16305462334221
+  },
+  "capturedAt": "2026-10-13T11:40:20.970061797Z"
+}

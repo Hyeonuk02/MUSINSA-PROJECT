@@ -1,0 +1,23 @@
+# Phase 3.2 - Coupon DB 격리 (mysql-networkpolicy.yaml과 같은 형태)
+#
+# 서비스 축: Coupon DB에는 같은 네임스페이스의 소유 서비스(app=coupon)만 3306으로 들어온다.
+#   Order(app=order)도 Coupon DB에 직접 접근할 수 없다 — 쿠폰은 Coupon API로만.
+# 스택 축: namespaceSelector가 없으므로 다른 스택(네임스페이스)에서는 들어올 수 없다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: coupon-mysql-ingress-owner-only
+spec:
+  podSelector:
+    matchLabels:
+      app: coupon-mysql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: coupon
+      ports:
+        - port: 3306
+          protocol: TCP

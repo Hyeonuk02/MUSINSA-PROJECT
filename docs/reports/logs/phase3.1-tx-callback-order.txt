@@ -1,0 +1,18 @@
+# 3.1 트랜잭션 콜백 순서 실측 — legacy order, POST /api/orders/ok-R910021/pay (R910022), 2026-10-13
+# 임시 설정(실측 후 제거): EVIDENCE_TX_TRACE=true, SPRING_APPLICATION_JSON logging.level JpaTransactionManager=DEBUG, org.hibernate.SQL=DEBUG
+# 표기: listener.* = TransactionExecutionListener(EvidenceTransactionListener), synchronization.* = 트랜잭션 시작 때 등록한 관측용 TransactionSynchronization
+
+2026-10-13T06:18:36.325Z o.s.orm.jpa.JpaTransactionManager: Creating new transaction with name [poc.order.OrderController.pay]: PROPAGATION_REQUIRED,ISOLATION_DEFAULT
+2026-10-13T06:18:36.326Z o.s.orm.jpa.JpaTransactionManager: Opened new EntityManager [SessionImpl(1390990398<open>)] for JPA transaction
+2026-10-13T06:18:36.329Z o.s.orm.jpa.JpaTransactionManager: Exposing JPA transaction as JDBC [org.springframework.orm.jpa.vendor.HibernateJpaDialect$HibernateConnectionHandle@6173f2aa]
+2026-10-13T06:18:36.331Z org.hibernate.SQL: select o1_0.id,o1_0.amount,o1_0.created_at,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from orders o1_0 where o1_0.order_key=?
+2026-10-13T06:18:36.408Z org.hibernate.SQL: select i1_0.order_id,i1_0.id,i1_0.line_no,i1_0.price,i1_0.qty,i1_0.sku from order_items i1_0 where i1_0.order_id=? order by i1_0.line_no
+2026-10-13T06:18:36.411Z p.evidence.EvidenceTransactionListener: TX_TRACE synchronization.beforeCommit tx=poc.order.OrderController.pay
+2026-10-13T06:18:36.412Z o.s.orm.jpa.JpaTransactionManager: Initiating transaction commit
+2026-10-13T06:18:36.412Z p.evidence.EvidenceTransactionListener: TX_TRACE listener.beforeCommit tx=poc.order.OrderController.pay
+2026-10-13T06:18:36.412Z o.s.orm.jpa.JpaTransactionManager: Committing JPA transaction on EntityManager [SessionImpl(1390990398<open>)]
+2026-10-13T06:18:36.414Z org.hibernate.SQL: update orders set amount=?,created_at=?,idempotency_key=?,order_key=?,status=?,transaction_id=? where id=?
+2026-10-13T06:18:36.418Z p.evidence.EvidenceTransactionListener: TX_TRACE synchronization.afterCommit tx=poc.order.OrderController.pay
+2026-10-13T06:18:36.418Z p.evidence.EvidenceTransactionListener: TX_TRACE synchronization.afterCompletion(0) tx=poc.order.OrderController.pay
+2026-10-13T06:18:36.418Z p.evidence.EvidenceTransactionListener: TX_TRACE listener.afterCommit tx=poc.order.OrderController.pay
+2026-10-13T06:18:36.418Z o.s.orm.jpa.JpaTransactionManager: Closing JPA EntityManager after transaction

@@ -1,0 +1,51 @@
+spring:
+  application:
+    name: coupon-app
+  datasource:
+    url: ${DB_URL:jdbc:mysql://localhost:3306/coupons?serverTimezone=UTC}
+    username: ${DB_USER:poc}
+    password: ${DB_PASSWORD:poc}
+  sql:
+    init:
+      # 스키마 소유자는 MySQL init SQL 하나(deploy/k8s/base/coupon-mysql-initdb/schema.sql). 앱은 DDL을 만들지 않는다.
+      mode: never
+  jpa:
+    # 지연 로딩·SQL은 트랜잭션(서비스) 안에서만. hibernate.jdbc.batch_size 미설정(배치 off).
+    open-in-view: false
+    hibernate:
+      ddl-auto: none
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.MySQLDialect
+  kafka:
+    # Phase 3.3: order.paid 소비(+ DLQ 발행). 같은 ns의 브로커(kafka:9092).
+    bootstrap-servers: ${KAFKA_BOOTSTRAP:localhost:9092}
+    consumer:
+      group-id: coupon-settlement
+      auto-offset-reset: earliest
+      key-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      value-deserializer: org.apache.kafka.common.serialization.StringDeserializer
+      properties:
+        # 브로커 재시작(S0) 뒤 run.sh가 토픽을 만들면 빨리 알아채도록(기본 5분)
+        metadata.max.age.ms: 2000
+    producer:
+      # DLQ 발행
+      key-serializer: org.apache.kafka.common.serialization.StringSerializer
+      value-serializer: org.apache.kafka.common.serialization.StringSerializer
+      acks: all
+      retries: 0
+      properties:
+        enable.idempotence: false
+        delivery.timeout.ms: 5000
+        request.timeout.ms: 4000
+        max.block.ms: 5000
+  lifecycle:
+    timeout-per-shutdown-phase: 20s
+
+server:
+  port: 8080
+  shutdown: graceful
+
+app:
+  # 비어 있으면 시스템 시각(개발 편의). k8s에서는 APP_FIXED_CLOCK env로 주입한다.
+  fixed-clock: ${APP_FIXED_CLOCK:}

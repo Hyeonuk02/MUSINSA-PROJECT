@@ -1,0 +1,15 @@
+runs/p36-F6-1 git {'rev': '9648cf17c9d88322c2cf24187bb11560027bfdac', 'dirty': False} new order-app:phase3.6-F6
+   target 26 B0 DIFF 26 B1 DIFF 26
+   violation axes {} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'IMPROVEMENT': 17, 'SAME': 17}, 'learn': {'IMPROVEMENT': 9, 'SAME': 16}}
+runs/p36-F6-2 git {'rev': '9648cf17c9d88322c2cf24187bb11560027bfdac', 'dirty': False} new order-app:phase3.6-F6
+   target 26 B0 DIFF 26 B1 DIFF 26
+   violation axes {} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'IMPROVEMENT': 17, 'SAME': 17}, 'learn': {'IMPROVEMENT': 9, 'SAME': 16}}
+runs/p36-F6-3 git {'rev': '9648cf17c9d88322c2cf24187bb11560027bfdac', 'dirty': False} new order-app:phase3.6-F6
+   target 26 B0 DIFF 26 B1 DIFF 26
+   violation axes {} uncertain kinds {}
+   sessionViolations [] runChecks [('dbstate_equal', True, [])]
+   bySplit {'eval': {'CONTRACT_VIOLATION': 1, 'IMPROVEMENT': 17, 'SAME': 17}, 'learn': {'IMPROVEMENT': 9, 'SAME': 16}}

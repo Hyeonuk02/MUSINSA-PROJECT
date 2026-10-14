@@ -1,11 +1,13 @@
-# Phase 1.6 - Shadow 미러링 / Phase 2.3 - Evidence Store 진입 경로
+# Phase 1.6 - Shadow 미러링 / Phase 2.3 - Evidence Store 진입 경로 / Phase 3.2 - Coupon 표면
 #
 # Istio는 http 라우트를 위에서부터 순서대로 매칭한다. 순서가 곧 의미다.
 #   1. /_evidence/  -> verify/evidence-store (mirror 없음). 호스트의 k6·run script가 쓰는 경로.
 #                      prefix가 겹치지 않지만 순서 의미를 고정하려고 mirror 라우트보다 앞에 둔다.
-#   2. /api/        -> legacy route + new mirror
+#   2. /api/orders  -> order legacy route + order new mirror
+#   3. /api/coupons -> coupon legacy route + coupon new mirror (Phase 3.2)
+#   (Order가 Coupon을 부르는 내부 호출은 게이트웨이를 거치지 않는다 — 같은 ns 직접 호출이라 미러 없음)
 #
-# 게이트웨이 표면은 위 두 개뿐이다. 그 외 경로는 매칭되는 라우트가 없어 게이트웨이가 404를 낸다.
+# 게이트웨이 표면은 위 세 개뿐이다. 그 외 경로는 매칭되는 라우트가 없어 게이트웨이가 404를 낸다.
 # 미러 대상은 선언된 표면이어야 하고, 실험 밖 요청이 조용히 legacy로 들어가는 것보다 404로 드러나는 게 낫다.
 #
 # 미러는 fire-and-forget이다. new의 응답은 버려지고 클라이언트는 legacy 응답만 받는다.
@@ -35,7 +37,7 @@ spec:
     - name: order-shadow
       match:
         - uri:
-            prefix: /api/
+            prefix: /api/orders
       route:
         - destination:
             host: order.legacy.svc.cluster.local
@@ -47,4 +49,19 @@ spec:
           number: 8080
       mirrorPercentage:
         # 모든 요청을 미러한다.
+        value: 100.0
+    - name: coupon-shadow
+      match:
+        - uri:
+            prefix: /api/coupons
+      route:
+        - destination:
+            host: coupon.legacy.svc.cluster.local
+            port:
+              number: 8080
+      mirror:
+        host: coupon.new.svc.cluster.local
+        port:
+          number: 8080
+      mirrorPercentage:
         value: 100.0

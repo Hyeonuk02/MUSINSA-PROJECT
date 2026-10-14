@@ -1,0 +1,147 @@
+== p36-F7-1  arm C  pairs 59  {'CONTRACT_VIOLATION': 3, 'SAME': 56}
+  split eval   {'CONTRACT_VIOLATION': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'CONTRACT_VIOLATION': 1, 'SAME': 12}
+  order.pay            {'CONTRACT_VIOLATION': 1, 'SAME': 7}
+  run dbstate_equal: VIOLATION ["orders: legacy={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b'} new={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:3a85eb132c1cfcc0dce6b53f3043d48e25400538dda973e99f8b2a0da06c3f2a'}"]
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000041/0 order.pay: response.status: legacy=200 new=502; writeSet: legacy=[['update', 'orders']] new=[]; externalCalls: legacy=[["POST","wiremock","/gateway/charge",200]] new=[["POST","wiremock","/gateway/charge",0]]; events.published: 개수 l
+  CONTRACT_VIOLATION R000042/0 order.get: response_body_compatible: response.valueChanged {"from":"PAID","path":"status","to":"CREATED"}; response_body_compatible: response.valueChanged {"from":"tx-idem-slow-R000041","path":"transactionId","to":null}
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F7-1/verdict.json
+== p36-F7-1  arm B0  pairs 59  {'DIFF': 3, 'SAME': 56}
+  split eval   {'DIFF': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 1, 'SAME': 12}
+  order.pay            {'DIFF': 1, 'SAME': 7}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F7-1/verdict-B0.json
+== p36-F7-1  arm B1  pairs 59  {'DIFF': 3, 'SAME': 56}
+  split eval   {'DIFF': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 1, 'SAME': 12}
+  order.pay            {'DIFF': 1, 'SAME': 7}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F7-1/verdict-B1.json
+== p36-F7-2  arm C  pairs 59  {'CONTRACT_VIOLATION': 3, 'SAME': 56}
+  split eval   {'CONTRACT_VIOLATION': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'CONTRACT_VIOLATION': 1, 'SAME': 12}
+  order.pay            {'CONTRACT_VIOLATION': 1, 'SAME': 7}
+  run dbstate_equal: VIOLATION ["orders: legacy={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b'} new={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:3a85eb132c1cfcc0dce6b53f3043d48e25400538dda973e99f8b2a0da06c3f2a'}"]
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000041/0 order.pay: response.status: legacy=200 new=502; writeSet: legacy=[['update', 'orders']] new=[]; externalCalls: legacy=[["POST","wiremock","/gateway/charge",200]] new=[["POST","wiremock","/gateway/charge",0]]; events.published: 개수 l
+  CONTRACT_VIOLATION R000042/0 order.get: response_body_compatible: response.valueChanged {"from":"PAID","path":"status","to":"CREATED"}; response_body_compatible: response.valueChanged {"from":"tx-idem-slow-R000041","path":"transactionId","to":null}
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F7-2/verdict.json
+== p36-F7-2  arm B0  pairs 59  {'DIFF': 3, 'SAME': 56}
+  split eval   {'DIFF': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 1, 'SAME': 12}
+  order.pay            {'DIFF': 1, 'SAME': 7}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F7-2/verdict-B0.json
+== p36-F7-2  arm B1  pairs 59  {'DIFF': 3, 'SAME': 56}
+  split eval   {'DIFF': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 1, 'SAME': 12}
+  order.pay            {'DIFF': 1, 'SAME': 7}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F7-2/verdict-B1.json
+== p36-F7-3  arm C  pairs 59  {'CONTRACT_VIOLATION': 3, 'SAME': 56}
+  split eval   {'CONTRACT_VIOLATION': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'CONTRACT_VIOLATION': 1, 'SAME': 9}
+  order.get            {'CONTRACT_VIOLATION': 1, 'SAME': 12}
+  order.pay            {'CONTRACT_VIOLATION': 1, 'SAME': 7}
+  run dbstate_equal: VIOLATION ["orders: legacy={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b'} new={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:3a85eb132c1cfcc0dce6b53f3043d48e25400538dda973e99f8b2a0da06c3f2a'}"]
+  Undelivered legacy 0 / new 0, degraded 0
+  CONTRACT_VIOLATION R000041/0 order.pay: response.status: legacy=200 new=502; writeSet: legacy=[['update', 'orders']] new=[]; externalCalls: legacy=[["POST","wiremock","/gateway/charge",200]] new=[["POST","wiremock","/gateway/charge",0]]; events.published: 개수 l
+  CONTRACT_VIOLATION R000042/0 order.get: response_body_compatible: response.valueChanged {"from":"PAID","path":"status","to":"CREATED"}; response_body_compatible: response.valueChanged {"from":"tx-idem-slow-R000041","path":"transactionId","to":null}
+  CONTRACT_VIOLATION R000047/0 order.create: response.status: legacy=409 new=400; response.content-type: legacy='application/json' new=None; writeSet: legacy=[['insert', 'orders']] new=[]; transactions.outcomes: legacy=[['COMPLETED', 'ROLLED_BACK']] new=[]; respons
+  → runs/p36-F7-3/verdict.json
+== p36-F7-3  arm B0  pairs 59  {'DIFF': 3, 'SAME': 56}
+  split eval   {'DIFF': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 1, 'SAME': 12}
+  order.pay            {'DIFF': 1, 'SAME': 7}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F7-3/verdict-B0.json
+== p36-F7-3  arm B1  pairs 59  {'DIFF': 3, 'SAME': 56}
+  split eval   {'DIFF': 3, 'SAME': 31}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 6}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'DIFF': 1, 'SAME': 9}
+  order.get            {'DIFF': 1, 'SAME': 12}
+  order.pay            {'DIFF': 1, 'SAME': 7}
+  Undelivered legacy 0 / new 0, degraded 0
+  DIFF               R000041/0 order.pay: 
+  DIFF               R000042/0 order.get: 
+  DIFF               R000047/0 order.create: 
+  → runs/p36-F7-3/verdict-B1.json

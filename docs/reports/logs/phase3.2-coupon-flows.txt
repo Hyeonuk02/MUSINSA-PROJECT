@@ -1,0 +1,25 @@
+# p32-1 legacy — 쿠폰 주문(S006 R000027)과 실패 경로(S008: R000036 주문 A, R000037 주문 B 같은 쿠폰, R000038 B 조회, R000039 쿠폰 조회)
+== R000027/0 order POST /api/orders -> 201 body={"id":4,"orderKey":"ok-R000027","items":[{"sku":"D-1","qty":2,"price":5000}],"amount":7000,"couponKey":"ck-R000026","discountAmount":3000,"s
+   timeline: 1:SQL select o1_0.id from | 2:SQL insert into orders | 3:SQL insert into order_items | 4:CALL coupon/api/coupons/ck-R000026/use->200 child=0.h1 | 5:TX COMMIT_BEGIN | 6:SQL update orders set | 7:TX COMPLETED COMMITTED
+   callTree: 0:OrderController.create > 1:OrderService.create > 2:OrderRepository.existsByOrderKey > 2:OrderRepository.saveAndFlush > 2:CouponClient.use
+== R000027/0.h1 coupon POST /api/coupons/ck-R000026/use -> 200 body={"couponKey":"ck-R000026","discountAmount":3000,"status":"USED","usedByOrderKey":"ok-R000027"}
+   timeline: 1:SQL select c1_0.id,c1_0.coupon_key,c1_0.created_at,c1_0.discount_amount,c1_0.status,c1_0.used_at,c1_0.used_by_order_key from | 2:TX COMMIT_BEGIN | 3:SQL update coupons set | 4:TX COMPLETED COMMITTED
+   callTree: 0:CouponController.use > 1:CouponService.use > 2:CouponRepository.findByCouponKey
+== R000036/0 order POST /api/orders -> 201 body={"id":7,"orderKey":"ok-R000036","items":[{"sku":"F-1","qty":1,"price":9000}],"amount":6500,"couponKey":"ck-R000035","discountAmount":2500,"s
+   timeline: 1:SQL select o1_0.id from | 2:SQL insert into orders | 3:SQL insert into order_items | 4:CALL coupon/api/coupons/ck-R000035/use->200 child=0.h1 | 5:TX COMMIT_BEGIN | 6:SQL update orders set | 7:TX COMPLETED COMMITTED
+   callTree: 0:OrderController.create > 1:OrderService.create > 2:OrderRepository.existsByOrderKey > 2:OrderRepository.saveAndFlush > 2:CouponClient.use
+== R000036/0.h1 coupon POST /api/coupons/ck-R000035/use -> 200 body={"couponKey":"ck-R000035","discountAmount":2500,"status":"USED","usedByOrderKey":"ok-R000036"}
+   timeline: 1:SQL select c1_0.id,c1_0.coupon_key,c1_0.created_at,c1_0.discount_amount,c1_0.status,c1_0.used_at,c1_0.used_by_order_key from | 2:TX COMMIT_BEGIN | 3:SQL update coupons set | 4:TX COMPLETED COMMITTED
+   callTree: 0:CouponController.use > 1:CouponService.use > 2:CouponRepository.findByCouponKey
+== R000037/0 order POST /api/orders -> 400 body={"code":"COUPON_ALREADY_USED"}
+   timeline: 1:SQL select o1_0.id from | 2:SQL insert into orders | 3:SQL insert into order_items | 4:CALL coupon/api/coupons/ck-R000035/use->409 child=0.h1 | 5:TX COMPLETED ROLLED_BACK
+   callTree: 0:OrderController.create(threw) > 1:OrderService.create(threw) > 2:OrderRepository.existsByOrderKey > 2:OrderRepository.saveAndFlush > 2:CouponClient.use(threw) > 0:OrderController.onCouponFailure
+== R000037/0.h1 coupon POST /api/coupons/ck-R000035/use -> 409 body={"code":"COUPON_ALREADY_USED"}
+   timeline: 1:SQL select c1_0.id,c1_0.coupon_key,c1_0.created_at,c1_0.discount_amount,c1_0.status,c1_0.used_at,c1_0.used_by_order_key from | 2:TX COMMIT_BEGIN | 3:TX COMPLETED COMMITTED
+   callTree: 0:CouponController.use > 1:CouponService.use > 2:CouponRepository.findByCouponKey
+== R000038/0 order GET /api/orders/by-key/ok-R000037 -> 404 body={"error":"ORDER_NOT_FOUND","orderKey":"ok-R000037"}
+   timeline: 1:SQL select o1_0.id,o1_0.amount,o1_0.coupon_key,o1_0.created_at,o1_0.discount_amount,o1_0.idempotency_key,o1_0.order_key,o1_0.status,o1_0.transaction_id from | 2:TX COMMIT_BEGIN | 3:TX COMPLETED COMMITTED
+   callTree: 0:OrderController.getByKey > 1:OrderService.getByKey > 2:OrderRepository.findByOrderKey
+== R000039/0 coupon GET /api/coupons/by-key/ck-R000035 -> 200 body={"couponKey":"ck-R000035","discountAmount":2500,"status":"USED","usedByOrderKey":"ok-R000036"}
+   timeline: 1:SQL select c1_0.id,c1_0.coupon_key,c1_0.created_at,c1_0.discount_amount,c1_0.status,c1_0.used_at,c1_0.used_by_order_key from | 2:TX COMMIT_BEGIN | 3:TX COMPLETED COMMITTED
+   callTree: 0:CouponController.getByKey > 1:CouponService.getByKey > 2:CouponRepository.findByCouponKey

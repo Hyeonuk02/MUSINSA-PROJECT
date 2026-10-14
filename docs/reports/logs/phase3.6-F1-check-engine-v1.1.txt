@@ -1,0 +1,18 @@
+== p36-F1-1 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 3, 'SAME': 57}
+   targets 일치 1/1
+   정상 경로 오탐(baseline과 다른 non-target) 1 {'R000007/0': ('SAME', 'CONTRACT_VIOLATION')}
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p36-F1-2 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 3, 'SAME': 57}
+   targets 일치 1/1
+   정상 경로 오탐(baseline과 다른 non-target) 1 {'R000007/0': ('SAME', 'CONTRACT_VIOLATION')}
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p36-F1-3 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 3, 'SAME': 57}
+   targets 일치 1/1
+   정상 경로 오탐(baseline과 다른 non-target) 1 {'R000007/0': ('SAME', 'CONTRACT_VIOLATION')}
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+세 run 판정 동일: True
+결과: 기대와 다름
+fault_check exit=1
