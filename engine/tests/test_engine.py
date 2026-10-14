@@ -92,7 +92,7 @@ def test_output_deterministic(run, rules):
     b = dumps(judge_run(run, rules, "C"))
     assert a == b
     head = json.loads(a)["engine"]
-    assert head["version"].startswith("engine-v1.2") and set(head["rules"]) >= {"contract.yaml", "improvement.yaml"}
+    assert head["version"].startswith("engine-v1.3") and set(head["rules"]) >= {"contract.yaml", "improvement.yaml"}
 
 
 # ---------------------------------------------------------------- 계획 7건
@@ -336,3 +336,35 @@ def test_coupon_transition_both_stacks_flag_only(run, rules):
     assert pair(r, "R000029", "0.e1")["verdict"] == SAME and pair(r, "R000027", "0.h1")["verdict"] == SAME
     sv = r["summary"]["sessionViolations"]
     assert len(sv) == 1 and sv[0]["bothStacks"] is True and sv[0]["attributedPairs"] == []
+
+
+# ---------------------------------------------------------------- engine-v1.3 externalCalls.responseHashChanged matcher
+def _coupon_response_changed(rec, _):
+    rec["externalCalls"][0]["responseBodyHash"] = "sha256:" + "0" * 64
+
+
+def test_response_hash_changed_is_uncertain_with_host_path(run, rules):
+    tamper(run, "R000027", "0", _coupon_response_changed)
+    p = pair(judge_run(run, rules, "C"), "R000027")
+    assert p["verdict"] == UNC
+    u = [x for x in p["uncertain"] if x["diffKind"] == "externalCalls.responseHashChanged"]
+    assert len(u) == 1 and u[0]["detail"]["changed"] == [{"host": "coupon", "path": "/api/coupons/ck-R000026/use"}]
+
+
+def _rule(host, path):
+    return {"rules": [{"id": "hash-ok", "scope": "request", "verdict": "improvement", "reason": "x",
+                       "provenance": {"author": "t", "date": "2026-10-14", "runId": "p33-mini", "split": "learn", "sessions": ["S006"]},
+                       "match": {"endpoint": "order.create", "diffKind": "externalCalls.responseHashChanged", "host": host, "path": path}}]}
+
+
+def test_response_hash_changed_rule_matches_host_path(run, rules):
+    tamper(run, "R000027", "0", _coupon_response_changed)
+    (rules / "learned" / "hash.yaml").write_text(yaml.safe_dump(_rule("coupon", r"/api/coupons/[^/]+/use")), encoding="utf-8")
+    p = pair(judge_run(run, rules, "C"), "R000027")
+    assert p["verdict"] == IMP and p["appliedRules"][0]["rule"] == "hash-ok"
+
+
+def test_response_hash_changed_rule_wrong_path_no_match(run, rules):
+    tamper(run, "R000027", "0", _coupon_response_changed)
+    (rules / "learned" / "hash.yaml").write_text(yaml.safe_dump(_rule("wiremock", "/gateway/charge")), encoding="utf-8")
+    assert pair(judge_run(run, rules, "C"), "R000027")["verdict"] == UNC

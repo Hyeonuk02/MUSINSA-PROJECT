@@ -1,0 +1,486 @@
+{
+ "source": "p36-base-1",
+ "engine": "engine-v1.2 (phase3.6: 세션 검사 귀속 규칙)",
+ "pairs": [
+  {
+   "replayRequestId": "R000001",
+   "hopPath": "0",
+   "sessionId": "S001",
+   "split": "learn",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000002",
+   "hopPath": "0",
+   "sessionId": "S001",
+   "split": "learn",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000003",
+   "hopPath": "0",
+   "sessionId": "S001",
+   "split": "learn",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000003",
+   "hopPath": "0.e1",
+   "sessionId": "S001",
+   "split": "learn",
+   "endpoint": "consume.order.paid",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000004",
+   "hopPath": "0",
+   "sessionId": "S001",
+   "split": "learn",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000005",
+   "hopPath": "0",
+   "sessionId": "S002",
+   "split": "eval",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000006",
+   "hopPath": "0",
+   "sessionId": "S002",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000007",
+   "hopPath": "0",
+   "sessionId": "S002",
+   "split": "eval",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000007",
+   "hopPath": "0.e1",
+   "sessionId": "S002",
+   "split": "eval",
+   "endpoint": "consume.order.paid",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000008",
+   "hopPath": "0",
+   "sessionId": "S002",
+   "split": "eval",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000009",
+   "hopPath": "0",
+   "sessionId": "S002",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000010",
+   "hopPath": "0",
+   "sessionId": "S003",
+   "split": "eval",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000011",
+   "hopPath": "0",
+   "sessionId": "S003",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000012",
+   "hopPath": "0",
+   "sessionId": "S003",
+   "split": "eval",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000012",
+   "hopPath": "0.e1",
+   "sessionId": "S003",
+   "split": "eval",
+   "endpoint": "consume.order.paid",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000013",
+   "hopPath": "0",
+   "sessionId": "S003",
+   "split": "eval",
+   "endpoint": "order.cancel",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000014",
+   "hopPath": "0",
+   "sessionId": "S003",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000015",
+   "hopPath": "0",
+   "sessionId": "S004",
+   "split": "learn",
+   "endpoint": "coupon.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000016",
+   "hopPath": "0",
+   "sessionId": "S004",
+   "split": "learn",
+   "endpoint": "coupon.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000017",
+   "hopPath": "0",
+   "sessionId": "S004",
+   "split": "learn",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000018",
+   "hopPath": "0",
+   "sessionId": "S004",
+   "split": "learn",
+   "endpoint": "coupon.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000019",
+   "hopPath": "0",
+   "sessionId": "S004",
+   "split": "learn",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000020",
+   "hopPath": "0",
+   "sessionId": "S004",
+   "split": "learn",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000021",
+   "hopPath": "0",
+   "sessionId": "S005",
+   "split": "eval",
+   "endpoint": "coupon.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000022",
+   "hopPath": "0",
+   "sessionId": "S005",
+   "split": "eval",
+   "endpoint": "coupon.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000023",
+   "hopPath": "0",
+   "sessionId": "S005",
+   "split": "eval",
+   "endpoint": "coupon.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000024",
+   "hopPath": "0",
+   "sessionId": "S005",
+   "split": "eval",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000025",
+   "hopPath": "0",
+   "sessionId": "S005",
+   "split": "eval",
+   "endpoint": "coupon.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000026",
+   "hopPath": "0",
+   "sessionId": "S006",
+   "split": "learn",
+   "endpoint": "coupon.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000027",
+   "hopPath": "0",
+   "sessionId": "S006",
+   "split": "learn",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000027",
+   "hopPath": "0.h1",
+   "sessionId": "S006",
+   "split": "learn",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000028",
+   "hopPath": "0",
+   "sessionId": "S006",
+   "split": "learn",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000029",
+   "hopPath": "0",
+   "sessionId": "S006",
+   "split": "learn",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000029",
+   "hopPath": "0.e1",
+   "sessionId": "S006",
+   "split": "learn",
+   "endpoint": "consume.order.paid",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000030",
+   "hopPath": "0",
+   "sessionId": "S006",
+   "split": "learn",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000031",
+   "hopPath": "0",
+   "sessionId": "S007",
+   "split": "eval",
+   "endpoint": "coupon.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000032",
+   "hopPath": "0",
+   "sessionId": "S007",
+   "split": "eval",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000032",
+   "hopPath": "0.h1",
+   "sessionId": "S007",
+   "split": "eval",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000033",
+   "hopPath": "0",
+   "sessionId": "S007",
+   "split": "eval",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000033",
+   "hopPath": "0.e1",
+   "sessionId": "S007",
+   "split": "eval",
+   "endpoint": "consume.order.paid",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000034",
+   "hopPath": "0",
+   "sessionId": "S007",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000035",
+   "hopPath": "0",
+   "sessionId": "S008",
+   "split": "learn",
+   "endpoint": "coupon.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000036",
+   "hopPath": "0",
+   "sessionId": "S008",
+   "split": "learn",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000036",
+   "hopPath": "0.h1",
+   "sessionId": "S008",
+   "split": "learn",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000037",
+   "hopPath": "0",
+   "sessionId": "S008",
+   "split": "learn",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000037",
+   "hopPath": "0.h1",
+   "sessionId": "S008",
+   "split": "learn",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000038",
+   "hopPath": "0",
+   "sessionId": "S008",
+   "split": "learn",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000039",
+   "hopPath": "0",
+   "sessionId": "S008",
+   "split": "learn",
+   "endpoint": "coupon.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000040",
+   "hopPath": "0",
+   "sessionId": "S009",
+   "split": "eval",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000041",
+   "hopPath": "0",
+   "sessionId": "S009",
+   "split": "eval",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000041",
+   "hopPath": "0.e1",
+   "sessionId": "S009",
+   "split": "eval",
+   "endpoint": "consume.order.paid",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000042",
+   "hopPath": "0",
+   "sessionId": "S009",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000043",
+   "hopPath": "0",
+   "sessionId": "S010",
+   "split": "eval",
+   "endpoint": "coupon.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000044",
+   "hopPath": "0",
+   "sessionId": "S010",
+   "split": "eval",
+   "endpoint": "order.create",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000044",
+   "hopPath": "0.h1",
+   "sessionId": "S010",
+   "split": "eval",
+   "endpoint": "coupon.use",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000045",
+   "hopPath": "0",
+   "sessionId": "S010",
+   "split": "eval",
+   "endpoint": "order.pay",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000045",
+   "hopPath": "0.e1",
+   "sessionId": "S010",
+   "split": "eval",
+   "endpoint": "consume.order.paid",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000046",
+   "hopPath": "0",
+   "sessionId": "S010",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  },
+  {
+   "replayRequestId": "R000047",
+   "hopPath": "0",
+   "sessionId": "S011",
+   "split": "eval",
+   "endpoint": "order.create",
+   "verdict": "CONTRACT_VIOLATION"
+  },
+  {
+   "replayRequestId": "R000048",
+   "hopPath": "0",
+   "sessionId": "S011",
+   "split": "eval",
+   "endpoint": "order.get",
+   "verdict": "SAME"
+  }
+ ]
+}

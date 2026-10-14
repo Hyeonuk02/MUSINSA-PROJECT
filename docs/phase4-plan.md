@@ -137,6 +137,15 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 
 끝난 기준: 입력 점검 표, engine-v1.3 재판정 변화 0, pytest 통과, 보고서 `phase4.0`
 
+구현 시 확정 (4.0)
+- **scoping/ 골격**: `common.py`(run·corpus·git 읽기, 클래스 이름 정리 `clean_class`·바깥 클래스 `match_class`, contract.yaml 엔드포인트 표로 엔드포인트 식별, 파일 분류 `classify_path`, `name_status`(`git diff -M --name-status`, pathspec 선택)), `map.py`·`impact.py`·`evaluate.py`(CLI·입출력 형식만 — 4.1~4.3에서 채움, 지금은 exit 2), `check_inputs.py`(Phase 3 입력 점검), `tests/`(fixture `p36-base-1-mini` = runs/p36-base-1의 legacy 축약 60 레코드 + verdict pair 판정, `tests/make_fixture.py`). 엔진 import 없음 — 이름 정리는 엔진 Normalization과 같은 규칙을 다시 구현하고 테스트로 같음을, 엔드포인트 식별은 같은 contract.yaml 표로 엔진 판정 파일의 endpoint와 60/60 같음을 확인
+- **매칭 키**: `match_class` = 정리 후 바깥 클래스(`$` 앞) — 중첩 클래스는 바깥 클래스로(D24 "중첩 클래스는 바깥 클래스로")
+- **파일 분류 순서**: verify(`services/evidence-collector/`, `engine/`, `corpus/`, `k6/`, `evidence-store/`, `scoping/`) → deploy → docs(`docs/`, `*.md`) → test(`/src/test/`) → class(`src/main/{java,kotlin}/**/*.{java,kt}`) → resource(`src/main/resources/`) → build(`pom.xml`·`Dockerfile`·gradle). **분류 밖 파일(`.gitignore` 등)은 build = 전역**(fail-closed)
+- **engine-v1.3**: `externalCalls.responseHashChanged` diff 항목 detail에 `changed: [{host, path}]`(응답 hash가 달라진 호출) 추가, matcher `{host, path}`(정규식 fullmatch, 바뀐 호출 전부가 맞아야), review 제안 템플릿(escape한 host·path), 규칙 대상(`RULE_COVERABLE`)에 포함. 기존 run 판정은 메모리에서만 다시 내고 판정 파일은 덮어쓰지 않는다(`engine/rejudge_check.py`) — 150 판정 파일 pair 판정·집계·runChecks 변화 0. 이 diffKind가 있던 pair(F1 R000008, F7 R000041, F9 쿠폰 주문 생성 4)는 모두 CV라 판정 영향 없음(Uncertain 후보 detail에만 `changed` 추가)
+- **테스트 실행**: `engine/tests`와 `scoping/tests`는 각각 따로 실행한다(두 디렉터리 모두 평평한 모듈 이름 `common`을 써서 한 프로세스에서 섞이면 충돌)
+- **Java → Kotlin 이동은 git rename(R)으로 잡히지 않는다**(내용이 크게 바뀌어 D + A): 4.2 영향 산출에서 **같은 diff 안에서 같은 FQCN이 삭제·추가되면 같은 클래스의 수정**으로 본다(D17 FQCN 유지, D24 "rename은 같은 클래스의 수정"의 일반화). 삭제만 있고 같은 FQCN 추가가 없을 때만 규칙 4 "클래스 삭제 → 전역"
+- **교수님 10/13 피드백 반영 자리**: 내용을 받지 못해 비워 둠(보고서 0절)
+
 ### 4.1 맵 합성
 
 할 것

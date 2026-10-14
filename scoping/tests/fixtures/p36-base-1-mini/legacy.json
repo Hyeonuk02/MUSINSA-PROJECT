@@ -1,0 +1,2000 @@
+[
+ {
+  "replayRequestId": "R000001",
+  "hopPath": "0",
+  "sessionId": "S001",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000002",
+  "hopPath": "0",
+  "sessionId": "S001",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000001"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000003",
+  "hopPath": "0",
+  "sessionId": "S001",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000001/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.PaymentGatewayClient",
+     "method": "charge",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderEventPublisher",
+     "method": "onOrderPaid",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000003",
+  "hopPath": "0.e1",
+  "sessionId": "S001",
+  "service": "coupon",
+  "origin": "kafka",
+  "request": null,
+  "event": {
+   "topic": "order.paid"
+  },
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.OrderPaidListener",
+     "method": "onOrderPaid",
+     "depth": 0
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000004",
+  "hopPath": "0",
+  "sessionId": "S001",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000001"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000005",
+  "hopPath": "0",
+  "sessionId": "S002",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000006",
+  "hopPath": "0",
+  "sessionId": "S002",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000005"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000007",
+  "hopPath": "0",
+  "sessionId": "S002",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000005/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.PaymentGatewayClient",
+     "method": "charge",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderEventPublisher",
+     "method": "onOrderPaid",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000007",
+  "hopPath": "0.e1",
+  "sessionId": "S002",
+  "service": "coupon",
+  "origin": "kafka",
+  "request": null,
+  "event": {
+   "topic": "order.paid"
+  },
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.OrderPaidListener",
+     "method": "onOrderPaid",
+     "depth": 0
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000008",
+  "hopPath": "0",
+  "sessionId": "S002",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000005/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000009",
+  "hopPath": "0",
+  "sessionId": "S002",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000005"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000010",
+  "hopPath": "0",
+  "sessionId": "S003",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000011",
+  "hopPath": "0",
+  "sessionId": "S003",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-missing-R000011"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000012",
+  "hopPath": "0",
+  "sessionId": "S003",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000010/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.PaymentGatewayClient",
+     "method": "charge",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderEventPublisher",
+     "method": "onOrderPaid",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000012",
+  "hopPath": "0.e1",
+  "sessionId": "S003",
+  "service": "coupon",
+  "origin": "kafka",
+  "request": null,
+  "event": {
+   "topic": "order.paid"
+  },
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.OrderPaidListener",
+     "method": "onOrderPaid",
+     "depth": 0
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000013",
+  "hopPath": "0",
+  "sessionId": "S003",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000010/cancel"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "cancel",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "cancel",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000014",
+  "hopPath": "0",
+  "sessionId": "S003",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000010"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000015",
+  "hopPath": "0",
+  "sessionId": "S004",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "issue",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "issue",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "existsByCouponKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "save",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000016",
+  "hopPath": "0",
+  "sessionId": "S004",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/coupons/by-key/ck-R000015"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000017",
+  "hopPath": "0",
+  "sessionId": "S004",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000015/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000018",
+  "hopPath": "0",
+  "sessionId": "S004",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/coupons/by-key/ck-R000015"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000019",
+  "hopPath": "0",
+  "sessionId": "S004",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000015/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000020",
+  "hopPath": "0",
+  "sessionId": "S004",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000015/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000021",
+  "hopPath": "0",
+  "sessionId": "S005",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "issue",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "issue",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "existsByCouponKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "save",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000022",
+  "hopPath": "0",
+  "sessionId": "S005",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/coupons/by-key/ck-R000021"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000023",
+  "hopPath": "0",
+  "sessionId": "S005",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/coupons/by-key/ck-missing-R000023"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000024",
+  "hopPath": "0",
+  "sessionId": "S005",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000021/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000025",
+  "hopPath": "0",
+  "sessionId": "S005",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/coupons/by-key/ck-R000021"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000026",
+  "hopPath": "0",
+  "sessionId": "S006",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "issue",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "issue",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "existsByCouponKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "save",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000027",
+  "hopPath": "0",
+  "sessionId": "S006",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.CouponClient",
+     "method": "use",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000027",
+  "hopPath": "0.h1",
+  "sessionId": "S006",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000026/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000028",
+  "hopPath": "0",
+  "sessionId": "S006",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000027"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000029",
+  "hopPath": "0",
+  "sessionId": "S006",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000027/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.PaymentGatewayClient",
+     "method": "charge",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderEventPublisher",
+     "method": "onOrderPaid",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000029",
+  "hopPath": "0.e1",
+  "sessionId": "S006",
+  "service": "coupon",
+  "origin": "kafka",
+  "request": null,
+  "event": {
+   "topic": "order.paid"
+  },
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.OrderPaidListener",
+     "method": "onOrderPaid",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "settle",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000030",
+  "hopPath": "0",
+  "sessionId": "S006",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000027"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000031",
+  "hopPath": "0",
+  "sessionId": "S007",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "issue",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "issue",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "existsByCouponKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "save",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000032",
+  "hopPath": "0",
+  "sessionId": "S007",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.CouponClient",
+     "method": "use",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000032",
+  "hopPath": "0.h1",
+  "sessionId": "S007",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000031/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000033",
+  "hopPath": "0",
+  "sessionId": "S007",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000032/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.PaymentGatewayClient",
+     "method": "charge",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderEventPublisher",
+     "method": "onOrderPaid",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000033",
+  "hopPath": "0.e1",
+  "sessionId": "S007",
+  "service": "coupon",
+  "origin": "kafka",
+  "request": null,
+  "event": {
+   "topic": "order.paid"
+  },
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.OrderPaidListener",
+     "method": "onOrderPaid",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "settle",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000034",
+  "hopPath": "0",
+  "sessionId": "S007",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000032"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000035",
+  "hopPath": "0",
+  "sessionId": "S008",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "issue",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "issue",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "existsByCouponKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "save",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000036",
+  "hopPath": "0",
+  "sessionId": "S008",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.CouponClient",
+     "method": "use",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000036",
+  "hopPath": "0.h1",
+  "sessionId": "S008",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000035/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000037",
+  "hopPath": "0",
+  "sessionId": "S008",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.CouponClient",
+     "method": "use",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderController",
+     "method": "onCouponFailure",
+     "depth": 0
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000037",
+  "hopPath": "0.h1",
+  "sessionId": "S008",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000035/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000038",
+  "hopPath": "0",
+  "sessionId": "S008",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000037"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000039",
+  "hopPath": "0",
+  "sessionId": "S008",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/coupons/by-key/ck-R000035"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000040",
+  "hopPath": "0",
+  "sessionId": "S009",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000041",
+  "hopPath": "0",
+  "sessionId": "S009",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000040/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.PaymentGatewayClient",
+     "method": "charge",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderEventPublisher",
+     "method": "onOrderPaid",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000041",
+  "hopPath": "0.e1",
+  "sessionId": "S009",
+  "service": "coupon",
+  "origin": "kafka",
+  "request": null,
+  "event": {
+   "topic": "order.paid"
+  },
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.OrderPaidListener",
+     "method": "onOrderPaid",
+     "depth": 0
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000042",
+  "hopPath": "0",
+  "sessionId": "S009",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000040"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000043",
+  "hopPath": "0",
+  "sessionId": "S010",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "issue",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "issue",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "existsByCouponKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "save",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000044",
+  "hopPath": "0",
+  "sessionId": "S010",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.CouponClient",
+     "method": "use",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000044",
+  "hopPath": "0.h1",
+  "sessionId": "S010",
+  "service": "coupon",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/coupons/ck-R000043/use"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.CouponController",
+     "method": "use",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "use",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000045",
+  "hopPath": "0",
+  "sessionId": "S010",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders/ok-R000044/pay"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "pay",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "pay",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.PaymentGatewayClient",
+     "method": "charge",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderEventPublisher",
+     "method": "onOrderPaid",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000045",
+  "hopPath": "0.e1",
+  "sessionId": "S010",
+  "service": "coupon",
+  "origin": "kafka",
+  "request": null,
+  "event": {
+   "topic": "order.paid"
+  },
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.coupon.OrderPaidListener",
+     "method": "onOrderPaid",
+     "depth": 0
+    },
+    {
+     "class": "poc.coupon.CouponService",
+     "method": "settle",
+     "depth": 1
+    },
+    {
+     "class": "poc.coupon.CouponRepository",
+     "method": "findByCouponKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000046",
+  "hopPath": "0",
+  "sessionId": "S010",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000044"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000047",
+  "hopPath": "0",
+  "sessionId": "S011",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "POST",
+   "path": "/api/orders"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "create",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "create",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "existsByOrderKey",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "saveAndFlush",
+     "depth": 2
+    },
+    {
+     "class": "poc.order.OrderController",
+     "method": "onConflict",
+     "depth": 0
+    }
+   ]
+  }
+ },
+ {
+  "replayRequestId": "R000048",
+  "hopPath": "0",
+  "sessionId": "S011",
+  "service": "order",
+  "origin": "http",
+  "request": {
+   "method": "GET",
+   "path": "/api/orders/by-key/ok-R000047"
+  },
+  "event": null,
+  "callTree": {
+   "nodes": [
+    {
+     "class": "poc.order.OrderController",
+     "method": "getByKey",
+     "depth": 0
+    },
+    {
+     "class": "poc.order.OrderService",
+     "method": "getByKey",
+     "depth": 1
+    },
+    {
+     "class": "poc.order.OrderRepository",
+     "method": "findByOrderKey",
+     "depth": 2
+    }
+   ]
+  }
+ }
+]
