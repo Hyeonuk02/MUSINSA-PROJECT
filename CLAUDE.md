@@ -69,6 +69,40 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 
 콜트리 합성·endpoint → class 맵·git diff 대조·Tag/Filter·B2 arm(Phase 4) / 정적 Call Graph / 운영 시연·mirrorPercentage / 오버헤드 측정 / LLM 보조 판정 / Store DB·인증·UI / @Async 스레드 전파(Kafka consumer 스레드만) / Coupon 코드 변경 / 결함을 v1 사다리에 섞는 것 / Outbox·Saga / 자체 JSON writer / 같은 데이터로 규칙을 만들고 같은 데이터로 평가하는 것
 
+## Phase 4 — 진행 중
+
+계획: docs/phase4-plan.md (v2). 단계별 세부 작업과 끝난 기준은 그 문서가 기준이다.
+목표: 스코핑 — Git Diff → 동적 Call Graph(요청 단위 맵) → 영향 API → Tag/Filter, 그리고 그 효과의 측정(재생 수 감소율·Observed-diff Recall·Filter 하 결함 탐지 유지·B2-S 전체 조합), 서비스 간 변경(Coupon C1·C2).
+
+| 단계 | 내용 | 상태 |
+|---|---|---|
+| 4.0 | 준비 — 계획·결정 기록, scoping/ 골격, Phase 3 입력 점검, engine-v1.3 additive matcher | |
+| 4.1 | 맵 합성 — 요청 → {클래스}(+자식 홉 합산), 엔드포인트 요약, 커버리지 | |
+| 4.2 | 영향 산출 + 15 변형 사전 등록(scope-expectations.json) | |
+| 4.3 | 오프라인 평가 — 13 변형 + B2-S 전체 조합 + ablation 2종 | |
+| 4.4 | 파이프라인 Tag/Filter + 실제 run(Filter F3·F9 ×3, Tag F8·F3 ×1) | |
+| 4.5 | 서비스 간 변경 — Coupon C1(Kafka 홉)·C2(HTTP 홉) | |
+| 4.6 | 스코핑 경계 사례 E1~E7 (impact만) | |
+| 4.7 | 지표·보고 + Phase 4 마감(phase4-done) | |
+| 4.8 | (선택) 선택적 미러 시연 — VirtualService match | |
+| 4.9 | (선택) Evidence 수집 오버헤드 | |
+
+### Phase 4 확정 사항 (요약 — 원문은 phase4-plan 3절)
+
+- 맵(D23): Legacy 레코드로만. 정본 입력 runs/p36-base-1..3. **정본 맵은 요청 단위** corpus 요청 id → {클래스 FQCN}, 한 요청의 모든 홉(0, 0.h*, 0.e*)의 callTree 클래스를 합산(byHop 보존). 엔드포인트 맵은 요약·corpus 밖 미지 요청의 fail-closed용 — 선택에는 쓰지 않음. 매칭은 클래스 단위($·Kt·CGLIB 정리는 엔진 Normalization과 같게). 산출물 scoping/map.json(결정론, 커밋)
+- 변경 추출·영향(D24): `git diff -M --name-status`, 파일 분류 class/test/resource/build/deploy/verify/docs. 관측 클래스 → 그 클래스가 실행된 요청 전부. 미관측 → head 소스 정적 참조 폐포(깊이 ≤3 BFS, 도달한 관측 클래스 합집합), 미해결 가지·참조 없음·타입 모호 → 전역. resource·build·deploy·클래스 삭제 → 전역, verify·docs·test만 → 영향 없음(verify면 A/A 게이트 경고). 전역 하나라도 → 전역(fail-closed). 보수적 휴리스틱이지 안전성 증명이 아님
+- 선택 단위는 세션(영향 요청을 하나라도 가진 세션 전체). 요청 단위 선택 금지. 산출물 impact.json(결정론)
+- 모드: Tag(기본) = 전체 재생 + 영향 pair 태그 = 리뷰 우선순위(판정·Uncertain·재생 수 불변, 감소 주장 금지) / Filter(B2) = 영향 세션만 재생, 같은 엔진·규칙 / B2-S = 전체 조합 열거(실제 run 없음)
+- Coupon 변경(4.5): change/C1·C2 = phase3.3-base 위 1커밋(Coupon 코드만), 이미지 coupon-app:phase4-C<n>, new overlay coupon만 교체. C1 = OrderPaidListener settle 누락(Kafka 홉), C2 = CouponService.use 조회 리팩터링(HTTP 홉)
+- 평가(D25): 오프라인(전체 재생 verdict의 선택 세션 부분집합) — 감소율·Observed-diff Recall(F0 `R000047/0` 제외 주·포함 보조, 분모 0 → N/A)·결함 탐지 유지·세션 검사·B2-S·Tag 순위 품질·ablation. 오프라인 불가(`not evaluated offline`) — run 범위 dbstate·Undelivered·degraded·시간·세션 독립성 → 실제 Filter run에서 "재생 pair 판정 == 전체 재생 같은 pair + dbstate 판정 기대와 일치"
+- 기대는 run 전에 등록(scope-expectations.json, fault-expectations.json). 결과 보고 기대·도구를 고치지 않는다 — 고치면 버전·사유·전후 결과·"사전 등록 아님" 명시
+- 고정: 엔진(4.0의 additive matcher 1건으로 engine-v1.3만)·규칙 세트·corpus v2.1·Legacy 이미지·Phase 3 run. 스코핑 도구는 엔진 import 금지 — runs/*/verdict*.json·legacy.json·git만 읽는다
+- 발견은 docs/findings.md O14~, 결정은 decision-log D23~
+
+### Phase 4 하지 말 것
+
+정적 Call Graph 도구(Soot·WALA) / 메서드 단위 매칭 / LLM 보조 / corpus 확장(v2.1 고정) / 엔진·규칙·Legacy 이미지 변경(4.0 additive matcher 1건만, C2 run 전 사전 등록) / Phase 3 run 재실행·판정 파일 덮어쓰기 / 결함 추가(C1·C2 외) / 요청 단위 Filter / 결과 보고 규칙·기대·corpus 수정 / 운영 트래픽·UI / `mirrorPercentage`(4.8은 match 기반 선택 미러만)
+
 ## 확정 사항 (Phase 1~2, Phase 3에도 유효 — Phase 3에서 바뀐 키는 위 요약이 우선)
 
 - replayRequestId는 k6(corpus)가 부여, X-Replay-Request-Id. Envoy mirror가 헤더 복사
@@ -91,15 +125,15 @@ Coupon/Payment 실서비스, Kafka, 이벤트·외부 호출 Evidence(DB Evidenc
 
 ## 작업 방식
 
-- Phase 3는 3.0부터 순서대로 진행한다.
+- Phase 3는 3.0부터 순서대로 진행한다. Phase 4는 4.0부터 순서대로 진행한다.
 - DB Evidence는 StatementInspector로 SQL 원문만 기록한다. 앱에서 종류·횟수·테이블을 계산하거나 SQL 주석을 삽입하지 않는다(그건 Phase 3 엔진 또는 CDC 확장의 몫).
 - 한 번에 한 단계만 진행한다.
 - 구현 전에 이번 단계에서 무엇을 할지와 완료 기준을 먼저 설명한다.
 - 내가 실행 결과를 확인한 뒤 다음 단계로 넘어간다.
 - 오류는 현재 단계에서 해결한다.
 - 중요한 설계 결정이 필요하면 임의로 정하지 말고 질문한다.
-- 단계마다 "phase3.x: ..." 형식으로 커밋한다. 사다리·결함은 "phase3.5-v1.1: ...", "phase3.6-F1: ..." 형식으로 단계당 1개.
-- 단계별 세부 작업과 완료 기준은 @docs/phase3-plan.md 를 따른다. 전체 설계는 docs/architecture.md, Phase 1 실측 교훈은 docs/phase1-result.md 를 참고한다. 문서들이 CLAUDE.md와 다르면 문서가 우선한다.
+- 단계마다 "phase3.x: ..."(Phase 4는 "phase4.x: ...") 형식으로 커밋한다. 사다리·결함은 "phase3.5-v1.1: ...", "phase3.6-F1: ..." 형식으로 단계당 1개.
+- 단계별 세부 작업과 완료 기준은 @docs/phase3-plan.md(Phase 4는 @docs/phase4-plan.md)를 따른다. 전체 설계는 docs/architecture.md, Phase 1 실측 교훈은 docs/phase1-result.md 를 참고한다. 문서들이 CLAUDE.md와 다르면 문서가 우선한다.
 
 ## 단계 완료 보고 규칙
 - 단계가 끝나면 콘솔에 긴 결과를 출력하지 말고 `docs/reports/phase<N>.<step>.md`를 작성하고 커밋한 뒤 `git push origin hyeonuk-dev` 한다. 콘솔에는 보고서 경로, 전체 PASS/FAIL 한 줄, "결정 필요" 항목 개수만 출력한다.

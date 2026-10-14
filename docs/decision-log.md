@@ -424,3 +424,18 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 **결정**: Order·Coupon `JAVA_TOOL_OPTIONS`의 `-XX:MaxMetaspaceSize` 128m → 256m(heap `-Xmx384m` 유지), memory limits 768Mi → 1Gi(requests 512Mi 그대로 — 스케줄링 불변). legacy·new 같은 base 매니페스트. "legacy 매니페스트 무변경"은 코드·이미지 고정의 뜻이며 양쪽 공통 JVM·자원 설정은 같이 바뀐다. 변경 뒤 base A/A(p35-base)로 게이트 재확인.
 **근거**: v1.1 첫 run에서 New Order가 `OutOfMemoryError: Metaspace`(첫 지점 Kafka producer 지연 로딩) → ack failed·5xx·degraded 7. 측정하니 Legacy(Java)도 128m의 99%(125.85 MB)였고 Kotlin 런타임(+약 7 MB, +1,800 클래스)으로 초과. 256m은 v1.3·v1.4의 kotlin-reflect·jackson-module-kotlin까지 감안, 1Gi는 상한 합이 768Mi를 넘어 OOMKill로 원인이 가려지지 않게.
 **한계**: 단일 노드 kind(12GiB)의 자원 상한이다. 운영 크기와 무관하며, Metaspace 수치는 참고값(run 뒤 jcmd 측정)이다.
+
+### D23. 스코핑 맵은 요청 단위(+자식 홉 합산), 선택 단위는 세션, 매칭은 클래스 (2026-10-14)
+결정: Legacy baseline 레코드로 corpus 요청 → {클래스} 맵을 만든다. 한 요청의 진입 홉과 자식 홉(HTTP 0.h*, Kafka 0.e*)의 callTree 클래스를 그 요청에 합산한다(서비스 간 간선). 엔드포인트 → {클래스}는 요청 맵의 합집합으로 요약·미지 요청의 fail-closed 스코핑에만 쓴다. Filter·Tag의 선택 단위는 세션(영향 요청을 가진 세션 전체). 매칭은 클래스 단위.
+근거: 세션은 의존 폐포라 요청 단위 선택은 상태를 깨뜨린다. 엔드포인트 합집합으로 선택하면 일부 요청에서만 실행된 클래스(쿠폰 주문의 CouponService)가 그 엔드포인트의 모든 요청을 영향으로 만들어 Coupon 변경이 사실상 전역이 된다. 요청별 callTree는 이미 있는 데이터이며 메서드 단위 정밀도가 아니다. 두 해상도의 차이는 ablation으로 측정한다.
+한계: 맵은 corpus가 실행한 경로만 안다.
+
+### D24. 미관측 변경 클래스의 참조 폐포는 보수적 휴리스틱 — 합집합·미해결은 전역 (2026-10-14)
+결정: 변경 클래스가 맵에 없으면 head 소스에서 그 클래스(및 상위 타입·인터페이스)의 단순 이름을 참조하는 클래스를 전부 모아 깊이 ≤3 BFS로 관측 클래스에 닿는 것을 모두 합집합한다. 깊이 3 안에 해결되지 않는 가지가 있거나, 참조가 없거나(설정 클래스·필터·메인), 타입이 모호하면 전역. 리소스·빌드·배포 변경·클래스 삭제는 전역. 검증 레이어·문서·테스트만 변경은 영향 없음.
+근거: Controller→Service→Repository→Entity 계층에서 비-빈 클래스에서 빈까지 최대 3간선. Spring DI의 타입 주입·@Bean·@Qualifier·프록시·리플렉션은 소스 텍스트로 복원되지 않으므로 전역으로 흡수하는 것이 유일한 보장이다. 안전성이 증명된 회귀 테스트 선택이 아니라 fail-closed 휴리스틱이다.
+한계: 과포함(전역 발동)은 Filter 이득을 0으로 만든다 — impact.json에 미관측 수·전역 사유를 항상 남긴다.
+
+### D25. 스코핑 평가는 Phase 3 전체 재생 verdict의 오프라인 부분집합이 주, 실제 Filter run은 부분집합 실행의 동등성 확인 (2026-10-14)
+결정: 감소율·요청 단위 Observed-diff Recall(F0 제외 주·포함 보조, 분모 0은 N/A)·요청 단위 결함 탐지 유지·세션 범위 검사·B2-S 전체 조합·Tag 순위 품질·ablation은 오프라인으로 계산한다. run 범위 dbstate·Undelivered·degraded·시간·세션 독립성은 오프라인으로 재지 않고(not evaluated offline) 실제 Filter run(F3·F9·C1·C2 × 3)에서 "부분집합 재생의 pair 판정 == 전체 재생의 같은 pair 판정 + dbstate 판정 기대와 일치"로 확인한다.
+근거: 전체 재생 run이 이미 있으므로 요청 단위 결과는 그 안에 있다. 집계 해시는 부분집합으로 재구성할 수 없다.
+한계: 세션 독립성이 깨지는 경우(공유 자원 경합)는 Filter run에서 판정이 달라지는 것으로만 드러난다.
