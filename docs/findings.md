@@ -94,3 +94,10 @@
 - 근거: `docs/reports/phase3.4.md` 6절
 - 왜 중요: 동시성이 있으면 결정론적 재생에서도 auto id는 같지 않다. 값만 가리고 키 유무는 비교해야(engine-v1.1) id 누락 결함은 여전히 잡힌다
 - 후속: Normalization v1(3.4), engine-v1.1 id 값 마스킹(3.5)
+
+### O14. 사다리 커밋의 diff에는 서비스 코드 말고도 overlay 이미지 태그(deploy)가 들어 있고, Java → Kotlin 이동은 rename으로 안 잡힌다
+- 날짜·단계: 2026-10-14, 4.0
+- 봤다: `git diff -M --name-status <v1.x>~1..<v1.x>`가 네 단계 모두 `M deploy/k8s/new/kustomization.yaml`(new order 이미지 태그) + 서비스 파일 `D *.java` / `A *.kt`(같은 FQCN). 계획 1절의 범위 `phase3.3-base..phase3.5-v1.x`는 그 사이의 엔진·문서·run.sh·base 매니페스트 커밋까지 포함한다. 결함 브랜치(`phase3.5-v1.4..fault/F<n>`)는 서비스 코드 1~2 파일만
+- 근거: `docs/reports/logs/phase4.0-inputs.txt`, `scoping/tests/test_common.py::test_name_status_ladder_and_fault_shapes`
+- 왜 중요: D24를 글자 그대로 적용하면 deploy 변경 → 전역, 클래스 삭제(D) → 전역이라 사다리 4단계가 모두 전역이 된다(계획 4.2 기대: v1.2·v1.3은 order.* 9세션). 실험을 위해 한 커밋에 배포 설정을 함께 바꾼 것이 스코핑 결과를 바꾼다 — 실제 레포에서도 "코드 + 배포 매니페스트" 동시 커밋은 흔하다
+- 후속: 4.0 보고서 0절(사다리 diff 범위), 구현 시 확정(같은 FQCN D+A = 수정)
