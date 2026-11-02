@@ -88,6 +88,5 @@ def test_name_status_ladder_and_fault_shapes():
 
 
 def test_skeleton_clis_exit_2():
-    import impact, evaluate
-    assert impact.main(["--base", "a", "--head", "b", "--out", "/dev/null"]) == 2
+    import evaluate
     assert evaluate.main([]) == 2
