@@ -1,2 +1,5 @@
-# run별 결과(export, k6, DB 덤프). 커밋하지 않고 요약만 docs에 남긴다.
+# run별 결과(export, k6, DB 덤프). 커밋하지 않고 요약만 docs/legacy-baseline-result.md에 남긴다.
 runs/
+# Python 캐시(engine/iterations.py가 compare.py를 import하면서 생긴다)
+__pycache__/
+*.pyc
