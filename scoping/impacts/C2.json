@@ -1,0 +1,157 @@
+{
+  "assumedChanged": [],
+  "base": "phase3.3-base",
+  "baseCommit": "98c9356f20d29335ff68dd99bc3ed57be107d2cf",
+  "changedClasses": [
+    "poc.coupon.CouponService"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.coupon.CouponService"
+      ],
+      "kind": "class",
+      "path": "services/coupon/src/main/java/poc/coupon/CouponService.java",
+      "status": "M"
+    }
+  ],
+  "globalReasons": [],
+  "globalTriggered": false,
+  "head": "change/C2",
+  "headCommit": "1cba45e56ee35ba45ca5246a2b4307cd9ae98e9a",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "coupon.create",
+    "coupon.get",
+    "coupon.use",
+    "order.create",
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000015": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000016": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000017": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000018": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000019": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000020": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000021": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000022": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000023": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000024": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000025": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000026": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000027": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000029": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000031": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000032": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000033": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000035": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000036": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000037": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000039": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000043": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000044": [
+      "observed:poc.coupon.CouponService"
+    ],
+    "R000045": [
+      "observed:poc.coupon.CouponService"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [
+    "poc.coupon.CouponService"
+  ],
+  "pathFilter": null,
+  "reductionRequests": 0.3958,
+  "reductionSessions": 0.4545,
+  "selectedRequests": [
+    "R000015",
+    "R000016",
+    "R000017",
+    "R000018",
+    "R000019",
+    "R000020",
+    "R000021",
+    "R000022",
+    "R000023",
+    "R000024",
+    "R000025",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000035",
+    "R000036",
+    "R000037",
+    "R000038",
+    "R000039",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046"
+  ],
+  "selectedSessions": [
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S010"
+  ],
+  "toolVersion": "impact-v1.1",
+  "unobserved": [],
+  "warnings": []
+}
