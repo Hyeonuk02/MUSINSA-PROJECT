@@ -116,6 +116,25 @@ def main(argv: list[str]) -> int:
             print(f"<!-- {name} {b} -->")
         if args.explain:
             print("\n".join(f"<!-- {l} -->" for l in impact.explain(got).splitlines()))
+    print("\n| 경계 사례 | 변경 | 관측 | 미관측 | 전역 | 영향 요청 | 세션 | 재생 | 경고 | 사전 등록 |\n|---|---|---|---|---|---|---|---|---|---|")
+    (OUT / "boundary").mkdir(exist_ok=True)
+    empty = ({**sets, "none": []}, {**sessions, "none": []})
+    for name, exp in spec.get("boundaryCases", {}).items():
+        if not ref_exists(exp["head"]):
+            print(f"| {name} | {exp['change']} | | | | | | | | 대기 |")
+            continue
+        got = impact.compute(m, corpus, exp["base"], exp["head"], ROOT, exp["pathFilter"])
+        (OUT / "boundary" / f"{name}.json").write_text(dumps(got), encoding="utf-8")
+        bad = compare(exp, got, *empty)
+        if got["warnings"] != exp["warnings"]:
+            bad.append(f"warnings: 기대 {exp['warnings']} / 결과 {got['warnings']}")
+        failures += bool(bad)
+        print(f"| {name} | {exp['change']} | {len(got['observed'])} | {len(got['unobserved'])} | {'전역' if got['globalTriggered'] else '-'} | {len(got['impactedRequests'])} "
+              f"| {len(got['selectedSessions'])}/11 | {len(got['selectedRequests'])}/48 | {'A/A' if got['warnings'] else '-'} | {'일치' if not bad else '**불일치**'} |")
+        for b in bad:
+            print(f"<!-- {name} {b} -->")
+        if args.explain:
+            print("\n".join(f"<!-- {l} -->" for l in impact.explain(got).splitlines()))
     print(f"\n불일치 {failures}건")
     return 1 if failures else 0
 

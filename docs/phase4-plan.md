@@ -281,11 +281,19 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 
 끝난 기준: 7건 impact.json과 기대 일치 표. 임시 브랜치는 로컬 워크트리(push 없음), 보고서에 diff 요약만
 
+구현 시 확정 (4.6)
+- **기대 등록**: `docs/scope-expectations.json` `boundaryCases`(impact 실행 전 커밋). 기존 항목은 그대로, 기대는 impact-v1.1 기준 손 도출
+- **임시 브랜치**: 로컬 `scope/E1..E7` = `phase3.5-v1.4` 위 1커밋, push 없음. 산출물 `scoping/impacts/boundary/E<n>.json`(`evaluate.py`는 읽지 않는다)
+- **E6 대상**: 관측 클래스 `PaymentGatewayClient`. 삭제가 아니면 7세션인 클래스도 규칙 4로 전역이 되는지 본다
+
 ### 4.7 지표·보고 + Phase 4 마감
 
 - `docs/phase4-metrics.md`(4.3 + 4.5 + 4.6 + ablation), `docs/reports/phase4.7.md`, `docs/phase4-result.md`(맵·규칙·모드·지표·한계·최종 보고 입력), findings O14~, decision-log
 - 한계(미리): 맵은 corpus가 실행한 경로만(F0와 같은 원리) / 참조 폐포는 보수적 휴리스틱(DI 타입 주입·리플렉션 불가 → 전역) / 감소율은 corpus 구성·변경 지역성·해상도에 좌우 / 변형 15·세션 11 / 실제 Filter run은 결정론 확인용 / 요청 수 감소 ≠ 시간 감소
 - `git tag phase4-done`
+
+구현 시 확정 (4.7, 미리 적어둠)
+- **전역 행의 Recall 표기**: 전역으로 떨어진 행(v1.1·v1.4·C1 ablation(b))의 Recall 1.0은 전체 재생이라 자명한 값이므로 **"전역(자명)"**으로 표시하고, 스코핑이 맞힌 Recall과 구분한다
 
 ### 4.8 (선택) 선택적 미러 시연 — VirtualService `match`
 - impact.json → VS 렌더링: 재생 헤더 `X-Impact-Scope: 1`인 요청만 `mirror`. Tag run에서 k6가 선택 세션 요청에 헤더 → Legacy 전체·New 영향 세션만. barrier New 기대 = 선택 세션. 1 변형(F3) × 1 run

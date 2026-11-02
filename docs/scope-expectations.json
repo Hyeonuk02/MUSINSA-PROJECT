@@ -47,6 +47,162 @@
       "selectedSessionSet": "all"
     }
   },
+  "boundaryCases": {
+    "E1": {
+      "base": "phase3.5-v1.4",
+      "change": "poc.order.ClockConfig 한 줄",
+      "changedClasses": [
+        "poc.order.ClockConfig"
+      ],
+      "global": true,
+      "globalReasonsInclude": [
+        "unresolved:poc.order.ClockConfig"
+      ],
+      "head": "scope/E1",
+      "impactedRequestSet": "all",
+      "note": "@Configuration 포인트컷 제외로 미관측, 코드 참조 없음(Order.kt는 주석뿐, poc.coupon.ClockConfig는 자기 선언)",
+      "observed": [],
+      "pathFilter": null,
+      "reductionRequests": 0.0,
+      "reductionSessions": 0.0,
+      "selectedRequests": 48,
+      "selectedSessionSet": "all",
+      "unobserved": {
+        "poc.order.ClockConfig": {
+          "reachedClasses": [],
+          "unresolved": true
+        }
+      },
+      "warnings": []
+    },
+    "E2": {
+      "base": "phase3.5-v1.4",
+      "change": "services/order application.yml 값",
+      "changedClasses": [],
+      "global": true,
+      "globalReasonsInclude": [
+        "resource:services/order/src/main/resources/application.yml"
+      ],
+      "head": "scope/E2",
+      "impactedRequestSet": "all",
+      "observed": [],
+      "pathFilter": null,
+      "reductionRequests": 0.0,
+      "reductionSessions": 0.0,
+      "selectedRequests": 48,
+      "selectedSessionSet": "all",
+      "unobserved": {},
+      "warnings": []
+    },
+    "E3": {
+      "base": "phase3.5-v1.4",
+      "change": "README.md·docs/",
+      "changedClasses": [],
+      "global": false,
+      "head": "scope/E3",
+      "impactedRequestSet": "none",
+      "note": "docs만 — 영향 없음, 재생 0, 경고 없음",
+      "observed": [],
+      "pathFilter": null,
+      "reductionRequests": 1.0,
+      "reductionSessions": 1.0,
+      "selectedRequests": 0,
+      "selectedSessionSet": "none",
+      "unobserved": {},
+      "warnings": []
+    },
+    "E4": {
+      "base": "phase3.5-v1.4",
+      "change": "services/evidence-collector 한 줄",
+      "changedClasses": [],
+      "global": false,
+      "head": "scope/E4",
+      "impactedRequestSet": "none",
+      "observed": [],
+      "pathFilter": null,
+      "reductionRequests": 1.0,
+      "reductionSessions": 1.0,
+      "selectedRequests": 0,
+      "selectedSessionSet": "none",
+      "unobserved": {},
+      "warnings": [
+        "검증 레이어 변경 — A/A 게이트 필요"
+      ]
+    },
+    "E5": {
+      "base": "phase3.5-v1.4",
+      "change": "poc.order.OrderItem만",
+      "changedClasses": [
+        "poc.order.OrderItem"
+      ],
+      "global": false,
+      "head": "scope/E5",
+      "impactedRequestSet": "order_all",
+      "note": "OrderItem <- Order <- {OrderRepository, OrderService, OrderView}, 깊이 3에서 OrderController. impact-v1.1 기준. 원래 문구 결과는 aux.E5-literal",
+      "observed": [],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {
+        "poc.order.OrderItem": {
+          "reachedClasses": [
+            "poc.order.OrderController",
+            "poc.order.OrderRepository",
+            "poc.order.OrderService"
+          ],
+          "unresolved": false
+        }
+      },
+      "warnings": []
+    },
+    "E6": {
+      "base": "phase3.5-v1.4",
+      "change": "poc.order.PaymentGatewayClient 삭제(가정 커밋)",
+      "changedClasses": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "global": true,
+      "globalReasonsInclude": [
+        "deleted:poc.order.PaymentGatewayClient"
+      ],
+      "head": "scope/E6",
+      "impactedRequestSet": "all",
+      "note": "관측 클래스를 골랐다 — 삭제가 아니면 7세션인 클래스도 규칙 4로 전역이 되는지 본다",
+      "observed": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.0,
+      "reductionSessions": 0.0,
+      "selectedRequests": 48,
+      "selectedSessionSet": "all",
+      "unobserved": {},
+      "warnings": []
+    },
+    "E7": {
+      "base": "phase3.5-v1.4",
+      "change": "poc.coupon.CouponRepository",
+      "changedClasses": [
+        "poc.coupon.CouponRepository"
+      ],
+      "global": false,
+      "head": "scope/E7",
+      "impactedRequestSet": "coupon_service",
+      "note": "coupon.* 직접 + 쿠폰 주문 생성(HTTP 홉) + 쿠폰 결제(Kafka 홉)",
+      "observed": [
+        "poc.coupon.CouponRepository"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.3958,
+      "reductionSessions": 0.4545,
+      "selectedRequests": 29,
+      "selectedSessionSet": "coupon_service",
+      "unobserved": {},
+      "warnings": []
+    }
+  },
   "mapBodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
   "requestSets": {
     "all": [
