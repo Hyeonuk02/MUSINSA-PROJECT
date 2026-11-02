@@ -1,0 +1,2 @@
+{"pairs": 60, "session": {"pairs": 40, "budget": 0.6667, "diffsInside": 7, "diffs": 7, "rate": 1.0}, "requestAuxiliary": {"pairs": 14, "budget": 0.2333, "diffsInside": 7, "diffs": 7, "rate": 1.0}, "tiers": {"1": 14, "2": 26, "3": 20}, "f0": false}
+{"pairs": 60, "session": {"pairs": 49, "budget": 0.8167, "diffsInside": 10, "diffs": 10, "rate": 1.0}, "requestAuxiliary": {"pairs": 44, "budget": 0.7333, "diffsInside": 10, "diffs": 10, "rate": 1.0}, "tiers": {"1": 44, "2": 5, "3": 11}, "f0": true}

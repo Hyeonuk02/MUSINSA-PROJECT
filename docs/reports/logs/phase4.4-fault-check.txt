@@ -1,0 +1,42 @@
+== p44-F3-f-1 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 7, 'SAME': 33}
+   targets 일치 7/7
+   not replayed target 0
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p44-F3-f-2 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 7, 'SAME': 33}
+   targets 일치 7/7
+   not replayed target 0
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p44-F3-f-3 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 7, 'SAME': 33}
+   targets 일치 7/7
+   not replayed target 0
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+세 run 판정 동일: True
+결과: 기대와 일치
+exit 0
+== p44-F9-f-1 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 5, 'SAME': 44}
+   targets 일치 4/4
+   not replayed target 0
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p44-F9-f-2 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 5, 'SAME': 44}
+   targets 일치 4/4
+   not replayed target 0
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+== p44-F9-f-3 (verdict.json, 기대 targets) verdicts {'CONTRACT_VIOLATION': 5, 'SAME': 44}
+   targets 일치 4/4
+   not replayed target 0
+   정상 경로 오탐(baseline과 다른 non-target) 0
+   pair 집합: baseline에만 0, F run에만 0
+   Undelivered 0, degraded 0
+세 run 판정 동일: True
+결과: 기대와 일치
+exit 0

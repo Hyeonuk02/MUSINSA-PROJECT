@@ -1,0 +1,13 @@
+== F3-filter
+   p44-F3-f-1: pairs 40 {'SAME': 33, 'CONTRACT_VIOLATION': 7} 기대 일치
+   p44-F3-f-2: pairs 40 {'SAME': 33, 'CONTRACT_VIOLATION': 7} 기대 일치
+   p44-F3-f-3: pairs 40 {'SAME': 33, 'CONTRACT_VIOLATION': 7} 기대 일치
+== F3-tag
+   p44-F3-t-1: pairs 60 {'SAME': 52, 'CONTRACT_VIOLATION': 8} 기대 일치
+== F8-tag
+   p44-F8-t-1: pairs 60 {'SAME': 49, 'UNCERTAIN': 10, 'CONTRACT_VIOLATION': 1} 기대 일치
+== F9-filter
+   p44-F9-f-1: pairs 49 {'SAME': 44, 'CONTRACT_VIOLATION': 5} 기대 일치
+   p44-F9-f-2: pairs 49 {'SAME': 44, 'CONTRACT_VIOLATION': 5} 기대 일치
+   p44-F9-f-3: pairs 49 {'SAME': 44, 'CONTRACT_VIOLATION': 5} 기대 일치
+불일치 run 0건

@@ -144,3 +144,10 @@
 - 결정: D-4.3a (A) — `tags.json`의 inScope는 세션 입도, `impactedRequest`와 3단 리뷰 순서를 함께 둔다
 - 후속: 4.3 보고서 D-4.3a
 
+### O20. 메시 전체 인증서가 한꺼번에 만료된다 — preflight가 잡지만 복구 범위는 문서보다 넓다
+- 날짜·단계: 2026-11-02, 4.4
+- 봤다: 4.4 시작 시 ingressgateway·order·coupon·kafka·도구 pod의 인증서가 모두 `VALID CERT false`(NOT AFTER 07:42~08:30Z, 확인 시각 11:36Z). 사이드카 로그에 `CERTIFICATE_VERIFY_FAILED`, istiod는 정상이고 agent 로그에 갱신 기록이 없다
+- 근거: `istioctl proxy-config secret`, 재시작 뒤 NOT AFTER 2026-11-03T11:37Z. 이전 관찰 `docs/isolation-proof.md` "관찰 1"
+- 왜 중요: 기록된 복구 절차(`phase2-plan` 2.6)는 ingressgateway·order만 적었지만 Phase 3 이후 메시 구성원이 늘어 sidecar Deployment 12개와 도구 pod 2개가 모두 대상이다. 그대로 두면 run이 시작되지 않는다(fail-closed는 의도대로 동작). 호스트 sleep 후 원인이라는 것은 추정이다
+- 후속: 장기 run이나 4.5 전에는 preflight 실패 시 전체 재시작. 자동 복구는 넣지 않는다
+
