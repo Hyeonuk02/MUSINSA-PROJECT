@@ -66,6 +66,14 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
 - 파일명: macOS 파일시스템은 대소문자를 구분하지 않아 `Dockerfile`을 따로 둘 수 없으므로 upstream `DockerFile`의 내용을 교체했다.
 - OTel Java agent는 이미지에 넣지 않는다(hyeonuk-dev decision-log D5와 같은 방식으로 실행 시 주입).
 
+### L-C4. 결함 주입 빌드 인자 (`FAULT`)
+
+- 파일: `{order,coupon,payment}-service/DockerFile` (`COPY src` 와 `mvn package` 사이에 `RUN` 한 단계)
+- 판정 엔진 실험용 New 버전(`baseline/faults/PF<n>-<svc>.patch`)을 브랜치 없이 만들기 위한 빌드 인자.
+  `FAULT=PF<n>`이고 추가 빌드 컨텍스트 `faults`에 그 서비스의 패치가 있을 때만 `git apply`로 적용한다.
+- `FAULT`가 비어 있으면(기본, Legacy 이미지) 아무것도 하지 않는다. 소스·산출물은 L-C3와 같다(aa-003에서 B1 0 확인).
+- 빌드는 `baseline/faults/build.sh PF<n>`(이미지 `prince-mart/<svc>-service:PF<n>`), 배포는 `baseline/faults/deploy.sh`(New 스택만 교체).
+
 ---
 
 ## I — 통제·계측

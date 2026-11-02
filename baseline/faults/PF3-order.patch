@@ -1,0 +1,26 @@
+# PF3-order: 진짜 결함: 주문 생성에서 장바구니 비우기와 재고 차감의 호출 순서를 뒤바꿈
+# git apply로 legacy/prince-mart/order-service 아래에 적용(baseline/faults/build.sh)
+--- a/src/main/java/com/pm/order/service/OrderService.java
++++ b/src/main/java/com/pm/order/service/OrderService.java
+@@ -143,16 +143,17 @@
+                 .map(item -> new StockUpdateDTO(item.getVariantId(), item.getQuantity()))
+                 .collect(Collectors.toList());
+ 
++        // PF3: 장바구니 비우기를 재고 차감보다 먼저 호출(동기 호출 순서 뒤바뀜)
+         try {
+-            inventoryClient.reduceStock(stockUpdates);
++            cartClient.clearCart(userId);
+         } catch (Exception e) {
+-            throw new ResourceNotFoundException("Inventory update failed: " + e.getMessage());
++            System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
+         }
+ 
+         try {
+-            cartClient.clearCart(userId);
++            inventoryClient.reduceStock(stockUpdates);
+         } catch (Exception e) {
+-            System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
++            throw new ResourceNotFoundException("Inventory update failed: " + e.getMessage());
+         }
+ 
+         // Audit the order creation

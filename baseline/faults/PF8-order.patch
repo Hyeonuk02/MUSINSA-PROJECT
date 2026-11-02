@@ -1,0 +1,15 @@
+# PF8-order: 성능 계약: 내 주문 조회에서 주문마다 품목을 따로 읽음(N+1)
+# git apply로 legacy/prince-mart/order-service 아래에 적용(baseline/faults/build.sh)
+--- a/src/main/java/com/pm/order/service/OrderService.java
++++ b/src/main/java/com/pm/order/service/OrderService.java
+@@ -270,7 +270,9 @@
+     }
+     
+     public List<Order> getMyOrders(Long userId) {
+-		return orderRepository.findByUserId(userId);
++		List<Order> orders = orderRepository.findByUserId(userId);
++		orders.forEach(o -> o.getItems().size());   // PF8: 주문마다 품목을 지연 로딩(N+1)
++		return orders;
+ 	}
+ 
+     @Transactional

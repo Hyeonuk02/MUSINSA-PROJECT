@@ -1,0 +1,27 @@
+# PF5-order: 정상 리팩터링: 주문 취소에서 주문·품목을 fetch join 한 번으로 조회(SELECT 2 -> 1)
+# git apply로 legacy/prince-mart/order-service 아래에 적용(baseline/faults/build.sh)
+--- a/src/main/java/com/pm/order/repository/OrderRepository.java
++++ b/src/main/java/com/pm/order/repository/OrderRepository.java
+@@ -19,4 +19,8 @@
+     boolean existsByUserIdAndProductId(@Param("userId") Long userId, @Param("productId") Long productId);
+     
+     List<Order> findByUserId(Long userId);
++
++    // PF5: 취소에서 주문과 품목을 한 번에 읽는다(fetch join)
++    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.orderId = :orderId")
++    java.util.Optional<Order> findWithItemsByOrderId(@Param("orderId") Long orderId);
+ }
+\ No newline at end of file
+--- a/src/main/java/com/pm/order/service/OrderService.java
++++ b/src/main/java/com/pm/order/service/OrderService.java
+@@ -275,8 +275,8 @@
+ 
+     @Transactional
+     public Order cancelOrder(Long orderId, Long userId) {
+-        // 1. Fetch the Order
+-        Order order = orderRepository.findById(orderId)
++        // 1. Fetch the Order (PF5: fetch join으로 품목까지 한 번에)
++        Order order = orderRepository.findWithItemsByOrderId(orderId)
+                 .orElseThrow(() -> new ResourceNotFoundException("Order Registry entry not found"));
+ 
+         // 2. Security Check: Ensure the order belongs to the user

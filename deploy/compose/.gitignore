@@ -1,0 +1,2 @@
+# baseline/faults/deploy.sh가 쓰는 실행 상태(new 스택 이미지 태그). 커밋하지 않는다.
+.env

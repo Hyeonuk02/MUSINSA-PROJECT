@@ -1,0 +1,12 @@
+# PF1-payment: 진짜 결함: 결제 처리에서 가짜 PG 주문 생성을 2번 호출
+# git apply로 legacy/prince-mart/payment-service 아래에 적용(baseline/faults/build.sh)
+--- a/src/main/java/com/pm/payment/service/PaymentService.java
++++ b/src/main/java/com/pm/payment/service/PaymentService.java
+@@ -49,6 +49,7 @@
+ 
+             // [LEGACY_CHANGES L-F1] client.orders.create(orderRequest).get("id") -> PaymentGateway
+             String razorpayOrderId = paymentGateway.createOrder(orderRequest);
++            paymentGateway.createOrder(orderRequest);   // PF1: PG 주문 생성을 한 번 더 호출(중복 호출 결함)
+ 
+             Payment payment = new Payment();
+             payment.setOrderId(request.getOrderId());

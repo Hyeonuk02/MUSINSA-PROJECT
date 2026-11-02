@@ -96,17 +96,18 @@ x-app-env: &app-env
   OTEL_INSTRUMENTATION_HTTP_SERVER_CAPTURE_REQUEST_HEADERS: X-Replay-Request-Id,X-Run-Id,X-Session-Id,baggage,Host
   # Evidence 계측(com.pm.evidence)이 보내는 곳. 두 스택이 같은 Store를 쓴다(k8s에서는 verify ns).
   EVIDENCE_STORE_URL: http://evidence-store:8080
-  # 실행 중인 코드의 버전. 베이스라인(A/A)에서는 두 스택 모두 Legacy 코드다.
-  EVIDENCE_VERSION: prince-mart-legacy
 
 # 스택별로 다른 식별자. 서비스 이름(OTEL_SERVICE_NAME)과 함께 이 값들만 legacy/new가 다르다(hyeonuk-dev D5와 같은 규칙).
 # EVIDENCE_STACK은 Evidence 키(runId, replayRequestId, stack)의 stack이다.
 x-otel-legacy: &otel-legacy
   OTEL_RESOURCE_ATTRIBUTES: service.namespace=legacy
   EVIDENCE_STACK: legacy
+  EVIDENCE_VERSION: prince-mart-legacy          # legacy는 항상 Legacy 코드
 x-otel-new: &otel-new
   OTEL_RESOURCE_ATTRIBUTES: service.namespace=new
   EVIDENCE_STACK: new
+  # 실행 중인 코드의 버전. 베이스라인(A/A)은 Legacy, 결함 실험은 baseline/faults/deploy.sh가 .env에 PF<n>을 쓴다.
+  EVIDENCE_VERSION: ${NEW_VERSION:-prince-mart-legacy}
 
 x-app-health: &app-health
   interval: 3s
@@ -221,6 +222,9 @@ services:
     build:
       context: ../../legacy/prince-mart/order-service
       dockerfile: DockerFile
+      # 결함 패치 디렉터리(L-C4). FAULT 빌드 인자가 비어 있으면 쓰지 않는다.
+      additional_contexts:
+        faults: ../../baseline/faults
     ports: ["8085:8085"]
     depends_on:
       evidence-store: { condition: service_healthy }
@@ -237,6 +241,9 @@ services:
     build:
       context: ../../legacy/prince-mart/coupon-service
       dockerfile: DockerFile
+      # 결함 패치 디렉터리(L-C4). FAULT 빌드 인자가 비어 있으면 쓰지 않는다.
+      additional_contexts:
+        faults: ../../baseline/faults
     ports: ["8091:8091"]
     depends_on:
       evidence-store: { condition: service_healthy }
@@ -252,6 +259,9 @@ services:
     build:
       context: ../../legacy/prince-mart/payment-service
       dockerfile: DockerFile
+      # 결함 패치 디렉터리(L-C4). FAULT 빌드 인자가 비어 있으면 쓰지 않는다.
+      additional_contexts:
+        faults: ../../baseline/faults
     ports: ["8086:8086"]
     depends_on:
       evidence-store: { condition: service_healthy }
@@ -284,6 +294,8 @@ services:
 
   order-new:
     <<: *order
+    # 결함 실험: baseline/faults/deploy.sh가 .env의 NEW_ORDER_TAG를 PF<n>으로 바꾼다(기본 legacy).
+    image: prince-mart/order-service:${NEW_ORDER_TAG:-legacy}
     environment:
       <<: [*app-env, *otel-new]
       OTEL_SERVICE_NAME: order-new
@@ -297,6 +309,8 @@ services:
 
   coupon-new:
     <<: *coupon
+    # 결함 실험: baseline/faults/deploy.sh가 .env의 NEW_COUPON_TAG를 PF<n>으로 바꾼다(기본 legacy).
+    image: prince-mart/coupon-service:${NEW_COUPON_TAG:-legacy}
     environment:
       <<: [*app-env, *otel-new]
       OTEL_SERVICE_NAME: coupon-new
@@ -309,6 +323,8 @@ services:
 
   payment-new:
     <<: *payment
+    # 결함 실험: baseline/faults/deploy.sh가 .env의 NEW_PAYMENT_TAG를 PF<n>으로 바꾼다(기본 legacy).
+    image: prince-mart/payment-service:${NEW_PAYMENT_TAG:-legacy}
     environment:
       <<: [*app-env, *otel-new]
       OTEL_SERVICE_NAME: payment-new

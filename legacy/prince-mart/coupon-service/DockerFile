@@ -6,6 +6,13 @@ WORKDIR /build
 COPY pom.xml .
 RUN --mount=type=cache,target=/root/.m2 mvn -q -B dependency:go-offline
 COPY src ./src
+# [LEGACY_CHANGES L-C4] 결함 주입 실험용 New 버전 빌드(baseline/faults/). FAULT가 비어 있으면(기본) 아무것도 하지 않는다.
+# FAULT=PF1이면 추가 빌드 컨텍스트 faults의 PF1-coupon.patch가 있을 때만 git apply로 적용한다(브랜치를 만들지 않는다).
+ARG FAULT=
+RUN --mount=type=bind,from=faults,target=/faults \
+    if [ -n "$FAULT" ] && [ -f "/faults/$FAULT-coupon.patch" ]; then \
+      git apply --verbose "/faults/$FAULT-coupon.patch" && echo "applied $FAULT-coupon.patch"; \
+    else echo "no fault patch for coupon (FAULT='$FAULT')"; fi
 RUN --mount=type=cache,target=/root/.m2 mvn -q -B package -DskipTests && cp target/*.jar /build/app.jar
 
 FROM eclipse-temurin:21-jre@sha256:d7051a45dd955e4d5d1db4d3f4269fe13d1c6dff8cc6b7ef89fc8577b96c1982
