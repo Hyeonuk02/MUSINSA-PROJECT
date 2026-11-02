@@ -447,3 +447,31 @@ S13은 멱등성 결함(팀원 F1에 대응) 주입 자리, S12는 L5의 동점 
 - 코드와 A/A 데이터를 읽으며 처음 계획과 달라진 점을 그대로 등록했다: PF1은 PGFAIL(R11)에서 첫 호출이 예외라 SAME(15건),
   PF7·PF9는 모든 consume에 SELECT가 하나 늘어 대상 밖 consume도 UNC, PF5의 404 취소(R16)는 learn 규칙과 유형이 달라 라벨 후에도 UNC,
   PF10은 B1 수정으로 같은 사용자 재사용(R7·R13)이 alreadyUsed가 되어 B3 경로(정가)로 바뀐다.
+
+### L19. norm-v1.2: `version`을 식별 필드로
+
+**결정** (2026-11-02, E2 PF1 첫 run)
+- `normalization.json` identityFields에 `version`을 더한다(`["stack", "version"]`, B0·B1 모두 비교에서 뺌).
+- 정규화 해시가 유효성 해시에 들어가므로 같은 정규화로 A/A 기준선을 다시 만들었다: `aa-004` ×3(B1 0, 테이블 일치).
+  결함 run의 기준선은 aa-004다. PF1도 norm-v1.2로 다시 돌렸다.
+
+**근거**
+- `version`은 Evidence를 낸 배포 버전(`prince-mart-legacy` / `prince-mart-PF<n>`)으로 `stack`과 같은 식별 값이다.
+  A/A는 양쪽이 같아서 드러나지 않았고, PF1 첫 run에서 모든 pair(111개)의 차이로 잡혔다.
+- 이 변경은 결함 결과를 보고 판정 기준을 바꾼 것이 아니다. 기대 판정(L18)은 그대로이고, 식별 값 누락을 고친 것이다.
+
+### L20. 기대 누락은 사전 등록을 고치지 않고 사후 보정으로, 결함 판정은 auto-increment ID 마스킹
+
+**결정** (2026-11-02, E2 실현 확인 뒤, 사용자 결정)
+- PF 9개 실현 확인(`realize.py`, 기준선 aa-004, ×3): 7개는 기대한 pair에만 실현. PF2·PF10은 대상 밖 차이 1건씩(세 run 동일).
+  - PF2 R24 `wiremock.external.1`: 취소 감사 로그 본문의 주문 상태(CONFIRMED/PAID → PENDING/UNPAID). 등록할 때 응답만 넣고 같은 상태를 싣는 감사 로그를 빠뜨렸다.
+  - PF10 R28 `wiremock.external.1`: 감사 로그의 `usageId` 1 → 5(앞선 coupon_usage 4건으로 auto-increment가 밀림).
+- 사전 등록 파일 `fault-expectations.json`은 그대로 두고, `fault-expectations-amendments.json`에 pair·발견 run·차이·이유를 남긴다.
+  E5 지표는 원래 기대와 보정한 기대 두 기준으로 모두 보고한다. realize.py도 두 기준을 함께 출력한다.
+- E3 판정은 결함 비교에서 `maskAutoIncrementIds`를 켠다(normalization.json에 미리 적어 둔 "New 비교에서 켠다"). A/A와 실현 확인은 마스킹 없이 둔다.
+  그래서 PF10 R28은 보정에서 `diffOnly`(B1 차이는 있으나 판정 SAME 기대)로 등록했다.
+
+**근거**
+- 결과를 본 뒤 기대 파일을 고치면 탐지율의 근거가 흐려진다. 고친 사실과 이유를 따로 남기면 두 기준으로 모두 볼 수 있다(팀원 F1·F4의 사후 기록과 같은 태도).
+- auto-increment 밀림은 같은 의미의 값이 처리 건수 차이로 달라 보이는 것이다. 마스킹하지 않으면 앞선 요청 하나의 차이가 뒤 요청 전부로 번진다.
+  A/A에서는 ID가 같아야 하므로(결정성 확인) 끈 채로 둔다.

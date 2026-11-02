@@ -1,0 +1,24 @@
+{
+  "_doc": "결함 run 뒤에 발견한 기대 누락(legacy-decision-log L20). 사전 등록 파일 fault-expectations.json은 바꾸지 않는다. 지표(E5)는 원래 기대와 이 보정을 더한 기대 두 기준으로 모두 보고한다. addTo: targets = 기대 판정이 SAME이 아닌 대상에 추가 / diffOnly = 정규화(B1) 차이는 있지만 판정은 SAME으로 기대(E3 판정 설정으로 흡수).",
+  "PF2": [
+    {
+      "pair": "R000024/wiremock.external.1",
+      "addTo": "targets",
+      "verdict": "CONTRACT_VIOLATION",
+      "cvDisposition": "fault",
+      "foundIn": ["pf2-1", "pf2-2", "pf2-3"],
+      "diff": "calls[1](audit USER_ORDER_CANCELLATION) body dataBefore·dataAfter: CONFIRMED/PAID → CANCELLED/PAID 대신 PENDING/UNPAID → CANCELLED/UNPAID",
+      "reason": "R24 취소 응답(order.http.1)은 등록했지만, 같은 주문 상태를 싣는 Order 취소 감사 로그(external)를 빠뜨렸다. PF2(이벤트 누락)의 직접 결과다"
+    }
+  ],
+  "PF10": [
+    {
+      "pair": "R000028/wiremock.external.1",
+      "addTo": "diffOnly",
+      "verdict": "SAME",
+      "foundIn": ["pf10-1", "pf10-2", "pf10-3"],
+      "diff": "calls[0](audit COUPON_CONSUMED) body dataAfter.usageId 1 → 5",
+      "reason": "앞선 주문의 coupon_usage 4건(R6·R8·R11·R12)이 기록돼 auto-increment가 밀렸다. 값의 의미는 같다. E3 판정은 maskAutoIncrementIds를 켜므로(L20) SAME으로 기대한다. 실현 확인(B1, 마스킹 없음)에서는 차이로 남는다"
+    }
+  ]
+}

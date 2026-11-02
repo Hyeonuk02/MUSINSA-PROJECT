@@ -7,16 +7,27 @@
 
 | id | 패치 | 종류 | 기대(target pair) | 실제 | 보일 축 |
 |---|---|---|---|---|---|
-| PF1 | `PF1-payment` | 진짜 결함 | 주문 15건 `wiremock.external.1` CV(fault). R11(PGFAIL) SAME | | external 호출 `POST /v1/orders` 1→2 |
-| PF2 | `PF2-payment` | 진짜 결함 | verify 5건 `payment.http.1` + verify 뒤 조회·취소 7건 `order.http.1` = 12 CV(fault), legacyOnly 15, dbstate 다름 | | events 1→0, consume·consumer external 없음, 응답 orderStatus/paymentStatus |
-| PF3 | `PF3-order` | 진짜 결함 | 주문 16건 × (`order.http.1`, `wiremock.external.1`) = 32 CV(fault) | | outbound·external 순서(reduce-stock ↔ cart/clear) |
-| PF4 | `PF4-order` | 진짜 결함 | 성공 취소 4건 × (`order.http.1`, `wiremock.external.1`) = 8 CV(fault) | | outbound `add-stock-bulk` 없음, external 2→1 |
-| PF5 | `PF5-order` | 정상 리팩터링 | 취소 5건 `order.http.1` UNC → learn(R24·R27) 라벨 후 성공 취소 4건 IMP, R16(404) UNC 유지 | | SELECT 2→1, fingerprint(fetch join) |
+| PF1 | `PF1-payment` | 진짜 결함 | 주문 15건 `wiremock.external.1` CV(fault). R11(PGFAIL) SAME | 15/15 ×3, 대상 밖 0, R11 SAME — 일치 | external 호출 `POST /v1/orders` 1→2 |
+| PF2 | `PF2-payment` | 진짜 결함 | verify 5건 `payment.http.1` + verify 뒤 조회·취소 7건 `order.http.1` = 12 CV(fault), legacyOnly 15, dbstate 다름 | 12/12 ×3, legacy에만 15/15, dbstate 다름(orders·status_history) — **대상 밖 1: R24 `wiremock.external.1`**(취소 감사 로그의 before/after 상태, 등록 누락) | events 1→0, consume·consumer external 없음, 응답 orderStatus/paymentStatus |
+| PF3 | `PF3-order` | 진짜 결함 | 주문 16건 × (`order.http.1`, `wiremock.external.1`) = 32 CV(fault) | 32/32 ×3, 대상 밖 0 — 일치 | outbound·external 순서(reduce-stock ↔ cart/clear) |
+| PF4 | `PF4-order` | 진짜 결함 | 성공 취소 4건 × (`order.http.1`, `wiremock.external.1`) = 8 CV(fault) | 8/8 ×3, 대상 밖 0 — 일치 | outbound `add-stock-bulk` 없음, external 2→1 |
+| PF5 | `PF5-order` | 정상 리팩터링 | 취소 5건 `order.http.1` UNC → learn(R24·R27) 라벨 후 성공 취소 4건 IMP, R16(404) UNC 유지 | 5/5 ×3, 대상 밖 0 — 일치(판정·learn은 E3·E4) | SELECT 2→1, fingerprint(fetch join) |
 | PF6 | (예정) | 정상 변경 | Payment Boot 4 업그레이드 — 패치 후 run 전에 따로 등록 | | |
-| PF7 | `PF7-order` | 승인된 개선(B4) | R20 consume·R21 조회 IMP(승인 규칙), 다른 consume 4건 UNC → learn(R2·R23) 후 IMP, legacyOnly R20 external, dbstate 다름 | | 취소 주문 consume: 쓰기·outbound 없음, R21 CONFIRMED/PAID → CANCELLED/UNPAID, SELECT +1 |
-| PF8 | `PF8-order` | 성능 | my-orders 2건(R4, R32) 기본 UNC / `max_selects`(my-orders 1) 선언 시 CV | | SELECT 1→2, 1→3 (N+1) |
-| PF9 | `PF9-order` | 승인된 개선(재확정 멱등) | R35 consume IMP(승인 규칙), 다른 consume 4건 UNC → learn 후 IMP, legacyOnly R35 external, dbstate 다름 | | 재확정 consume: 쓰기·outbound 없음, SELECT +1 |
-| PF10 | `PF10-order` | 승인된 개선(B1) | 첫 사용 4건(R6·R8·R11·R12) × 4 pair + 재사용 2건(R7·R13) × 4 pair = 24 CV(accept), legacyOnly 4, dbstate 다름 | | coupon `/use`·역조회 404→200, use가 결제 뒤로, R7·R13 alreadyUsed → 정가(B3) |
+| PF7 | `PF7-order` | 승인된 개선(B4) | R20 consume·R21 조회 IMP(승인 규칙), 다른 consume 4건 UNC → learn(R2·R23) 후 IMP, legacyOnly R20 external, dbstate 다름 | 6/6 ×3, legacy에만 1/1, dbstate 다름(orders·status_history) — 일치 | 취소 주문 consume: 쓰기·outbound 없음, R21 CONFIRMED/PAID → CANCELLED/UNPAID, SELECT +1 |
+| PF8 | `PF8-order` | 성능 | my-orders 2건(R4, R32) 기본 UNC / `max_selects`(my-orders 1) 선언 시 CV | 2/2 ×3, 대상 밖 0 — 일치 | SELECT 1→2, 1→3 (N+1) |
+| PF9 | `PF9-order` | 승인된 개선(재확정 멱등) | R35 consume IMP(승인 규칙), 다른 consume 4건 UNC → learn 후 IMP, legacyOnly R35 external, dbstate 다름 | 5/5 ×3, legacy에만 1/1, dbstate 다름(status_history) — 일치 | 재확정 consume: 쓰기·outbound 없음, SELECT +1 |
+| PF10 | `PF10-order` | 승인된 개선(B1) | 첫 사용 4건(R6·R8·R11·R12) × 4 pair + 재사용 2건(R7·R13) × 4 pair = 24 CV(accept), legacyOnly 4, dbstate 다름 | 24/24 ×3, legacy에만 4/4, dbstate 다름(coupon_usage·orders·payments) — **대상 밖 1: R28 `wiremock.external.1`**(감사 로그 usageId 1→5, auto-increment) | coupon `/use`·역조회 404→200, use가 결제 뒤로, R7·R13 alreadyUsed → 정가(B3) |
+
+> 실제 = `realize.py`(B1 차이가 기대 pair에만 있는지, 기준선 aa-004 ×3, norm-v1.2). 판정(CV/UNC/IMP)이 아니라 결함이 드러난 위치다. 판정은 E3.
+
+## run 뒤 발견한 기대 누락 (`fault-expectations-amendments.json`, legacy-decision-log L20)
+
+사전 등록 파일은 고치지 않는다. 지표는 원래 기대·보정한 기대 두 기준으로 보고한다.
+
+| 결함 | pair | 차이 | 보정 |
+|---|---|---|---|
+| PF2 | R24 `wiremock.external.1` | 취소 감사 로그의 주문 상태 CONFIRMED/PAID → PENDING/UNPAID | targets에 추가(CV, fault) — 응답만 등록하고 같은 상태를 싣는 감사 로그를 빠뜨림 |
+| PF10 | R28 `wiremock.external.1` | 감사 로그 `usageId` 1 → 5 | diffOnly(판정 SAME 기대) — auto-increment 밀림, E3 판정은 ID 마스킹 |
 
 ## 기대를 정하며 확인한 것 (A/A Evidence와 코드)
 
