@@ -1,5 +1,127 @@
 {
+  "boundary": [
+    {
+      "case": "E1",
+      "change": "poc.order.ClockConfig 한 줄",
+      "global": true,
+      "impacted": 48,
+      "label": "맹검 일치",
+      "requests": 48,
+      "sessions": 11,
+      "warning": false
+    },
+    {
+      "case": "E2",
+      "change": "services/order application.yml 값",
+      "global": true,
+      "impacted": 48,
+      "label": "맹검 일치",
+      "requests": 48,
+      "sessions": 11,
+      "warning": false
+    },
+    {
+      "case": "E3",
+      "change": "README.md·docs/",
+      "global": false,
+      "impacted": 0,
+      "label": "맹검 일치",
+      "requests": 0,
+      "sessions": 0,
+      "warning": false
+    },
+    {
+      "case": "E4",
+      "change": "services/evidence-collector 한 줄",
+      "global": false,
+      "impacted": 0,
+      "label": "맹검 일치",
+      "requests": 0,
+      "sessions": 0,
+      "warning": true
+    },
+    {
+      "case": "E5",
+      "change": "poc.order.OrderItem만",
+      "global": false,
+      "impacted": 32,
+      "label": "회귀 확인(4.2 whatif에서 본 값)",
+      "requests": 37,
+      "sessions": 9,
+      "warning": false
+    },
+    {
+      "case": "E6",
+      "change": "poc.order.PaymentGatewayClient 삭제(가정 커밋)",
+      "global": true,
+      "impacted": 48,
+      "label": "맹검 일치",
+      "requests": 48,
+      "sessions": 11,
+      "warning": false
+    },
+    {
+      "case": "E7",
+      "change": "poc.coupon.CouponRepository",
+      "global": false,
+      "impacted": 24,
+      "label": "맹검 일치",
+      "requests": 29,
+      "sessions": 6,
+      "warning": false
+    }
+  ],
   "f0Pair": "R000047/0",
+  "failClosed": [
+    {
+      "case": "E1",
+      "change": "poc.order.ClockConfig 한 줄",
+      "reasons": [
+        "unresolved:poc.order.ClockConfig"
+      ],
+      "reduction": 0.0,
+      "sessions": 11
+    },
+    {
+      "case": "E2",
+      "change": "services/order application.yml 값",
+      "reasons": [
+        "resource:services/order/src/main/resources/application.yml"
+      ],
+      "reduction": 0.0,
+      "sessions": 11
+    },
+    {
+      "case": "E6",
+      "change": "poc.order.PaymentGatewayClient 삭제(가정 커밋)",
+      "reasons": [
+        "deleted:poc.order.PaymentGatewayClient"
+      ],
+      "reduction": 0.0,
+      "sessions": 11
+    },
+    {
+      "case": "v1.1",
+      "change": "PaymentGatewayClient Kotlin 전환 + pom",
+      "reasons": [
+        "build:services/order/pom.xml"
+      ],
+      "reduction": 0.0,
+      "sessions": 11
+    },
+    {
+      "case": "v1.4",
+      "change": "Controller·DTO·설정·필터·메인 Kotlin 전환",
+      "reasons": [
+        "unresolved:poc.order.ClockConfig",
+        "unresolved:poc.order.OrderApplication",
+        "unresolved:poc.order.requestlog.CachedBodyRequest",
+        "unresolved:poc.order.requestlog.RequestLogFilter"
+      ],
+      "reduction": 0.0,
+      "sessions": 11
+    }
+  ],
   "mapBodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
   "notEvaluatedOffline": {
     "dbstate_equal": "not evaluated offline",
@@ -10,6 +132,231 @@
     "undelivered": "not evaluated offline"
   },
   "recallBelowOne": [],
+  "registration": {
+    "C1": {
+      "case": "C1",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "C2": {
+      "case": "C2",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "E1": {
+      "case": "E1",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "E2": {
+      "case": "E2",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "E3": {
+      "case": "E3",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "E4": {
+      "case": "E4",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "E5": {
+      "case": "E5",
+      "kind": "regression",
+      "match": true,
+      "note": "4.2 whatif에서 본 값",
+      "tool": "impact-v1.1"
+    },
+    "E6": {
+      "case": "E6",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "E7": {
+      "case": "E7",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.1"
+    },
+    "F1": {
+      "case": "F1",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "F2": {
+      "case": "F2",
+      "kind": "blind",
+      "match": false,
+      "note": "폐포가 JpaRepository로 Coupon까지 번짐(O18)",
+      "tool": "impact-v1.0"
+    },
+    "F2@impact-v1.1": {
+      "case": "F2",
+      "kind": "regression",
+      "match": true,
+      "note": "결과를 본 뒤 도구 변경, 사전 등록 아님(D24 보완 3)",
+      "tool": "impact-v1.1"
+    },
+    "F3": {
+      "case": "F3",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "F4": {
+      "case": "F4",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "F5": {
+      "case": "F5",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "F6": {
+      "case": "F6",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "F7": {
+      "case": "F7",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "F8": {
+      "case": "F8",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "F9": {
+      "case": "F9",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "v1.1": {
+      "case": "v1.1",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "v1.2": {
+      "case": "v1.2",
+      "kind": "blind",
+      "match": false,
+      "note": "폐포가 JpaRepository로 Coupon까지 번짐(O18)",
+      "tool": "impact-v1.0"
+    },
+    "v1.2@impact-v1.1": {
+      "case": "v1.2",
+      "kind": "regression",
+      "match": true,
+      "note": "결과를 본 뒤 도구 변경, 사전 등록 아님(D24 보완 3)",
+      "tool": "impact-v1.1"
+    },
+    "v1.3": {
+      "case": "v1.3",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    },
+    "v1.4": {
+      "case": "v1.4",
+      "kind": "blind",
+      "match": true,
+      "tool": "impact-v1.0"
+    }
+  },
+  "runs": [
+    {
+      "case": "C1-filter",
+      "dbstate": false,
+      "degraded": 0,
+      "iterations": 3,
+      "pairs": 40,
+      "pairsMatched": 120,
+      "pairsTotal": 120,
+      "replayed": 30,
+      "undelivered": 0,
+      "verdicts": "CONTRACT_VIOLATION 3, SAME 37"
+    },
+    {
+      "case": "C2-filter",
+      "dbstate": true,
+      "degraded": 0,
+      "iterations": 3,
+      "pairs": 37,
+      "pairsMatched": 111,
+      "pairsTotal": 111,
+      "replayed": 29,
+      "undelivered": 0,
+      "verdicts": "SAME 37"
+    },
+    {
+      "case": "F3-filter",
+      "dbstate": true,
+      "degraded": 0,
+      "iterations": 3,
+      "pairs": 40,
+      "pairsMatched": 120,
+      "pairsTotal": 120,
+      "replayed": 30,
+      "undelivered": 0,
+      "verdicts": "CONTRACT_VIOLATION 7, SAME 33"
+    },
+    {
+      "case": "F3-tag",
+      "dbstate": true,
+      "degraded": 0,
+      "iterations": 1,
+      "pairs": 60,
+      "pairsMatched": 60,
+      "pairsTotal": 60,
+      "replayed": 48,
+      "undelivered": 0,
+      "verdicts": "CONTRACT_VIOLATION 8, SAME 52"
+    },
+    {
+      "case": "F8-tag",
+      "dbstate": true,
+      "degraded": 0,
+      "iterations": 1,
+      "pairs": 60,
+      "pairsMatched": 60,
+      "pairsTotal": 60,
+      "replayed": 48,
+      "undelivered": 0,
+      "verdicts": "CONTRACT_VIOLATION 1, SAME 49, UNCERTAIN 10"
+    },
+    {
+      "case": "F9-filter",
+      "dbstate": true,
+      "degraded": 0,
+      "iterations": 3,
+      "pairs": 49,
+      "pairsMatched": 147,
+      "pairsTotal": 147,
+      "replayed": 37,
+      "undelivered": 0,
+      "verdicts": "CONTRACT_VIOLATION 5, SAME 44"
+    }
+  ],
   "tool": "impact-v1.1",
   "variants": {
     "C1": {
@@ -18,6 +365,7 @@
           "global": false,
           "impactedRequests": 8,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.375,
           "selectedRequests": 30,
           "selectedSessions": 7,
@@ -42,6 +390,7 @@
           "global": true,
           "impactedRequests": 48,
           "recall": 1.0,
+          "recallKind": "global-trivial",
           "reductionRequests": 0.0,
           "selectedRequests": 48,
           "selectedSessions": 11,
@@ -88,6 +437,7 @@
       "impactedRequests": 7,
       "precision": 0.075,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -126,6 +476,7 @@
           "global": false,
           "impactedRequests": 34,
           "recall": 1.0,
+          "recallKind": "all-selected-trivial",
           "reductionRequests": 0.0,
           "selectedRequests": 48,
           "selectedSessions": 11,
@@ -150,6 +501,7 @@
           "global": false,
           "impactedRequests": 16,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.3958,
           "selectedRequests": 29,
           "selectedSessions": 6,
@@ -196,6 +548,7 @@
       "impactedRequests": 24,
       "precision": 0.2432,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -245,6 +598,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -269,6 +623,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -315,6 +670,7 @@
       "impactedRequests": 32,
       "precision": 0.0408,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -353,6 +709,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -377,6 +734,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -423,6 +781,7 @@
       "impactedRequests": 32,
       "precision": 0.5714,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -481,6 +840,7 @@
       "impactedRequests": 48,
       "precision": 0.4667,
       "recall": 1.0,
+      "recallKind": "all-selected-trivial",
       "recallWithF0": 1.0,
       "reductionRequests": 0.0,
       "reductionSessions": 0.0,
@@ -514,6 +874,7 @@
           "global": false,
           "impactedRequests": 8,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.375,
           "selectedRequests": 30,
           "selectedSessions": 7,
@@ -538,6 +899,7 @@
           "global": false,
           "impactedRequests": 7,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.375,
           "selectedRequests": 30,
           "selectedSessions": 7,
@@ -584,6 +946,7 @@
       "impactedRequests": 7,
       "precision": 0.175,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -622,6 +985,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -646,6 +1010,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -692,6 +1057,7 @@
       "impactedRequests": 32,
       "precision": 0.0612,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -730,6 +1096,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -754,6 +1121,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -800,6 +1168,7 @@
       "impactedRequests": 32,
       "precision": 0.2857,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -838,6 +1207,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -862,6 +1232,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -908,6 +1279,7 @@
       "impactedRequests": 32,
       "precision": 0.551,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -946,6 +1318,7 @@
           "global": false,
           "impactedRequests": 8,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.375,
           "selectedRequests": 30,
           "selectedSessions": 7,
@@ -970,6 +1343,7 @@
           "global": false,
           "impactedRequests": 7,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.375,
           "selectedRequests": 30,
           "selectedSessions": 7,
@@ -1016,6 +1390,7 @@
       "impactedRequests": 7,
       "precision": 0.0513,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -1054,6 +1429,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1078,6 +1454,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1124,6 +1501,7 @@
       "impactedRequests": 32,
       "precision": 0.2245,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -1162,6 +1540,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1186,6 +1565,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": 1.0,
+          "recallKind": "scoped",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1232,6 +1612,7 @@
       "impactedRequests": 32,
       "precision": 0.102,
       "recall": 1.0,
+      "recallKind": "scoped",
       "recallPerRun": [
         1.0,
         1.0,
@@ -1270,6 +1651,7 @@
           "global": true,
           "impactedRequests": 48,
           "recall": null,
+          "recallKind": "global-trivial",
           "reductionRequests": 0.0,
           "selectedRequests": 48,
           "selectedSessions": 11,
@@ -1294,6 +1676,7 @@
           "global": true,
           "impactedRequests": 48,
           "recall": null,
+          "recallKind": "global-trivial",
           "reductionRequests": 0.0,
           "selectedRequests": 48,
           "selectedSessions": 11,
@@ -1321,6 +1704,7 @@
       "impactedRequests": 48,
       "precision": 0.0,
       "recall": null,
+      "recallKind": "global-trivial",
       "recallPerRun": [
         null,
         null,
@@ -1359,6 +1743,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": null,
+          "recallKind": "not-applicable",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1383,6 +1768,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": null,
+          "recallKind": "not-applicable",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1410,6 +1796,7 @@
       "impactedRequests": 32,
       "precision": 0.0,
       "recall": null,
+      "recallKind": "not-applicable",
       "recallPerRun": [
         null,
         null,
@@ -1449,6 +1836,7 @@
       "impactedRequests": 48,
       "precision": 0.0,
       "recall": null,
+      "recallKind": "all-selected-trivial",
       "recallWithF0": null,
       "reductionRequests": 0.0,
       "reductionSessions": 0.0,
@@ -1482,6 +1870,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": null,
+          "recallKind": "not-applicable",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1506,6 +1895,7 @@
           "global": false,
           "impactedRequests": 32,
           "recall": null,
+          "recallKind": "not-applicable",
           "reductionRequests": 0.2292,
           "selectedRequests": 37,
           "selectedSessions": 9,
@@ -1533,6 +1923,7 @@
       "impactedRequests": 32,
       "precision": 0.0,
       "recall": null,
+      "recallKind": "not-applicable",
       "recallPerRun": [
         null,
         null,
@@ -1571,6 +1962,7 @@
           "global": true,
           "impactedRequests": 48,
           "recall": null,
+          "recallKind": "global-trivial",
           "reductionRequests": 0.0,
           "selectedRequests": 48,
           "selectedSessions": 11,
@@ -1595,6 +1987,7 @@
           "global": true,
           "impactedRequests": 48,
           "recall": null,
+          "recallKind": "global-trivial",
           "reductionRequests": 0.0,
           "selectedRequests": 48,
           "selectedSessions": 11,
@@ -1622,6 +2015,7 @@
       "impactedRequests": 48,
       "precision": 0.0,
       "recall": null,
+      "recallKind": "global-trivial",
       "recallPerRun": [
         null,
         null,

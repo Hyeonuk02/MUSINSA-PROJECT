@@ -1,7 +1,7 @@
 # CLAUDE.md
 
 전체 프로젝트 설계는 docs/architecture.md 를 기준으로 한다.
-Phase 1은 완료됐다 (tag phase1-done, docs/phase1-result.md). Phase 2도 완료됐다 (docs/phase2-result.md).
+Phase 1은 완료됐다 (tag phase1-done, docs/phase1-result.md). Phase 2도 완료됐다 (docs/phase2-result.md). Phase 3·4도 완료됐다 (docs/phase3-result.md, docs/phase4-result.md).
 
 ## 프로젝트 방향
 
@@ -69,7 +69,9 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 
 콜트리 합성·endpoint → class 맵·git diff 대조·Tag/Filter·B2 arm(Phase 4) / 정적 Call Graph / 운영 시연·mirrorPercentage / 오버헤드 측정 / LLM 보조 판정 / Store DB·인증·UI / @Async 스레드 전파(Kafka consumer 스레드만) / Coupon 코드 변경 / 결함을 v1 사다리에 섞는 것 / Outbox·Saga / 자체 JSON writer / 같은 데이터로 규칙을 만들고 같은 데이터로 평가하는 것
 
-## Phase 4 — 진행 중
+## Phase 4 — 완료 (2026-11-02, tag phase4-done)
+
+결과: docs/phase4-result.md. 지표: docs/phase4-metrics.md(scoping/evaluate.py 생성, 손으로 고치지 않는다). 발견: docs/findings.md O14~O22. 4.8·4.9는 미실시 — 실시 여부 결정 대기.
 
 계획: docs/phase4-plan.md (v2). 단계별 세부 작업과 끝난 기준은 그 문서가 기준이다.
 목표: 스코핑 — Git Diff → 동적 Call Graph(요청 단위 맵) → 영향 API → Tag/Filter, 그리고 그 효과의 측정(재생 수 감소율·Observed-diff Recall·Filter 하 결함 탐지 유지·B2-S 전체 조합), 서비스 간 변경(Coupon C1·C2).
@@ -83,9 +85,9 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 | 4.4 | 파이프라인 Tag/Filter + 실제 run(Filter F3·F9 ×3, Tag F8·F3 ×1) | 완료(결정 대기 1건: C2 리팩터링) — docs/reports/phase4.4.md (Filter 89/89 pair 일치 ×3, dbstate 기대 일치, Tag 비-SAME 전부 inScope) |
 | 4.5 | 서비스 간 변경 — Coupon C1(Kafka 홉)·C2(HTTP 홉) | 완료 — docs/reports/phase4.5.md (C1 CV 3·dbstate 위반, C2 Uncertain 9 → same 라벨 → eval 0, Recall 1.0, Filter 동일, 관측된 차이 정의 D26) |
 | 4.6 | 스코핑 경계 사례 E1~E7 (impact만) | 완료 — docs/reports/phase4.6.md (7/7 사전 등록 일치) |
-| 4.7 | 지표·보고 + Phase 4 마감(phase4-done) | |
-| 4.8 | (선택) 선택적 미러 시연 — VirtualService match | |
-| 4.9 | (선택) Evidence 수집 오버헤드 | |
+| 4.7 | 지표·보고 + Phase 4 마감(phase4-done) | 완료 — docs/reports/phase4.7.md, docs/phase4-result.md (Recall 11/11 = 1.0, 감소율 0/22.9/37.5/39.6%, 맹검 대조 19/21) |
+| 4.8 | (선택) 선택적 미러 시연 — VirtualService match | 미실시 — 결정 대기 |
+| 4.9 | (선택) Evidence 수집 오버헤드 | 미실시 — 결정 대기 |
 
 ### Phase 4 확정 사항 (요약 — 원문은 phase4-plan 3절)
 

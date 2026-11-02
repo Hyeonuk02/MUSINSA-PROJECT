@@ -99,3 +99,17 @@ def test_review_effect_uses_verdict_after_rules():
     assert (r["evalUncertainBefore"], r["evalUncertainAfter"], r["learnUncertainBefore"], r["sameWithRules"]) == (1, 0, 1, 2)
     assert r["uncertainDiffKinds"] == ["callTree.sequenceReplaced", "dbRead.countDelta"]
 
+
+def row(global_, sessions, recall):
+    return {"global": global_, "selectedSessions": sessions, "recall": recall}
+
+
+def test_recall_label_separates_trivial_from_scoped():
+    import metrics_report as mr
+    assert mr.recall_label(row(True, 11, 1.0)) == "전역(자명)"
+    assert mr.recall_label(row(True, 11, None)) == "전역(자명, 분모 0)"
+    assert mr.recall_label(row(False, 11, 1.0)) == "전체 선택(자명)"
+    assert mr.recall_label(row(False, 7, 1.0)) == "1"
+    assert mr.recall_label(row(False, 9, None)) == "N/A"
+    assert mr.recall_kind(row(False, 7, 1.0)) == "scoped"
+

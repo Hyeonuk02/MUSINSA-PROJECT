@@ -2,7 +2,7 @@
 """Phase 4.3 — 오프라인 평가(D25). 전체 재생 판정을 선택 세션으로 제한해 잰다. 판정 파일은 읽기만 한다.
 
 입력: scoping/impacts/<변형>.json(aux의 impact-v1.0 포함), runs/ 전체 재생 verdict.json(C, 규칙 후), docs/fault-expectations.json
-출력 docs/phase4-metrics.json (결정론):
+출력 docs/phase4-metrics.json, docs/phase4-metrics.md (결정론, md는 손으로 고치지 않는다):
   변형별 감소율(요청·세션), Observed-diff Recall(F0 `R000047/0` 제외 주·포함 보조, 분모 0 → N/A),
   결함 탐지 유지(행동 차이 없는 변형 N/A), Filter Precision, 세션 검사 재계산, run 범위 항목 = "not evaluated offline",
   B2-S 전체 조합(C(11,k) 열거 + 요청 예산 보조), ablation 2종(엔드포인트 합집합 맵 / 홉 합산 없는 맵), Tag 순위 품질
@@ -20,7 +20,10 @@ import sys
 from pathlib import Path
 
 import impact
+import run_check
+from check_scope import compare
 from common import ENTRY_HOP, ROOT, corpus_index, dumps, load_corpus, load_verdict
+from metrics_report import recall_kind, render
 
 F0_PAIR = "R000047/0"
 NOT_OFFLINE = "not evaluated offline"
@@ -29,6 +32,7 @@ LADDER = ("v1.1", "v1.2", "v1.3", "v1.4")
 FAULTS = tuple(f"F{i}" for i in range(1, 10))
 DUAL = ("v1.2", "F2")     # impact-v1.0과 나란히 싣는 변형(D-4.2a)
 CHANGES = ("C1", "C2")    # 서비스 간 변경(4.5)
+REGRESSION_BOUNDARY = ("E5",)   # 등록 전에 값을 이미 봤다(4.2 whatif)
 
 
 def run_ids(variant: str) -> list[str]:
@@ -155,40 +159,53 @@ def review_effect(before: dict, after: dict) -> dict:
             "uncertainDiffKinds": kinds, "sameWithRules": sum(p["verdict"] == "SAME" and bool(p["appliedRules"]) for p in after["pairs"])}
 
 
-def fmt(v) -> str:
-    return "N/A" if v is None else f"{v:.4g}"
+def registration(spec: dict, m: dict, corpus_sets, impacts: Path) -> dict:
+    """사전 등록 대조 표. 맹검 = 결과를 보기 전의 대조, 회귀 확인 = 결과를 이미 본 뒤의 일치(독립 검증 아님)."""
+    sets, sessions = corpus_sets
+    out = {}
+    def load(path):
+        return json.loads(path.read_text(encoding="utf-8"))
+    for name, exp in spec["variants"].items():
+        if name in DUAL:
+            old = load(impacts / "aux" / f"{name}.impact-v1.0.json")
+            out[name] = {"case": name, "kind": "blind", "tool": "impact-v1.0", "match": not compare(exp, old, sets, sessions),
+                         "note": "폐포가 JpaRepository로 Coupon까지 번짐(O18)"}
+            out[f"{name}@impact-v1.1"] = {"case": name, "kind": "regression", "tool": impact.IMPACT_VERSION, "match": not compare(exp, load(impacts / f"{name}.json"), sets, sessions),
+                                          "note": "결과를 본 뒤 도구 변경, 사전 등록 아님(D24 보완 3)"}
+            continue
+        got = load(impacts / f"{name}.json")
+        tool = impact.IMPACT_VERSION if name in CHANGES else "impact-v1.0"   # 13 변형의 대조는 v1.0에서 했고 v1.1 결과도 같다
+        out[name] = {"case": name, "kind": "blind", "tool": tool, "match": not compare(exp, got, sets, sessions)}
+    for name, exp in spec["boundaryCases"].items():
+        got = load(impacts / "boundary" / f"{name}.json")
+        ok = not compare(exp, got, {**sets, "none": []}, {**sessions, "none": []}) and got["warnings"] == exp["warnings"]
+        kind = "regression" if name in REGRESSION_BOUNDARY else "blind"
+        out[name] = {"case": name, "kind": kind, "tool": got["toolVersion"], "match": ok}
+        if kind == "regression":
+            out[name]["note"] = "4.2 whatif에서 본 값"
+    return out
 
 
-def table(metrics: dict) -> str:
-    out = ["## 결함 변형", "", "| 변형 | 도구 | 세션 | 요청 | 감소(요청) | 감소(세션) | Recall | Recall+F0 | 탐지 유지 | Precision | 세션검사 | 전체 조합 k개 평균·최소·1.0 비율 | 예산 평균·1.0 비율 |",
-           "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
-    def row(name, r):
-        d = r["detection"]
-        b = r["b2s"]
-        bs = f"{b['sameSessionCount']['mean']:.3f}·{b['sameSessionCount']['min']:.3f}·{b['sameSessionCount']['fullRecallRate']:.4f} ({b['sameSessionCount']['subsets']})" if b else "N/A"
-        bb = f"{b['requestBudget']['mean']:.3f}·{b['requestBudget']['fullRecallRate']:.4f} ({b['requestBudget']['subsets']})" if b else "N/A"
-        return (f"| {name} | {r['toolVersion'].removeprefix('impact-')} | {r['selectedSessions']}/11 | {r['selectedRequests']}/48 | {r['reductionRequests']:.1%} | {r['reductionSessions']:.1%} "
-                f"| {fmt(r['recall'])} | {fmt(r['recallWithF0'])} | {f'{d['selected']}/{d['total']}' if d else 'N/A'} | {fmt(r['precision'])} | {r['sessionChecks']['inSelected']}/{r['sessionChecks']['full']} | {bs} | {bb} |")
-    for v in FAULTS + tuple(c for c in CHANGES if c in metrics["variants"]):
-        if f"{v}@impact-v1.0" in metrics["variants"]:
-            out.append(row(v, metrics["variants"][f"{v}@impact-v1.0"]))
-        out.append(row(v, metrics["variants"][v]))
-    out += ["", "## 행동 차이 없는 변형", "", "| 변형 | 도구 | 세션 | 요청 | 감소(요청) | 감소(세션) | Recall | Recall+F0 | 탐지 유지 | Precision | 세션검사 | 전체 조합 | 예산 |",
-            "|---|---|---|---|---|---|---|---|---|---|---|---|---|"]
-    for v in LADDER:
-        if f"{v}@impact-v1.0" in metrics["variants"]:
-            out.append(row(v, metrics["variants"][f"{v}@impact-v1.0"]))
-        out.append(row(v, metrics["variants"][v]))
-    out += ["", "## ablation (impact-v1.1)", "", "| 변형 | 맵 | 전역 | 세션 | 요청 | 영향 요청 | 감소(요청) | Recall | Tag 세션 입도(예산·포함) | Tag 요청 입도(예산·포함) |",
-            "|---|---|---|---|---|---|---|---|---|---|"]
-    for v in FAULTS + LADDER + tuple(c for c in CHANGES if c in metrics["variants"]):
-        r = metrics["variants"][v]
-        rows = [("정본", {**r, "tag": r["tag"]}), ("(a) 엔드포인트", r["ablation"]["endpointUnion"]), ("(b) 합산 없음(보조: Tag)", r["ablation"]["noHopMerge"])]
-        for label, x in rows:
-            t = x["tag"]
-            out.append(f"| {v} | {label} | {'전역' if x['global'] else '-'} | {x['selectedSessions']} | {x['selectedRequests']} | {x['impactedRequests']} | {x['reductionRequests']:.1%} "
-                       f"| {fmt(x['recall'])} | {fmt(t['session']['budget'])}·{fmt(t['session']['rate'])} | {fmt(t['request']['budget'])}·{fmt(t['request']['rate'])} |")
-    return "\n".join(out) + "\n"
+def fail_closed(spec: dict, impacts: Path) -> list[dict]:
+    rows = []
+    for name, path, change in (("E1", impacts / "boundary" / "E1.json", spec["boundaryCases"]["E1"]["change"]),
+                               ("E2", impacts / "boundary" / "E2.json", spec["boundaryCases"]["E2"]["change"]),
+                               ("E6", impacts / "boundary" / "E6.json", spec["boundaryCases"]["E6"]["change"]),
+                               ("v1.1", impacts / "v1.1.json", "PaymentGatewayClient Kotlin 전환 + pom"),
+                               ("v1.4", impacts / "v1.4.json", "Controller·DTO·설정·필터·메인 Kotlin 전환")):
+        got = json.loads(path.read_text(encoding="utf-8"))
+        rows.append({"case": name, "change": change, "reasons": got["globalReasons"], "sessions": len(got["selectedSessions"]), "reduction": got["reductionRequests"]})
+    return rows
+
+
+def boundary_rows(spec: dict, impacts: Path) -> list[dict]:
+    rows = []
+    for name, exp in spec["boundaryCases"].items():
+        got = json.loads((impacts / "boundary" / f"{name}.json").read_text(encoding="utf-8"))
+        rows.append({"case": name, "change": exp["change"], "label": "회귀 확인(4.2 whatif에서 본 값)" if name in REGRESSION_BOUNDARY else "맹검 일치",
+                     "global": got["globalTriggered"], "impacted": len(got["impactedRequests"]), "sessions": len(got["selectedSessions"]),
+                     "requests": len(got["selectedRequests"]), "warning": bool(got["warnings"])})
+    return rows
 
 
 def main(argv: list[str]) -> int:
@@ -197,6 +214,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--runs", default=ROOT / "runs", type=Path)
     ap.add_argument("--expectations", default=ROOT / "docs" / "fault-expectations.json", type=Path)
     ap.add_argument("--out", default=ROOT / "docs" / "phase4-metrics.json", type=Path)
+    ap.add_argument("--md", default=ROOT / "docs" / "phase4-metrics.md", type=Path)
     ap.add_argument("--map", default=ROOT / "scoping" / "map.json", type=Path)
     ap.add_argument("--corpus", default=ROOT / "corpus" / "corpus-v2.1.json", type=Path)
     args = ap.parse_args(argv)
@@ -220,6 +238,9 @@ def main(argv: list[str]) -> int:
         row = evaluate_selection(imp, pairs, verdict, targets, index, sizes)
         row["recallPerRun"] = [recall(p, set(imp["selectedSessions"])) for p in per_run]
         row["ablation"] = {"endpointUnion": ablation_row(union_map, imp, pairs, corpus), "noHopMerge": ablation_row(no_hop_map, imp, pairs, corpus)}
+        row["recallKind"] = recall_kind(row)
+        for x in row["ablation"].values():
+            x["recallKind"] = recall_kind(x)
         prelabel = args.runs / run_ids(v)[0] / "verdict-prelabel.json"
         if v in CHANGES and prelabel.exists():
             row["review"] = review_effect(load_verdict(args.runs / run_ids(v)[0], "verdict-prelabel.json"), verdict)
@@ -227,14 +248,19 @@ def main(argv: list[str]) -> int:
         if v in DUAL:
             old = json.loads((args.impacts / "aux" / f"{v}.impact-v1.0.json").read_text(encoding="utf-8"))
             variants[f"{v}@impact-v1.0"] = evaluate_selection(old, pairs, verdict, targets, index, sizes)
+            variants[f"{v}@impact-v1.0"]["recallKind"] = recall_kind(variants[f"{v}@impact-v1.0"])
 
     fn = [v for v in FAULTS + changes if variants[v]["recall"] != 1.0]
+    spec = json.loads((ROOT / "docs" / "scope-expectations.json").read_text(encoding="utf-8"))
     metrics = {"tool": impact.IMPACT_VERSION, "mapBodySha256": m["bodySha256"], "f0Pair": F0_PAIR,
                "notEvaluatedOffline": {k: NOT_OFFLINE for k in OFFLINE_GAPS}, "verdictSameAcrossRuns": determinism,
-               "variants": variants, "recallBelowOne": fn}
+               "variants": variants, "recallBelowOne": fn,
+               "registration": registration(spec, m, (spec["requestSets"], spec["sessionSets"]), args.impacts),
+               "failClosed": fail_closed(spec, args.impacts), "boundary": boundary_rows(spec, args.impacts),
+               "runs": run_check.summarize()}
     args.out.write_text(dumps(metrics), encoding="utf-8")
-    print(table(metrics))
-    print(f"3 run 판정 동일: {sum(determinism.values())}/{len(determinism)}, Recall < 1 결함 변형: {fn or '없음'}")
+    args.md.write_text(render(metrics), encoding="utf-8")
+    print(render(metrics))
     return 1 if fn else 0
 
 

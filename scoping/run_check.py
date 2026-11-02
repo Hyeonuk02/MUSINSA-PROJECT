@@ -108,6 +108,32 @@ def run_case(name: str, case: dict) -> tuple[int, list[str]]:
     return failures, lines
 
 
+def summarize() -> list[dict]:
+    """지표 문서용 — 케이스별 재생 수·pair 일치·판정."""
+    rows = []
+    for name, case in sorted(json.loads(EXPECT.read_text(encoding="utf-8"))["cases"].items()):
+        impact = json.loads((ROOT / case["impact"]).read_text(encoding="utf-8"))
+        sessions = set(impact["selectedSessions"]) if case["mode"] == "filter" else None
+        matched = total = pairs = undelivered = degraded = 0
+        dbstate, verdicts = True, {}
+        for i in range(1, case["iterations"] + 1):
+            verdict = load_verdict(ROOT / "runs" / f"{case['runBase']}-{i}")
+            full = load_verdict(ROOT / "runs" / f"{case['fullRunBase']}-{i}")
+            got, want = pair_map(verdict), pair_map(full)
+            total += len(got)
+            pairs = len(got)
+            matched += sum(k in want and want[k]["verdict"] == p["verdict"] and (sessions is None or p["sessionId"] in sessions) for k, p in got.items())
+            s = verdict["summary"]
+            undelivered += sum(len(v) for v in s["undelivered"].values())
+            degraded += len(s["degraded"])
+            dbstate = {c["check"]: c["ok"] for c in verdict["runChecks"]}["dbstate_equal"]
+            verdicts = dict(sorted(Counter(p["verdict"] for p in verdict["pairs"]).items()))
+        rows.append({"case": name, "iterations": case["iterations"], "replayed": case["replayedRequests"], "pairs": pairs, "pairsMatched": matched,
+                     "pairsTotal": total, "verdicts": ", ".join(f"{k} {v}" for k, v in verdicts.items()), "dbstate": dbstate,
+                     "undelivered": undelivered, "degraded": degraded})
+    return rows
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser(description="Filter·Tag run 대조(Phase 4.4)")
     ap.add_argument("--case", action="append")
