@@ -159,6 +159,15 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 - 맵 JSON 커밋, 3 run 동일, 커버리지 표(엔드포인트 8/8), 서비스 간 간선 2종(HTTP `0.h1`, Kafka `0.e1`) 존재
 - 사전 등록 예상 맵: `order.create` 요청 ⊇ {OrderController, OrderService, OrderRepository}, 쿠폰 주문이면 + {CouponClient, CouponController, CouponService, CouponRepository} / `order.pay` ⊇ {…, PaymentGatewayClient, OrderEventPublisher, OrderPaidListener}, 쿠폰 결제면 + {CouponService, CouponRepository} / `order.get`·`order.cancel` ⊇ {OrderController, OrderService, OrderRepository} / `coupon.*` ⊇ {CouponController, CouponService, CouponRepository}
 
+구현 시 확정 (4.1)
+- **변형 diff 범위(D-4.0a = A)**: decision-log D24 보완. `scope-expectations.json`의 변형별 base·head·pathFilter 명시는 4.2 등록 때
+- **Java → Kotlin 처리(O14 해석 승인)**: 같은 diff 안 같은 클래스 이름의 삭제 + 추가 = 같은 클래스의 수정(구현 시 확정 (4.0) 그대로)
+- **교수님 10/13 피드백(D-4.0b)**: 반영 내용 없음, 자리만 유지
+- **map.json 추가 필드**: `corpus{version, sha256}`, `bodySha256`(맵 본문 해시 — `builtFrom`·`coverage` 제외, run 간 비교 기준), `endpoints[id].hopRequests`(자식 홉으로 그 엔드포인트에 닿은 요청). `endpoints[id].requests`는 진입 홉이 그 엔드포인트인 요청이라 `consume.order.paid`는 비어 있다. 엔드포인트 `classes`는 진입 요청의 합산 클래스 ∪ 자식 홉으로 닿은 경우 그 홉의 클래스
+- **잘린 callTree·corpus와 다른 요청 집합은 맵 합성 실패**(ValueError) — 조용히 작은 맵을 만들지 않는다. `--runs`의 맵이 서로 다르면 exit 1, `--compare`에서 S011 밖 차이가 있으면 exit 1
+- **커버리지 소스**: Legacy 코드 `phase3.3-base`와 사다리 끝 `phase3.5-v1.4` 두 태그를 git에서 읽는다(작업 트리 비의존, 결정론). 빈 = 최상위 선언의 `@RestController/@Controller/@Service/@Repository/@Component`, `JpaRepository` 인터페이스, `@KafkaListener`, 이름이 `*Client`. 중첩 클래스는 바깥 클래스로
+- **대조 도구** `scoping/map_report.py`: 계획의 예측과 맵을 대조해 `[DIFF]`로 출력하고 `docs/call-graph-map.md`를 생성한다. 맵·계획을 바꾸지 않는다
+
 ### 4.2 영향 산출 + 15 변형 사전 등록
 
 할 것

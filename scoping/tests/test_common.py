@@ -88,7 +88,6 @@ def test_name_status_ladder_and_fault_shapes():
 
 
 def test_skeleton_clis_exit_2():
-    import impact, map as mapmod, evaluate
-    assert mapmod.main(["--runs", str(FIX)]) == 2
+    import impact, evaluate
     assert impact.main(["--base", "a", "--head", "b", "--out", "/dev/null"]) == 2
     assert evaluate.main([]) == 2
