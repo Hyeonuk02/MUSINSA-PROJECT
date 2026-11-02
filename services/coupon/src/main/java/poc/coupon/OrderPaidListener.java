@@ -29,7 +29,6 @@ public class OrderPaidListener {
             throw new IllegalArgumentException("order.paid without orderKey");
         }
         if (event.couponKey() != null) {
-            couponService.settle(event.couponKey(), event.orderKey());
         }
     }
 
