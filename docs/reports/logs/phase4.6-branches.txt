@@ -1,0 +1,15 @@
+== E1 2db9891 (1 commit)
+M	services/order/src/main/kotlin/poc/order/ClockConfig.kt
+== E2 1b8324c (1 commit)
+M	services/order/src/main/resources/application.yml
+== E3 cc06da1 (1 commit)
+M	README.md
+M	docs/call-graph.md
+== E4 d3ad2e2 (1 commit)
+M	services/evidence-collector/src/main/java/poc/evidence/EvidenceAutoConfiguration.java
+== E5 3948a00 (1 commit)
+M	services/order/src/main/kotlin/poc/order/OrderItem.kt
+== E6 670e436 (1 commit)
+D	services/order/src/main/kotlin/poc/order/PaymentGatewayClient.kt
+== E7 d398570 (1 commit)
+M	services/coupon/src/main/java/poc/coupon/CouponRepository.java
