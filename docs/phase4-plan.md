@@ -239,6 +239,14 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 - Filter run: 재생 pair 판정 == 전체 재생 run 같은 pair(100%), 세션 검사 동일, run 범위 dbstate 판정 기대와 같음, Undelivered·degraded 0, 재생 수 = impact.json 선택 수, 시간 기록(참고)
 - Tag run: tags.json 순서에서 비-SAME pair가 모두 inScope 구간 안(= Recall 1.0), Uncertain·판정 수는 전체 재생과 동일(바뀌면 안 된다)
 
+구현 시 확정 (4.4)
+- **기대 등록**: `docs/filter-expectations.json`(run 전 커밋). `scope-expectations.json`은 그대로 둔다
+- **tags.json(D-4.3a = A)**: `inScope`는 세션 입도(끝난 기준 "비-SAME pair가 모두 inScope 구간 안" = Recall, F0 `R000047/0` 제외). `impactedRequest: bool` 병기, 리뷰 순서 = 영향 요청 → 같은 세션의 나머지 → 범위 밖 3단. 요청 입도 예산·포함은 보조로 보고. 생성은 판정 뒤 `scoping/tag.py`(run.sh `--tag`는 전체 재생 + run-meta `scope`)
+- **dbstate 기대**: 전체 재생의 해당 변형 판정을 기대로 쓴다. F3·F9는 전체 재생에서 `dbstate_equal` true라 부분집합 기대도 true다(5절 "결함 변형이면 위반"은 전체 재생에서 위반인 변형에 해당)
+- **Filter VU**: 재생 세션 목록에서 `j % VUS` 분배. 세션이 맡는 VU가 전체 재생과 달라진다 — 세션 독립성 확인의 일부
+- **run 이름**: `p44-F3-f-1..3`, `p44-F9-f-1..3`, `p44-F8-t-1`, `p44-F3-t-1`. 결함 이미지 배포는 3.6과 같다(new overlay 렌더링에서 order 이미지만 치환, dirty=false). run 뒤 `phase3.5-v1.4`로 되돌린다
+- **대조**: `scoping/run_check.py`(Filter·Tag 공통), `engine/fault_check.py --impact`(target 미재생 분리)
+
 ### 4.5 서비스 간 변경 — Coupon C1·C2
 
 할 것

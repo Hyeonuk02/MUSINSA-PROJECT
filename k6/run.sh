@@ -1,7 +1,9 @@
 #!/usr/bin/env bash
 # Phase 2.6 - run script: preflight → (reset → k6 → barrier → export) × N
 #
-# 사용: k6/run.sh --run-id <base> --iterations N --vus V
+# 사용: k6/run.sh --run-id <base> --iterations N --vus V [--impact impact.json | --tag impact.json]
+#   --impact(Phase 4.4 Filter): impact.json의 선택 세션만 재생, VU=min(V, 세션 수), barrier 기대는 sent 기준이라 재생 세션으로 줄어든다,
+#     보낸 요청이 선택 요청과 다르면 중단. --tag: 전체 재생 그대로, run-meta에 scope만 남긴다(태그는 판정 뒤 scoping/tag.py)
 #   iteration i의 runId = <base>-<i>. 결과는 runs/<runId>/{legacy.json,new.json,k6-summary.json,run-meta.json}
 #
 # preflight(루프 전 1회) — 하나라도 실패하면 run을 시작하지 않고 exit 1. 자동 복구는 하지 않는다.
@@ -31,12 +33,14 @@ READINESS_PATH=/api/orders/by-key/ok-readiness-check   # corpus에 없는 키 �
 COUPON_READINESS_PATH=/api/coupons/by-key/ck-readiness-check
 READY_TIMEOUT_S=180
 
-BASE=""; ITERATIONS=""; VUS=""
+BASE=""; ITERATIONS=""; VUS=""; IMPACT=""; SCOPE_MODE=""; SESSIONS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --run-id) BASE="${2:-}"; shift 2 ;;
     --iterations) ITERATIONS="${2:-}"; shift 2 ;;
     --vus) VUS="${2:-}"; shift 2 ;;
+    --impact) [[ -z "$SCOPE_MODE" ]] || { echo "--impact와 --tag는 함께 쓸 수 없다" >&2; exit 2; }; IMPACT="${2:-}"; SCOPE_MODE=filter; shift 2 ;;
+    --tag) [[ -z "$SCOPE_MODE" ]] || { echo "--impact와 --tag는 함께 쓸 수 없다" >&2; exit 2; }; IMPACT="${2:-}"; SCOPE_MODE=tag; shift 2 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -47,6 +51,16 @@ fi
 
 log() { echo "[$(date -u +%H:%M:%S)] $*"; }
 fail() { echo "[$(date -u +%H:%M:%S)] FAIL: $*" >&2; exit 1; }
+
+if [[ -n "$IMPACT" ]]; then
+  [[ -f "$IMPACT" ]] || fail "impact 파일 없음: $IMPACT"
+fi
+if [[ "$SCOPE_MODE" == filter ]]; then
+  SESSIONS=$("$PY" -c 'import json,sys; print(",".join(json.load(open(sys.argv[1]))["selectedSessions"]))' "$IMPACT")
+  [[ -n "$SESSIONS" ]] || fail "선택 세션 없음 — 재생할 것이 없다: $IMPACT"
+  session_count=$(awk -F, '{print NF}' <<<"$SESSIONS")
+  (( VUS <= session_count )) || VUS=$session_count
+fi
 http_code() { curl -s -o /dev/null -w '%{http_code}' --max-time 5 "$@" || echo 000; }
 
 # 종료 중이 아닌 Running pod 하나
@@ -232,7 +246,7 @@ write_meta() {  # runId dir started finished resetSeconds
   local fixed_legacy fixed_new
   fixed_legacy=$(kubectl get deploy order -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].env[?(@.name=="APP_FIXED_CLOCK")].value}')
   fixed_new=$(kubectl get deploy order -n new -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].env[?(@.name=="APP_FIXED_CLOCK")].value}')
-  RUN_ID="$1" DIR="$2" STARTED="$3" FINISHED="$4" VUS="$VUS" CORPUS="$CORPUS" \
+  RUN_ID="$1" DIR="$2" STARTED="$3" FINISHED="$4" VUS="$VUS" CORPUS="$CORPUS" SCOPE_MODE="$SCOPE_MODE" IMPACT="$IMPACT" \
   FIXED_LEGACY="$fixed_legacy" FIXED_NEW="$fixed_new" \
   ORDER_LEGACY_TAG="$(kubectl get deploy order -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].image}')" \
   ORDER_NEW_TAG="$(kubectl get deploy order -n new -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].image}')" \
@@ -276,6 +290,10 @@ meta = {
     "startedAt": e["STARTED"],
     "finishedAt": e["FINISHED"],
 }
+if e["SCOPE_MODE"]:
+    impact = json.load(open(e["IMPACT"]))
+    meta["scope"] = {"mode": e["SCOPE_MODE"], "impact": e["IMPACT"], "sha256": hashlib.sha256(open(e["IMPACT"], "rb").read()).hexdigest(),
+                     "toolVersion": impact.get("toolVersion"), "sessions": impact["selectedSessions"]}
 json.dump(meta, open(os.path.join(e["DIR"], "run-meta.json"), "w"), indent=2)
 EOF
   log "run-meta: $2/run-meta.json"
@@ -294,10 +312,18 @@ for ((i = 1; i <= ITERATIONS; i++)); do
   reset_s0
   reset_seconds=$((SECONDS - reset_start))
   log "  reset 소요 ${reset_seconds}s"
-  log "k6: RUN_ID=$run_id VUS=$VUS k6 run k6/run.js"
-  RUN_ID="$run_id" VUS="$VUS" CORPUS="$(basename "$CORPUS")" BASE_URL="$BASE_URL" EVIDENCE_URL="$EVIDENCE_URL" \
+  log "k6: RUN_ID=$run_id VUS=$VUS SESSIONS=${SESSIONS:-전체} k6 run k6/run.js"
+  RUN_ID="$run_id" VUS="$VUS" SESSIONS="$SESSIONS" CORPUS="$(basename "$CORPUS")" BASE_URL="$BASE_URL" EVIDENCE_URL="$EVIDENCE_URL" \
     k6 run --quiet k6/run.js | sed 's/^/  /'
   [[ -f "$dir/k6-summary.json" ]] || fail "k6-summary.json 없음: $dir"
+  if [[ "$SCOPE_MODE" == filter ]]; then
+    "$PY" -c '
+import json, sys
+sent = set(json.load(open(sys.argv[1]))["sent"])
+want = set(json.load(open(sys.argv[2]))["selectedRequests"])
+sys.exit(f"재생 요청이 impact 선택과 다르다: 빠짐 {sorted(want - sent)}, 더 보냄 {sorted(sent - want)}" if sent != want else 0)
+' "$dir/k6-summary.json" "$IMPACT" || fail "Filter 재생 집합 불일치: $dir"
+  fi
   barrier "$run_id" "$dir"
   export_run "$run_id" "$dir"
   k6/dbstate-export.sh --run-id "$run_id" | sed 's/^/  /' || fail "export: dbstate 실패"

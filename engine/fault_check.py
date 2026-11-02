@@ -10,6 +10,7 @@ pair 단위로:
 
 사용: .venv/bin/python engine/fault_check.py --fault F1 --run-base p36-F1 [--base p36-base] [--verdict verdict.json]
       [--expect-key targets]   (F5 라벨 후: afterLearnLabels, F8 maxSelects: targetsMaxSelects)
+      [--impact scoping/impacts/<변형>.json]   (Filter run: 재생하지 않은 pair를 "not replayed"로 분리, 대조는 재생 요청 안에서만)
 종료 코드: 0 = 기대와 일치, 1 = 불일치
 """
 import argparse
@@ -25,6 +26,14 @@ def load(run_dir: Path, name: str) -> dict:
     return {f"{p['replayRequestId']}/{p['hopPath']}": p for p in v["pairs"]}, v
 
 
+def split_replayed(targets: dict, base: dict, replayed: set | None) -> tuple[dict, dict, list]:
+    """Filter run이면 target·baseline을 재생 요청으로 제한한다. 반환: (재생 target, 재생 baseline, 재생 안 한 target)."""
+    if replayed is None:
+        return targets, base, []
+    inside = {k: v for k, v in targets.items() if k.split("/")[0] in replayed}
+    return inside, {k: v for k, v in base.items() if k.split("/")[0] in replayed}, sorted(set(targets) - set(inside))
+
+
 def main(argv: list[str]) -> int:
     ap = argparse.ArgumentParser()
     ap.add_argument("--fault", required=True)
@@ -32,15 +41,20 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--base", default="p36-base")
     ap.add_argument("--verdict", default="verdict.json")
     ap.add_argument("--expect-key", default="targets")
+    ap.add_argument("--impact", type=Path)
     args = ap.parse_args(argv)
     exp = json.loads((ROOT / "docs" / "fault-expectations.json").read_text(encoding="utf-8"))[args.fault]
-    targets = exp[args.expect_key]
+    all_targets = exp[args.expect_key]
+    replayed = None
+    if args.impact:
+        replayed = set(json.loads(args.impact.read_text(encoding="utf-8"))["selectedRequests"])
 
     ok = True
     signatures = []
     for i in (1, 2, 3):
         base, _ = load(ROOT / "runs" / f"{args.base}-{i}", "verdict.json")
         got, whole = load(ROOT / "runs" / f"{args.run_base}-{i}", args.verdict)
+        targets, base, not_replayed = split_replayed(all_targets, base, replayed)
         miss_t = {k: (v, got.get(k, {}).get("verdict")) for k, v in targets.items() if got.get(k, {}).get("verdict") != v}
         fp = {k: (base[k]["verdict"], p["verdict"]) for k, p in got.items()
               if k not in targets and k in base and p["verdict"] != base[k]["verdict"]}
@@ -52,6 +66,8 @@ def main(argv: list[str]) -> int:
         detected = sum(1 for k in targets if got.get(k, {}).get("verdict") == targets[k])
         print(f"== {args.run_base}-{i} ({args.verdict}, 기대 {args.expect_key}) verdicts {whole['summary']['verdicts']}")
         print(f"   targets 일치 {detected}/{len(targets)}" + (f"  불일치 {miss_t}" if miss_t else ""))
+        if replayed is not None:
+            print(f"   not replayed target {len(not_replayed)}" + (f" {not_replayed}" if not_replayed else ""))
         print(f"   정상 경로 오탐(baseline과 다른 non-target) {len(fp)}" + (f" {fp}" if fp else ""))
         print(f"   pair 집합: baseline에만 {only_base or 0}, F run에만 {only_f or 0}")
         if exp.get("runCheck"):

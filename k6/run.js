@@ -18,7 +18,8 @@
 // env
 //   RUN_ID        필수. 없으면 즉시 종료
 //   CORPUS        기본 corpus-v2.json (corpus/ 아래 파일명)
-//   VUS           기본 1. VU i(0부터)는 sessions[j] (j % VUS == i)를 순서대로 맡는다
+//   VUS           기본 1. VU i(0부터)는 재생 세션 목록의 [j] (j % VUS == i)를 순서대로 맡는다
+//   SESSIONS      Phase 4.4 Filter: 재생할 세션 id(쉼표). 없으면 corpus 전체. 세션 단위로만 고른다(요청 단위 선택 금지, D23)
 //   BASE_URL      기본 http://localhost
 //   EVIDENCE_URL  기본 http://localhost/_evidence
 //
@@ -47,6 +48,12 @@ if (!/^corpus-v[0-9]+(\.[0-9]+)?\.json$/.test(CORPUS)) {
   throw new Error('CORPUS는 corpus/ 아래 corpus-v<N>[.<M>].json');
 }
 const corpus = JSON.parse(open(`../corpus/${CORPUS}`));
+
+const SESSIONS = (__ENV.SESSIONS || '').split(',').filter((s) => s.length > 0);
+const replaySessions = SESSIONS.length > 0 ? corpus.sessions.filter((s) => SESSIONS.includes(s.id)) : corpus.sessions;
+if (SESSIONS.length > 0 && replaySessions.length !== SESSIONS.length) {
+  throw new Error(`SESSIONS에 corpus에 없는 세션이 있다: ${SESSIONS.join(',')}`);
+}
 
 http.setResponseCallback(http.expectedStatuses({ min: 200, max: 499 }));
 
@@ -154,7 +161,7 @@ function runSession(session) {
 
 export default function () {
   const vuIndex = exec.vu.idInTest - 1;
-  corpus.sessions.forEach((session, j) => {
+  replaySessions.forEach((session, j) => {
     if (j % VUS === vuIndex) {
       runSession(session);
     }
@@ -218,6 +225,7 @@ export function handleSummary(data) {
     runId: RUN_ID,
     corpusVersion: corpus.version,
     vus: VUS,
+    sessions: replaySessions.map((s) => s.id),
     baseUrl: BASE_URL,
     evidenceUrl: EVIDENCE_URL,
     // sent: 보낸 요청 id. 세션 안은 보낸 순서, 세션 사이는 corpus 순서(VUS>1이면 세션들이 병렬로 진행된다)
