@@ -1,11 +1,12 @@
 #!/usr/bin/env python3
 """Phase 4.2 — docs/scope-expectations.json의 변형을 impact로 돌려 scoping/impacts/에 쓰고 사전 등록과 대조한다.
-불일치는 출력만 한다(기대·도구를 고치지 않는다, exit 1). status가 있는 변형(C1·C2)은 해당 단계에서 실행한다.
+불일치는 출력만 한다(기대·도구를 고치지 않는다, exit 1). status가 있는 변형(C1·C2)은 head 브랜치가 생기면 실행한다(4.5).
 
 사용: .venv/bin/python scoping/check_scope.py [--explain]
 """
 import argparse
 import json
+import subprocess
 import sys
 from pathlib import Path
 
@@ -15,6 +16,10 @@ from common import ROOT, dumps, load_corpus
 EXPECT = ROOT / "docs" / "scope-expectations.json"
 FAULTS = ROOT / "docs" / "fault-expectations.json"
 OUT = ROOT / "scoping" / "impacts"
+
+
+def ref_exists(ref: str) -> bool:
+    return subprocess.run(["git", "rev-parse", "--verify", "--quiet", ref], cwd=ROOT, capture_output=True).returncode == 0
 
 
 def compare(exp: dict, got: dict, sets: dict, sessions: dict) -> list[str]:
@@ -79,7 +84,7 @@ def main(argv: list[str]) -> int:
     print("| 변형 | 범위 | 변경 | 관측 | 미관측 | 전역 | 영향 요청 | 세션 | 재생 | 감소(요청) | target 세션 포함 | 사전 등록 |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for name, exp in spec["variants"].items():
-        if "status" in exp:
+        if "status" in exp and not ref_exists(exp["head"]):
             print(f"| {name} | `{exp['base']}..{exp['head']}` | {exp['status']} | | | | | | | | | 대기 |")
             continue
         got = impact.compute(m, corpus, exp["base"], exp["head"], ROOT, exp["pathFilter"])

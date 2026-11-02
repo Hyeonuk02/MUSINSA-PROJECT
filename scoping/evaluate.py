@@ -7,6 +7,7 @@
   결함 탐지 유지(행동 차이 없는 변형 N/A), Filter Precision, 세션 검사 재계산, run 범위 항목 = "not evaluated offline",
   B2-S 전체 조합(C(11,k) 열거 + 요청 예산 보조), ablation 2종(엔드포인트 합집합 맵 / 홉 합산 없는 맵), Tag 순위 품질
   Tag는 두 입도로 낸다: session(계획 정의, = Recall), request(영향 요청에 든 pair — 요청 단위 차이가 드러나는 쪽).
+  관측된 차이 pair = verdict != SAME 또는 appliedRules가 있는 pair(= 규칙 적용 전 비-SAME, D26). 사람 검토 감소는 규칙 적용 후 verdict로 잰다.
 
 사용: .venv/bin/python scoping/evaluate.py --impacts scoping/impacts --runs runs \
         --expectations docs/fault-expectations.json --out docs/phase4-metrics.json
@@ -35,7 +36,8 @@ def run_ids(variant: str) -> list[str]:
 
 
 def pair_verdicts(verdict: dict) -> dict[str, dict]:
-    return {f"{p['replayRequestId']}/{p['hopPath']}": {"session": p["sessionId"], "rid": p["replayRequestId"], "verdict": p["verdict"]}
+    return {f"{p['replayRequestId']}/{p['hopPath']}": {"session": p["sessionId"], "rid": p["replayRequestId"], "verdict": p["verdict"],
+                                                        "split": p.get("split"), "diff": p["verdict"] != "SAME" or bool(p.get("appliedRules"))}
             for p in verdict["pairs"]}
 
 
@@ -44,14 +46,14 @@ def ratio(n: int, d: int):
 
 
 def recall(pairs: dict, sessions: set, exclude_f0: bool = True):
-    """비-SAME pair 중 선택 세션에 든 비율. 분모 0이면 None(N/A)."""
-    diffs = [k for k, p in pairs.items() if p["verdict"] != "SAME" and not (exclude_f0 and k == F0_PAIR)]
+    """관측된 차이 pair 중 선택 세션에 든 비율. 분모 0이면 None(N/A)."""
+    diffs = [k for k, p in pairs.items() if p["diff"] and not (exclude_f0 and k == F0_PAIR)]
     return ratio(sum(pairs[k]["session"] in sessions for k in diffs), len(diffs))
 
 
 def precision(pairs: dict, sessions: set):
     selected = [p for p in pairs.values() if p["session"] in sessions]
-    return ratio(sum(p["verdict"] != "SAME" for p in selected), len(selected))
+    return ratio(sum(p["diff"] for p in selected), len(selected))
 
 
 def detection(targets: dict | None, pairs: dict, sessions: set, sizes_session: dict):
@@ -70,7 +72,7 @@ def session_checks(verdict: dict, sessions: set) -> dict:
 def tag_quality(pairs: dict, sessions: set, impacted: set) -> dict:
     def grain(in_scope):
         total = [k for k in pairs if in_scope(k)]
-        diffs = [k for k, p in pairs.items() if p["verdict"] != "SAME" and k != F0_PAIR]
+        diffs = [k for k, p in pairs.items() if p["diff"] and k != F0_PAIR]
         return {"inScopePairs": len(total), "budget": ratio(len(total), len(pairs)),
                 "diffsInScope": sum(in_scope(k) for k in diffs), "diffs": len(diffs), "rate": ratio(sum(in_scope(k) for k in diffs), len(diffs))}
     return {"session": grain(lambda k: pairs[k]["session"] in sessions), "request": grain(lambda k: pairs[k]["rid"] in impacted)}
@@ -80,7 +82,7 @@ def b2s(pairs: dict, selected: list[str], request_budget: int, sizes: dict[str, 
     """같은 세션 수의 모든 부분집합 + 요청 수 ≤ 예산인 모든 부분집합의 Recall(F0 제외). 분모 0이면 None."""
     weights: dict[str, int] = {}
     for k, p in pairs.items():
-        if p["verdict"] != "SAME" and k != F0_PAIR:
+        if p["diff"] and k != F0_PAIR:
             weights[p["session"]] = weights.get(p["session"], 0) + 1
     total = sum(weights.values())
     if total == 0:

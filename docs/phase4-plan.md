@@ -259,6 +259,14 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 - C2: Uncertain → 라벨 → eval 0, 영향 6세션(40%), Recall 1.0, ablation(a)에서 11세션(0%)·ablation(b)에서 2세션·Recall < 1
 - B2-S: C1(7/11)에서 쿠폰 결제 세션 3개가 모두 든 조합 비율 = C(8,4)/C(11,7) ≈ 0.21 — 전체 조합 대비 스코핑의 가치
 
+구현 시 확정 (4.5)
+- **C2 라벨 정정**: 3절·5절의 "라벨 improvement"를 **same**으로 정정한다(D26). 사유: SELECT가 1 → 2로 늘어나는 기능적으로 동등한 실행 방식 변경이지 개선이 아니다. same은 사람이 현재 계약에서 허용되는 차이로 승인했다는 뜻이고 최종 SAME에 appliedRules가 남는다. eval Uncertain 0 기대는 그대로
+- **C2 리팩터링(D-4.4a = A)**: `use` 앞에 `existsByCouponKey`, 없으면 NOT_FOUND. 뒤의 `findByCouponKey`가 비는 경우의 NOT_FOUND 처리는 유지. Uncertain 기대 2종 `dbRead.countDelta`(1 → 2)·`callTree.sequenceReplaced`(`existsByCouponKey` 노드)
+- **관측된 차이 정의(C2 첫 run 전 등록)**: verdict != SAME 또는 appliedRules가 비어 있지 않은 pair. Observed-diff Recall·Precision·B2-S·Tag 전부. 결함 탐지 유지는 target 기준이라 영향 없음. 사람 검토 감소는 규칙 적용 후 verdict. 기대 파일 `docs/fault-expectations.json` `_observedDiff`
+- **ablation(b) C2 기대**: 구현 시 확정 (4.2) 그대로(6세션·Recall 1.0·영향 요청 24 → 16, Tag 보조)
+- **기대 등록**: 판정 `fault-expectations.json` C1·C2, Filter `filter-expectations.json` C1-filter·C2-filter, 영향은 4.2 등록(`scope-expectations.json`) 그대로
+- **run 순서**: C1 전체 3 → C1 Filter 3 → C2 전체 3 → 라벨 커밋 → C2 Filter 3(dirty=false). 전체 재생 baseline = `p36-base`
+
 ### 4.6 스코핑 경계 사례 (impact만, run 없음)
 
 | 사례 | 변경 | 기대 |

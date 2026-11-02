@@ -4,7 +4,7 @@ import tag
 
 
 def pair(rid, session, verdict="SAME", hop="0"):
-    return {"replayRequestId": rid, "hopPath": hop, "sessionId": session, "endpoint": "e", "verdict": verdict}
+    return {"replayRequestId": rid, "hopPath": hop, "sessionId": session, "endpoint": "e", "verdict": verdict, "appliedRules": []}
 
 
 VERDICT = {"pairs": [pair("R1", "S1"), pair("R2", "S1", "CONTRACT_VIOLATION"), pair("R3", "S2", "UNCERTAIN"), pair("R000047", "S2", "CONTRACT_VIOLATION")]}
@@ -42,3 +42,9 @@ def test_compare_pairs_restricts_full_replay_to_sessions():
 def test_session_violations_filtered_by_session():
     v = {"summary": {"sessionViolations": [{"session": "S1", "key": "a"}, {"session": "S2", "key": "b"}]}}
     assert len(run_check.session_violations(v, {"S1"})) == 1 and len(run_check.session_violations(v, None)) == 2
+
+
+def test_final_same_with_applied_rule_stays_observed_diff():
+    verdict = {"pairs": [dict(pair("R1", "S1"), appliedRules=[{"rule": "r"}])]}
+    rows, _ = tag.build_tags(verdict, {"selectedSessions": ["S1"], "impactedRequests": {}})
+    assert rows[0]["observedDiff"] and tag.summarize(rows)["session"]["diffs"] == 1

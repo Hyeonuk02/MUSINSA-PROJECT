@@ -5,6 +5,7 @@
   {runId, impact{path, sha256, toolVersion}, pairs[{pair, session, endpoint, verdict, inScope, impactedRequest, tier, reasons[]}],
    reviewOrder[pair...], summary}
 inScope = 선택 세션의 pair(세션 입도, D-4.3a). impactedRequest = 영향 요청의 pair(보조).
+관측된 차이 = verdict != SAME 또는 appliedRules가 있는 pair(D26). 사람이 same으로 승인한 차이도 리뷰 순서 평가에서는 차이다.
 리뷰 순서 tier 1 영향 요청 → 2 같은 세션의 나머지 → 3 범위 밖. 같은 tier 안은 corpus 순서(run의 요청 id·hop).
 Tag의 효과는 비-SAME pair가 앞쪽에 모이는가뿐이다 — 검토량 감소가 아니다.
 
@@ -29,14 +30,14 @@ def build_tags(verdict: dict, impact: dict) -> tuple[list[dict], list[str]]:
         in_scope = p["sessionId"] in sessions
         hit = rid in impacted
         rows.append({"pair": f"{rid}/{p['hopPath']}", "session": p["sessionId"], "endpoint": p["endpoint"], "verdict": p["verdict"],
-                     "inScope": in_scope, "impactedRequest": hit, "tier": 1 if hit else 2 if in_scope else 3,
+                     "observedDiff": p["verdict"] != "SAME" or bool(p.get("appliedRules")), "inScope": in_scope, "impactedRequest": hit, "tier": 1 if hit else 2 if in_scope else 3,
                      "reasons": impacted.get(rid, [])})
     rows.sort(key=lambda r: (r["tier"], r["pair"].split("/")[0], r["pair"]))
     return rows, [r["pair"] for r in rows]
 
 
 def summarize(rows: list[dict]) -> dict:
-    diffs = [r for r in rows if r["verdict"] != "SAME" and r["pair"] != F0_PAIR]
+    diffs = [r for r in rows if r["observedDiff"] and r["pair"] != F0_PAIR]
     def grain(key):
         inside = sum(r[key] for r in rows)
         hit = sum(r[key] for r in diffs)

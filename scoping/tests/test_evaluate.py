@@ -8,8 +8,8 @@ import evaluate as ev
 FIX = Path(__file__).resolve().parent / "fixtures" / "p36-base-1-mini"
 
 
-def pair(session, verdict="SAME", rid=None):
-    return {"session": session, "rid": rid or session, "verdict": verdict}
+def pair(session, verdict="SAME", rid=None, rules=False):
+    return {"session": session, "rid": rid or session, "verdict": verdict, "diff": verdict != "SAME" or rules}
 
 
 PAIRS = {"a/0": pair("S1", "CONTRACT_VIOLATION", "a"), "b/0": pair("S2", "UNCERTAIN", "b"), "c/0": pair("S3", rid="c"),
@@ -77,3 +77,14 @@ def test_no_hop_merge_map_drops_hop_only_classes():
 def test_pair_verdicts_reads_fixture():
     pairs = ev.pair_verdicts(json.loads((FIX / "verdict.json").read_text(encoding="utf-8")))
     assert len(pairs) == 60 and pairs[ev.F0_PAIR]["verdict"] == "CONTRACT_VIOLATION"
+
+
+def test_same_with_applied_rules_is_observed_diff_before_rules():
+    verdict = {"pairs": [{"replayRequestId": "R1", "hopPath": "0", "sessionId": "S1", "split": "eval", "verdict": "SAME", "appliedRules": [{"rule": "r"}]},
+                         {"replayRequestId": "R2", "hopPath": "0", "sessionId": "S2", "split": "eval", "verdict": "SAME", "appliedRules": []}]}
+    pairs = ev.pair_verdicts(verdict)
+    assert pairs["R1/0"]["diff"] and not pairs["R2/0"]["diff"]
+    assert ev.recall(pairs, {"S1"}) == 1.0 and ev.recall(pairs, {"S2"}) == 0.0
+    assert ev.precision(pairs, {"S1"}) == 1.0
+    assert ev.b2s(pairs, ["S1"], 1, {"S1": 1, "S2": 1})["sameSessionCount"]["fullRecallRate"] == 0.5
+    assert ev.tag_quality(pairs, {"S1"}, {"R1"})["request"]["rate"] == 1.0

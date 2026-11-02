@@ -70,6 +70,9 @@ def check_common(case: dict, verdict: dict, run_dir: Path, full: dict, sessions:
         bad.append("dirty run")
     if meta["images"]["order"]["new"]["image"] != case["image"]:
         bad.append(f"new order 이미지 {meta['images']['order']['new']['image']}")
+    coupon = meta["images"]["coupon"]["new"]["image"]
+    if coupon != case.get("couponImage", "coupon-app:phase3.3-base"):
+        bad.append(f"new coupon 이미지 {coupon}")
     impact_sha = hashlib.sha256((ROOT / case["impact"]).read_bytes()).hexdigest()
     if meta.get("scope", {}).get("sha256") != impact_sha or meta.get("scope", {}).get("mode") != case["mode"]:
         bad.append(f"run-meta scope 불일치: {meta.get('scope')}")
@@ -79,8 +82,8 @@ def check_common(case: dict, verdict: dict, run_dir: Path, full: dict, sessions:
 def check_tag(run_dir: Path) -> list[str]:
     tags = json.loads((run_dir / "tags.json").read_text(encoding="utf-8"))
     rows = {r["pair"]: r for r in tags["pairs"]}
-    outside = [r["pair"] for r in tags["pairs"] if r["verdict"] != "SAME" and r["pair"] != F0_PAIR and not r["inScope"]]
-    bad = [f"비-SAME pair가 inScope 밖: {outside}"] if outside else []
+    outside = [r["pair"] for r in tags["pairs"] if r["observedDiff"] and r["pair"] != F0_PAIR and not r["inScope"]]
+    bad = [f"관측된 차이 pair가 inScope 밖: {outside}"] if outside else []
     tiers = [rows[k]["tier"] for k in tags["reviewOrder"]]
     if tiers != sorted(tiers) or set(tags["reviewOrder"]) != set(rows):
         bad.append("리뷰 순서가 tier 순이 아니다")

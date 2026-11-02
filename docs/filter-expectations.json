@@ -1,6 +1,46 @@
 {
   "_doc": "Phase 4.4 Filter·Tag run 기대 사전 등록 — run 전 커밋. verdicts·dbstateEqual은 전체 재생(p36-<변형>)을 선택 세션으로 제한한 값이다. Filter 끝난 기준: 재생 pair 판정 == 전체 재생 같은 pair(100%), 세션 검사 동일. Tag 끝난 기준: 판정·재생 수 전체 재생과 동일, F0(R000047/0)를 뺀 비-SAME pair가 모두 inScope. 결과를 보고 고치지 않는다.",
   "cases": {
+    "C1-filter": {
+      "couponImage": "coupon-app:phase4-C1",
+      "dbstateEqual": false,
+      "degraded": 0,
+      "fullRunBase": "p45-C1",
+      "image": "order-app:phase3.5-v1.4",
+      "impact": "scoping/impacts/C1.json",
+      "iterations": 3,
+      "mode": "filter",
+      "replayedRequests": 30,
+      "runBase": "p45-C1-f",
+      "sessions": 7,
+      "undelivered": 0,
+      "variant": "C1",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 3,
+        "SAME": 37
+      },
+      "vus": 3
+    },
+    "C2-filter": {
+      "couponImage": "coupon-app:phase4-C2",
+      "dbstateEqual": true,
+      "degraded": 0,
+      "fullRunBase": "p45-C2",
+      "image": "order-app:phase3.5-v1.4",
+      "impact": "scoping/impacts/C2.json",
+      "iterations": 3,
+      "mode": "filter",
+      "note": "same 규칙 적용 후 37 pair 전부 SAME, 그중 9 pair는 appliedRules가 남는다. S011을 재생하지 않아 F0 없음",
+      "replayedRequests": 29,
+      "runBase": "p45-C2-f",
+      "sessions": 6,
+      "undelivered": 0,
+      "variant": "C2",
+      "verdicts": {
+        "SAME": 37
+      },
+      "vus": 3
+    },
     "F3-filter": {
       "dbstateEqual": true,
       "degraded": 0,
@@ -81,5 +121,5 @@
     }
   },
   "impactTool": "impact-v1.1",
-  "version": "filter-expectations-v1"
+  "version": "filter-expectations-v2"
 }

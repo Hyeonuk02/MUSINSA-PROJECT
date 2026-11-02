@@ -235,5 +235,69 @@
       "transactions.outcomes"
     ],
     "note": "baseline 기지 차이(주입 아님). 3.5 보고서의 잠재 차이(sku 없음)를 corpus v2.1 S011로 실측"
+  },
+  "_observedDiff": "Phase 4.5 지표 정의(C2 첫 run 전 등록, D26): 관측된 차이 pair = verdict != SAME 또는 appliedRules가 비어 있지 않은 pair(= 규칙 적용 전 비-SAME). Observed-diff Recall·Precision·B2-S·Tag가 이 정의를 쓴다. 사람 검토 감소(eval Uncertain 전→후)는 규칙 적용 후 verdict로 잰다.",
+  "C1": {
+    "targets": {
+      "R000029/0.e1": "CONTRACT_VIOLATION",
+      "R000033/0.e1": "CONTRACT_VIOLATION",
+      "R000045/0.e1": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "writeSet",
+      "callTree"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    },
+    "note": "OrderPaidListener가 couponKey가 있어도 settle을 부르지 않는다. 쿠폰 결제의 Kafka 소비 홉 3건에서 update coupons 없음(writeSet CV), callTree 차이, coupons SETTLED 3 → 0으로 dbstate 위반. 쿠폰 없는 결제의 소비 홉은 no-op이라 SAME"
+  },
+  "C2": {
+    "targets": {
+      "R000017/0": "UNCERTAIN",
+      "R000019/0": "UNCERTAIN",
+      "R000020/0": "UNCERTAIN",
+      "R000024/0": "UNCERTAIN",
+      "R000027/0.h1": "UNCERTAIN",
+      "R000032/0.h1": "UNCERTAIN",
+      "R000036/0.h1": "UNCERTAIN",
+      "R000037/0.h1": "UNCERTAIN",
+      "R000044/0.h1": "UNCERTAIN"
+    },
+    "afterLearnLabels": {
+      "R000017/0": "SAME",
+      "R000019/0": "SAME",
+      "R000020/0": "SAME",
+      "R000024/0": "SAME",
+      "R000027/0.h1": "SAME",
+      "R000032/0.h1": "SAME",
+      "R000036/0.h1": "SAME",
+      "R000037/0.h1": "SAME",
+      "R000044/0.h1": "SAME"
+    },
+    "uncertainDiffKinds": [
+      "dbRead.countDelta",
+      "callTree.sequenceReplaced"
+    ],
+    "axes": [
+      "dbRead.countDelta",
+      "callTree.sequenceReplaced"
+    ],
+    "learnPairs": [
+      "R000017/0",
+      "R000019/0",
+      "R000020/0",
+      "R000027/0.h1",
+      "R000036/0.h1",
+      "R000037/0.h1"
+    ],
+    "evalPairs": [
+      "R000024/0",
+      "R000032/0.h1",
+      "R000044/0.h1"
+    ],
+    "evalUncertainAfter": 0,
+    "labelAs": "same",
+    "note": "개선이 아닌 기능적으로 동등한 실행 방식 변경(D26): CouponService.use 앞에 existsByCouponKey 존재 확인(SELECT 1 → 2, callTree에 existsByCouponKey 노드). 응답 상태·본문, 쓰기 집합, 최종 DB 상태 불변. targets는 라벨 전(verdict-prelabel.json), afterLearnLabels는 same 라벨 후 — 최종 SAME에 appliedRules가 남아야 한다. learn 라벨을 만든 뒤 eval Uncertain 0"
   }
 }

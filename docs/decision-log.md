@@ -442,3 +442,9 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 결정: 감소율·요청 단위 Observed-diff Recall(F0 제외 주·포함 보조, 분모 0은 N/A)·요청 단위 결함 탐지 유지·세션 범위 검사·B2-S 전체 조합·Tag 순위 품질·ablation은 오프라인으로 계산한다. run 범위 dbstate·Undelivered·degraded·시간·세션 독립성은 오프라인으로 재지 않고(not evaluated offline) 실제 Filter run(F3·F9·C1·C2 × 3)에서 "부분집합 재생의 pair 판정 == 전체 재생의 같은 pair 판정 + dbstate 판정 기대와 일치"로 확인한다.
 근거: 전체 재생 run이 이미 있으므로 요청 단위 결과는 그 안에 있다. 집계 해시는 부분집합으로 재구성할 수 없다.
 한계: 세션 독립성이 깨지는 경우(공유 자원 경합)는 Filter run에서 판정이 달라지는 것으로만 드러난다.
+
+### D26. 기능적으로 동등한 변경은 same으로 승인하고, 관측된 차이는 규칙 적용 전 기준으로 센다 (2026-11-02)
+결정: C2(`CouponService.use` 앞 `existsByCouponKey`, SELECT 1 → 2)는 개선이 아닌 기능적으로 동등한 실행 방식 변경으로 기록하고 learn 라벨은 same으로 한다. same은 실행 기록이 같다는 뜻이 아니라 사람이 검토해 현재 계약에서 허용되는 차이로 승인했다는 뜻이며, 최종 SAME에도 appliedRules가 남는다. 관측된 차이 pair = verdict != SAME 또는 appliedRules가 비어 있지 않은 pair(= 규칙 적용 전 비-SAME)로 정의하고 Observed-diff Recall·Precision·B2-S·Tag에 쓴다. 사람 검토 감소(eval Uncertain 전→후)는 규칙 적용 후 verdict로 잰다.
+근거: verdict != SAME만 세면 same 규칙 적용 후 C2의 차이가 Recall 분모에서 사라진다. 계획 원문의 "라벨 improvement"는 SELECT가 늘어나는 변경을 개선이라 부르는 것이라 맞지 않는다. C2 첫 run 전에 등록했다.
+회귀: 정의 변경 전후 13 변형 `docs/phase4-metrics.json` 바이트 동일(Phase 3 판정에 SAME + appliedRules pair 0). 엔진·판정 파일 변경 없음.
+
