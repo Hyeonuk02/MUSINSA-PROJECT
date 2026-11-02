@@ -8,7 +8,8 @@ iteration마다:
   2. run 정보    비교 유효 조건 해시 = hash(corpus, S0 init SQL, WireMock 매핑, 고정 시각, 이미지 digest, Normalization 규칙)
                 → Store POST /runs, run-meta.json
   3. k6         baseline/k6/run.js (VU=1, 세션 순서대로, 요청마다 양쪽 Evidence 도착 대기)
-  4. barrier    Store count(stack별) == 기대 건수(보낸 요청의 expect.evidence 합) + 두 스택 consumer lag 0. 타임아웃이면 누락 보고
+  4. barrier    보낸 요청마다 두 스택이 완료(closure: 진입 Evidence + 선언된 하위 처리만큼 도착) + 두 스택 consumer lag 0.
+                타임아웃이면 완료되지 않은 요청·스택을 보고. legacy 건수가 corpus expect.evidence와 다르면 따로 보고
   5. collect    WireMock journal(kind=external), Kafka 토픽(kind=event)을 Store에 넣는다
   6. export     runs/<runId>/legacy.json, new.json (Evidence 배열), k6-summary.json, k6-results.jsonl, run-meta.json
   7. db         runs/<runId>/db-legacy.json, db-new.json (테이블별 전체 행, Step 8의 테이블 비교용)
@@ -65,9 +66,13 @@ def sha256_files(paths):
 def run_meta(run_id, base, iteration, vus):
     fixed_clock = next(l.split(":", 1)[1].strip().strip('"') for l in (COMPOSE / "docker-compose.yml").read_text().splitlines()
                        if l.strip().startswith("APP_FIXED_CLOCK:"))
-    images = {}
-    for svc in ["order", "coupon", "payment"]:
-        images[svc] = sh(["docker", "image", "inspect", f"prince-mart/{svc}-service:legacy", "--format", "{{.Id}}"]).strip()
+    # 실제로 떠 있는 컨테이너의 이미지를 스택별로 읽는다(결함 실험에서는 new만 PF<n> 이미지, baseline/faults/deploy.sh).
+    # 유효성 해시(images)는 legacy 스택만 덮는다 — 조건은 같고 arm(new 버전)만 다른 run끼리 비교할 수 있게.
+    running = {st: {svc: sh(["docker", "inspect", f"prince-mart-{svc}-{st}-1", "--format", "{{.Image}}"]).strip()
+                    for svc in ["order", "coupon", "payment"]} for st in STACKS}
+    images = running["legacy"]
+    new_version = next(e.split("=", 1)[1] for e in json.loads(sh(["docker", "inspect", "prince-mart-order-new-1",
+                       "--format", "{{json .Config.Env}}"])) if e.startswith("EVIDENCE_VERSION="))
     parts = {
         "corpus": sha256_files([CORPUS]),
         "s0": sha256_files(list((COMPOSE / "mysql-initdb").rglob("*.sql")) + [COMPOSE / "kafka" / "init-topics.sh"]),
@@ -79,8 +84,10 @@ def run_meta(run_id, base, iteration, vus):
     validity = hashlib.sha256(json.dumps(parts, sort_keys=True).encode()).hexdigest()
     corpus = json.loads(CORPUS.read_text())
     return {"runId": run_id, "baseRunId": base, "iteration": iteration, "vus": vus,
-            "arm": "A/A (legacy image on both stacks)", "corpusVersion": corpus["version"],
-            "fixedClock": fixed_clock, "imageDigests": images, "conditionHashes": parts, "validityHash": validity,
+            "arm": "A/A (legacy image on both stacks)" if running["new"] == running["legacy"] else f"fault {new_version}",
+            "newVersion": new_version, "corpusVersion": corpus["version"],
+            "fixedClock": fixed_clock, "imageDigests": images, "stackImages": running,
+            "conditionHashes": parts, "validityHash": validity,
             "startedAt": time.strftime("%Y-%m-%dT%H:%M:%SZ", time.gmtime())}
 
 
@@ -92,22 +99,46 @@ def consumer_lag(stack):
     return sum(0 if r[5] == "-" and r[4] == "0" else (int(r[5]) if r[5].isdigit() else 10**9) for r in rows)
 
 
+INTERNAL = {"ORDER-SERVICE": "order", "COUPON-SERVICE": "coupon", "PAYMENT-SERVICE": "payment"}
+
+
+def closure(evs, request_id):
+    """스택 하나의 완료 여부(k6 run.js의 closure()와 같은 규칙, legacy-decision-log L17)."""
+    app = [e for e in evs if e["kind"] in ("http", "consume")]
+    is_entry = lambda e: e["kind"] == "http" and (e["request"].get("headers") or {}).get("x-replay-request-id") == request_id
+    declared = {"order": 0, "coupon": 0, "payment": 0, "consume": 0}
+    present = dict(declared)
+    for e in app:
+        for o in e.get("outbound") or []:
+            svc = INTERNAL.get((o.get("url") or "").split("/")[2] if "//" in (o.get("url") or "") else "")
+            if svc and o.get("status") is not None:
+                declared[svc] += 1
+        declared["consume"] += len(e.get("events") or [])
+        if e["kind"] == "consume":
+            present["consume"] += 1
+        elif not is_entry(e):
+            present[e["service"]] += 1
+    settled = any(is_entry(e) for e in app) and all(present[k] >= declared[k] for k in declared)
+    return settled, len(app)
+
+
 def barrier(run_id, results, timeout=60):
-    expected = sum(r["expectedEvidence"] for r in results)
     deadline = time.time() + timeout
     while True:
-        counts = {st: http("GET", f"/count?runId={run_id}&stack={st}")["count"] for st in STACKS}
+        status, counts = [], {st: 0 for st in STACKS}
+        for r in results:
+            for st in STACKS:
+                ok, n = closure(http("GET", f"/export?runId={run_id}&requestId={r['requestId']}&stack={st}"), r["requestId"])
+                counts[st] += n
+                status.append({"requestId": r["requestId"], "stack": st, "settled": ok, "got": n,
+                               "expected": r["expectedEvidence"] if st == "legacy" else None})
         lags = {st: consumer_lag(st) for st in STACKS}
-        if all(counts[st] == expected for st in STACKS) and all(v == 0 for v in lags.values()):
-            return {"ok": True, "expectedPerStack": expected, "counts": counts, "consumerLag": lags, "missing": []}
-        if time.time() > deadline:
-            missing = []
-            for r in results:
-                for st in STACKS:
-                    n = http("GET", f"/count?runId={run_id}&requestId={r['requestId']}&stack={st}")["count"]
-                    if n != r["expectedEvidence"]:
-                        missing.append({"requestId": r["requestId"], "stack": st, "expected": r["expectedEvidence"], "got": n})
-            return {"ok": False, "expectedPerStack": expected, "counts": counts, "consumerLag": lags, "missing": missing}
+        unsettled = [x for x in status if not x["settled"]]
+        if (not unsettled and all(v == 0 for v in lags.values())) or time.time() > deadline:
+            legacy_mismatch = [x for x in status if x["stack"] == "legacy" and x["got"] != x["expected"]]
+            return {"ok": not unsettled and all(v == 0 for v in lags.values()),
+                    "expectedLegacy": sum(r["expectedEvidence"] for r in results), "counts": counts,
+                    "consumerLag": lags, "missing": unsettled, "legacyCountMismatch": legacy_mismatch}
         time.sleep(0.5)
 
 
