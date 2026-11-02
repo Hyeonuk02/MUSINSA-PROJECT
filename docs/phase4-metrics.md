@@ -135,9 +135,12 @@
 | C1-filter | 3 | 30 | 40 | 120/120 | CONTRACT_VIOLATION 3, SAME 37 | 위반 | 0·0 |
 | C2-filter | 3 | 29 | 37 | 111/111 | SAME 37 | 일치 | 0·0 |
 | F3-filter | 3 | 30 | 40 | 120/120 | CONTRACT_VIOLATION 7, SAME 33 | 일치 | 0·0 |
+| F3-mirror | 1 | 48 | 40 | 40/40 | CONTRACT_VIOLATION 7, SAME 33 | 위반 | 18·0 |
 | F3-tag | 1 | 48 | 60 | 60/60 | CONTRACT_VIOLATION 8, SAME 52 | 일치 | 0·0 |
 | F8-tag | 1 | 48 | 60 | 60/60 | CONTRACT_VIOLATION 1, SAME 49, UNCERTAIN 10 | 일치 | 0·0 |
 | F9-filter | 3 | 37 | 49 | 147/147 | CONTRACT_VIOLATION 5, SAME 44 | 일치 | 0·0 |
+
+`F3-mirror`(4.8)의 Undelivered 18은 미러하지 않은 요청이고 전달 실패가 아니다. New가 부분 상태라 dbstate 위반은 기대이며 판정 근거가 아니다.
 
 ## 9. 사람 검토 감소 (규칙 적용 후 verdict 기준)
 

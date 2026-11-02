@@ -1,6 +1,6 @@
 # Phase 4 결과 — 스코핑: Git Diff → 동적 Call Graph → 영향 API → Tag/Filter
 
-> 완료 2026-11-02, tag `phase4-done`. 계획 `docs/phase4-plan.md`(v2 + 구현 시 확정), 지표 `docs/phase4-metrics.md`(생성), 단계 보고 `docs/reports/phase4.0~4.7.md`, 스코핑 도구 impact-v1.1, 엔진 engine-v1.3.
+> 완료 2026-11-02, tag `phase4-done`(4.8·4.9는 태그 뒤 추가). 계획 `docs/phase4-plan.md`(v2 + 구현 시 확정), 지표 `docs/phase4-metrics.md`(생성), 단계 보고 `docs/reports/phase4.0~4.7.md`, 스코핑 도구 impact-v1.1, 엔진 engine-v1.3.
 
 ## 결론
 
@@ -41,6 +41,19 @@ Phase 3는 "전체를 재생하면 잡는다"였고, Phase 4는 "무엇을 재�
 - B2-S의 뜻: 무작위 선택이 스코핑을 따라오기 어려운 변형(F3·C2)과 무작위로도 대개 맞히는 변형(F1·F4)이 갈린다. 평균보다 1.0 비율을 본다
 - 사람 검토: C2 eval Uncertain 3 → 0(라벨 2건). 규칙이 직접 호출과 Order가 부른 `0.h1`에 함께 적용됐다
 - 시간: run 전체 약 35초 중 약 30초가 리셋이다. 요청 수 감소가 시간 감소로 그대로 이어지지 않는다
+
+### 참고: Evidence 수집 오버헤드 (4.9)
+
+기대 없음, 판정과 무관한 참고값이다. Legacy Evidence on/off, VU=1 × 3, run당 48요청(`docs/phase4-overhead.json`, `docs/reports/phase4.9.md`).
+
+| 항목(3 run 중앙값) | on | off |
+|---|---|---|
+| 응답 지연 p50 | 13.96ms | 11.41ms |
+| 응답 지연 p95 | 44.64ms | 32.35ms |
+| CPU 코어초(재생 1회) order 앱 / coupon 앱 | 0.955 / 0.850 | 0.835 / 0.626 |
+| working set MiB order 앱 / coupon 앱 | 414.3 / 368.3 | 403.0 / 421.7 |
+
+Evidence 건당 p50 1,900B, p95 2,976B, 최대 3,014B, run당 약 121KB. 차이를 소음과 분리하지 못했다(O24): 첫 회끼리는 off가 더 느렸고 메모리는 방향이 일정하지 않다. 운영 부하 추정이 아니다.
 
 ### 스코핑이 줄이지 못하는 변경 종류 (fail-closed 비용)
 
@@ -97,9 +110,14 @@ Phase 3는 "전체를 재생하면 잡는다"였고, Phase 4는 "무엇을 재�
 | O20 | 메시 전체 인증서가 한꺼번에 만료된다, 복구 범위가 문서보다 넓다 |
 | O21 | 해상도·홉 합산의 효과는 Coupon 변경에서만 나타나고, HTTP 홉 합산은 Tag에서만 보인다 |
 | O22 | learn 규칙이 호출 경로를 넘어 재사용된다 |
+| O23 | 선택 미러는 Legacy를 그대로 두는 대신 run 범위 상태 비교를 잃는다 |
+| O24 | 저부하 VU=1에서 Evidence 오버헤드는 반복 간 소음과 구분되지 않는다 |
 
 ## 미실시·다음
 
-4.8(선택 미러 시연)·4.9(Evidence 오버헤드)는 선택 항목이고 실시 여부는 이 결과를 보고 정한다. 바이트코드 참조 추출을 보조 검증으로 둘지(계획 7절)도 미정이다.
+- **4.8 선택 미러 시연**: 실시. F3 × 1, pair 판정 40/40 Filter·전체 재생과 일치, New 재생 30/48. 다만 run 범위 dbstate를 비교할 수 없어 Filter의 대체가 아니다(O23, `docs/reports/phase4.8.md`)
+- **4.9 Evidence 오버헤드**: 실시, 참고값(지표 절)
+- **바이트코드 참조 추출**: 미실시. 계획의 "정적 Call Graph 도구 금지"와 연구 범위 때문이다. 텍스트 폐포의 오탐(O17·O18)과 프레임워크 주입 누락을 줄일 **다음 연구** 후보로 남긴다
+- **선택 미러의 상태 비교**: 세션 범위 상태 비교는 다음 연구 후보다(O23)
 
 재현: `scoping/map.py` → `scoping/check_scope.py` → `scoping/evaluate.py`(클러스터 없음). 실제 run은 `k6/run.sh --impact|--tag` → `engine/verdict.py` → `scoping/tag.py` → `scoping/run_check.py`. 임시 경계 브랜치 `scope/E1..E7`은 로컬에만 있다.

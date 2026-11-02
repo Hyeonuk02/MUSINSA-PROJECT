@@ -321,6 +321,18 @@
       "verdicts": "CONTRACT_VIOLATION 7, SAME 33"
     },
     {
+      "case": "F3-mirror",
+      "dbstate": false,
+      "degraded": 0,
+      "iterations": 1,
+      "pairs": 40,
+      "pairsMatched": 40,
+      "pairsTotal": 40,
+      "replayed": 48,
+      "undelivered": 18,
+      "verdicts": "CONTRACT_VIOLATION 7, SAME 33"
+    },
+    {
       "case": "F3-tag",
       "dbstate": true,
       "degraded": 0,

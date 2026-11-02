@@ -1,0 +1,82 @@
+deployment "order" successfully rolled out
+virtualservice.networking.istio.io/order-shadow configured
+[14:02:53] preflight
+[14:02:53]   nodes: musinsa-phase1-control-plane(Ready) 
+[14:02:53]   cert istio-system/istio-ingressgateway-58959c897f-g8brn: VALID CERT=true NOT AFTER=2026-11-03T11:37:35Z (남은 1294분)
+[14:02:53]   cert legacy/order-5cfd64477-vjvcc: VALID CERT=true NOT AFTER=2026-11-03T14:00:29Z (남은 1437분)
+[14:02:54]   cert new/order-54cdcc59f-rn9nr: VALID CERT=true NOT AFTER=2026-11-03T14:02:36Z (남은 1439분)
+[14:02:54]   cert legacy/coupon-7448c7f5bd-njjw8: VALID CERT=true NOT AFTER=2026-11-03T14:00:29Z (남은 1437분)
+[14:02:54]   cert new/coupon-596c8966f-qw7df: VALID CERT=true NOT AFTER=2026-11-03T12:12:23Z (남은 1329분)
+[14:02:54]   cert legacy/kafka-589d967676-88p6k: VALID CERT=true NOT AFTER=2026-11-03T12:11:49Z (남은 1328분)
+[14:02:54]   cert new/kafka-774f9c6895-ftwwr: VALID CERT=true NOT AFTER=2026-11-03T12:11:49Z (남은 1328분)
+[14:02:54]   store: /_evidence/count 200
+[14:02:54]   corpus: validate.py PASS
+[14:02:54]   store: runId p48-F3-m-1..1 비어 있음
+[14:02:54] ===== iteration 1/1 runId=p48-F3-m-1 vus=3
+[14:02:54] reset: MySQL·Coupon MySQL·Kafka rollout restart (S0)
+[14:03:21]   kafka legacy/new: 토픽 order.paid order.paid.dlq (partition 1)
+[14:03:24]   order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)
+[14:03:27]   kafka legacy/new: coupon-settlement 그룹이 order.paid partition 할당받음
+[14:03:27]   wiremock legacy/new: DELETE /__admin/requests 200
+[14:03:27]   reset 소요 33s
+[14:03:27] k6: RUN_ID=p48-F3-m-1 VUS=3 SESSIONS=전체 k6 run k6/run.js
+  
+    runId              p48-F3-m-1
+    corpus             corpus-v2.1
+    vus                3
+    sent               48 (R000001 R000002 R000003 R000004 R000005 R000006 R000007 R000008 R000009 R000010 R000011 R000012 R000013 R000014 R000015 R000016 R000017 R000018 R000019 R000020 R000021 R000022 R000023 R000024 R000025 R000026 R000027 R000028 R000029 R000030 R000031 R000032 R000033 R000034 R000035 R000036 R000037 R000038 R000039 R000040 R000041 R000042 R000043 R000044 R000045 R000046 R000047 R000048)
+    degraded           0
+    settleTimeouts     0
+    newWaitMs          min=1 median=6 max=125
+    iteration_duration {"med":1918.052292,"max":3734.580042,"p(90)":3371.274492,"p(95)":3552.927267,"count":3,"avg":2467.2002780000003,"min":1748.9685}
+    summary            runs/p48-F3-m-1/k6-summary.json
+[14:03:32] barrier: spill 회수
+  [legacy] pod=order-5cfd64477-vjvcc spill=0 recovered=0
+  [new] pod=order-54cdcc59f-rn9nr spill=0 recovered=0
+  store count runId=p48-F3-m-1 stack=legacy: {"count":60}
+  store count runId=p48-F3-m-1 stack=new: {"count":40}
+[14:03:32] barrier: 기대 집합(진입 + 부모가 선언한 settle + 자식 홉 폐포, 관측 호스트 order,coupon, 관측 토픽 order.paid)
+    1단계 기대: 스택당 진입 48 + corpus settle 12 {'kafka': 7, 'http': 5} 중 부모가 선언한 것
+    1단계 legacy: 기대 60 (진입 48 + 선언된 settle 12)
+    1단계 new: 기대 40 (진입 48 + 선언된 settle -8)
+    legacy: 기대 60, 도착 60, 누락 0
+    new: 기대 40, 도착 40, 누락 0
+[14:03:32] export: runs/p48-F3-m-1/legacy.json (60건), runs/p48-F3-m-1/new.json (40건)
+  [legacy] dbstate: coupons=6, order_items=10, orders=8
+  [new] dbstate: coupons=3, order_items=9, orders=7
+[14:03:33] export: wiremock journal legacy 7건, new 7건
+[14:03:35] run-meta: runs/p48-F3-m-1/run-meta.json
+[14:03:35] done: 1 run(s) — runs/p48-F3-m-1 .. runs/p48-F3-m-1
+  PASS  request.query                      40/40
+  PASS  request.headers.x-replay-request-id 40/40
+  PASS  request.headers.x-run-id           40/40
+  PASS  request.headers.x-session-id       40/40
+  PASS  request.headers.x-replay-hop-path  40/40
+  PASS  request.headers.idempotency-key    40/40
+  PASS  request.headers.content-type       40/40
+  PASS  request.bodyHash                   40/40
+  PASS  k6 status == legacy response.status 48/48
+  참고  미러 지연 (new − legacy, ms) — 같은 kind 노드라 pod 간 시계 차이는 무시한다
+        completedAt: min=-76.8 median=-1.0 max=41.3 (n=40)
+        arrivedAt:   min=-79.0 median=-0.0 max=3.3 (n=40)
+== 요약
+  FAIL  runs/p48-F3-m-1
+verify exit 1
+  order.cancel         {'SAME': 1}
+  order.create         {'SAME': 7}
+  order.get            {'SAME': 11}
+  order.pay            {'CONTRACT_VIOLATION': 7, 'SAME': 1}
+  run dbstate_equal: VIOLATION ["coupons: legacy={'count': 6, 'sum': {'discount_amount': 60000}, 'sha256': 'sha256:5361319e8568f5518cb2d6bda52f1b31f5a1e28d005e01b9cfc6c2697950b397'} new={'count': 3, 'sum': {'discount_amount': 54000}, 'sha256': 'sha256:36444d9711946618d2ad77bfb4df3609373797a1fd90b8dda3eadc18be6ff052'}", "order_items: legacy={'count': 10, 'sum': {'price': 59500, 'qty': 15}, 'sha256': 'sha256:dbeff278b78dd45b0b8b737d647a8128ada103a3d6e5fe687c019ecb8416c75d'} new={'count': 9, 'sum': {'price': 50500, 'qty': 14}, 'sha256': 'sha256:954594574d9292953ab750b8fb3bb29c33710766c72a125b1e7887bb060e482d'}", "orders: legacy={'count': 8, 'sum': {'amount': 61500, 'discount_amount': 56500}, 'sha256': 'sha256:a385f73e5bf092285641489146efba2c9079ef704af02d902d45db5fb5cd761b'} new={'count': 7, 'sum': {'amount': 55000, 'discount_amount': 54000}, 'sha256': 'sha256:45d5352c193398dbb55d9b745ffd9f59a0d3e8a29c5059257d78bd638a079d64'}"]
+  Undelivered legacy 0 / new 18, degraded 0
+  CONTRACT_VIOLATION R000003/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000007/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000012/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000029/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000033/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000041/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  CONTRACT_VIOLATION R000045/0 order.pay: publish_after_commit_begin: publish.seq [3] <= COMMIT_BEGIN.seq 5 (new)
+  → runs/p48-F3-m-1/verdict.json
+DONE
+=== restore VS·new overlay
+deployment "order" successfully rolled out
+exit 0

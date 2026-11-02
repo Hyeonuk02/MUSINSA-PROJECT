@@ -109,6 +109,7 @@ def render(m: dict) -> str:
             "| 케이스 | run | 재생 요청 | pair | 전체 재생 같은 pair 판정 일치 | 판정 | dbstate | Undelivered·degraded |", "|---|---|---|---|---|---|---|---|"]
     for c in m["runs"]:
         out.append(f"| {c['case']} | {c['iterations']} | {c['replayed']} | {c['pairs']} | {c['pairsMatched']}/{c['pairsTotal']} | {c['verdicts']} | {'일치' if c['dbstate'] else '위반'} | {c['undelivered']}·{c['degraded']} |")
+    out += ["", "`F3-mirror`(4.8)의 Undelivered 18은 미러하지 않은 요청이고 전달 실패가 아니다. New가 부분 상태라 dbstate 위반은 기대이며 판정 근거가 아니다."]
     r = v["C2"]["review"]
     out += ["", "## 9. 사람 검토 감소 (규칙 적용 후 verdict 기준)", "",
             f"C2 eval Uncertain {r['evalUncertainBefore']} → {r['evalUncertainAfter']}, learn {r['learnUncertainBefore']} → {r['learnUncertainAfter']}, 유형 {', '.join(f'`{k}`' for k in r['uncertainDiffKinds'])}. 최종 SAME 중 규칙 적용 {r['sameWithRules']} pair.", "",

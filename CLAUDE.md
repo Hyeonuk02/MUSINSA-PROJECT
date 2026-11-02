@@ -71,7 +71,7 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 
 ## Phase 4 — 완료 (2026-11-02, tag phase4-done)
 
-결과: docs/phase4-result.md. 지표: docs/phase4-metrics.md(scoping/evaluate.py 생성, 손으로 고치지 않는다). 발견: docs/findings.md O14~O22. 4.8·4.9는 미실시 — 실시 여부 결정 대기.
+결과: docs/phase4-result.md. 지표: docs/phase4-metrics.md(scoping/evaluate.py 생성, 손으로 고치지 않는다). 발견: docs/findings.md O14~O24. 4.8·4.9는 태그 뒤 추가 실시, 바이트코드 참조는 미실시(다음 연구).
 
 계획: docs/phase4-plan.md (v2). 단계별 세부 작업과 끝난 기준은 그 문서가 기준이다.
 목표: 스코핑 — Git Diff → 동적 Call Graph(요청 단위 맵) → 영향 API → Tag/Filter, 그리고 그 효과의 측정(재생 수 감소율·Observed-diff Recall·Filter 하 결함 탐지 유지·B2-S 전체 조합), 서비스 간 변경(Coupon C1·C2).
@@ -86,8 +86,8 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 | 4.5 | 서비스 간 변경 — Coupon C1(Kafka 홉)·C2(HTTP 홉) | 완료 — docs/reports/phase4.5.md (C1 CV 3·dbstate 위반, C2 Uncertain 9 → same 라벨 → eval 0, Recall 1.0, Filter 동일, 관측된 차이 정의 D26) |
 | 4.6 | 스코핑 경계 사례 E1~E7 (impact만) | 완료 — docs/reports/phase4.6.md (7/7 사전 등록 일치) |
 | 4.7 | 지표·보고 + Phase 4 마감(phase4-done) | 완료 — docs/reports/phase4.7.md, docs/phase4-result.md (Recall 11/11 = 1.0, 감소율 0/22.9/37.5/39.6%, 맹검 대조 19/21) |
-| 4.8 | (선택) 선택적 미러 시연 — VirtualService match | 미실시 — 결정 대기 |
-| 4.9 | (선택) Evidence 수집 오버헤드 | 미실시 — 결정 대기 |
+| 4.8 | (선택) 선택적 미러 시연 — VirtualService match | 완료 — docs/reports/phase4.8.md (F3 × 1, pair 40/40, dbstate 비교 불가 O23) |
+| 4.9 | (선택) Evidence 수집 오버헤드 | 완료 — docs/reports/phase4.9.md (참고값, 판정 무관) |
 
 ### Phase 4 확정 사항 (요약 — 원문은 phase4-plan 3절)
 
