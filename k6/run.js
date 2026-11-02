@@ -20,6 +20,8 @@
 //   CORPUS        기본 corpus-v2.json (corpus/ 아래 파일명)
 //   VUS           기본 1. VU i(0부터)는 재생 세션 목록의 [j] (j % VUS == i)를 순서대로 맡는다
 //   SESSIONS      Phase 4.4 Filter: 재생할 세션 id(쉼표). 없으면 corpus 전체. 세션 단위로만 고른다(요청 단위 선택 금지, D23)
+//   MIRROR_SESSIONS Phase 4.8 선택 미러: New로 미러할 세션 id(쉼표). 이 세션 요청에 X-Impact-Scope: 1을 붙이고(VS match), 나머지 세션은
+//                 New Evidence가 없으므로 Legacy 도착을 폴링한다. 없으면 기존과 같다
 //   BASE_URL      기본 http://localhost
 //   EVIDENCE_URL  기본 http://localhost/_evidence
 //
@@ -54,6 +56,8 @@ const replaySessions = SESSIONS.length > 0 ? corpus.sessions.filter((s) => SESSI
 if (SESSIONS.length > 0 && replaySessions.length !== SESSIONS.length) {
   throw new Error(`SESSIONS에 corpus에 없는 세션이 있다: ${SESSIONS.join(',')}`);
 }
+
+const MIRROR_SESSIONS = (__ENV.MIRROR_SESSIONS || '').split(',').filter((s) => s.length > 0);
 
 http.setResponseCallback(http.expectedStatuses({ min: 200, max: 499 }));
 
@@ -108,6 +112,7 @@ function waitFor(requestId, stack, hopPath, started) {
 }
 
 function runSession(session) {
+  const legacyOnly = MIRROR_SESSIONS.length > 0 && !MIRROR_SESSIONS.includes(session.id);
   for (let i = 0; i < session.requests.length; i++) {
     const req = session.requests[i];
     const headers = Object.assign({
@@ -116,6 +121,9 @@ function runSession(session) {
       'X-Session-Id': session.id,
       'X-Replay-Hop-Path': '0',  // 진입 홉. 서비스가 나가는 호출의 자식 hopPath를 계산한다(D15)
     }, req.headers || {});
+    if (MIRROR_SESSIONS.length > 0 && !legacyOnly) {
+      headers['X-Impact-Scope'] = '1';
+    }
     let body = null;
     if (req.body !== undefined) {
       headers['Content-Type'] = 'application/json';
@@ -128,7 +136,7 @@ function runSession(session) {
     m[`sent_${req.id}`].add(1);
     m[`status_${req.id}`].add(res.status);
 
-    const waited = waitForNew(req.id);
+    const waited = legacyOnly ? waitFor(req.id, 'legacy', '0', Date.now()) : waitForNew(req.id);
     if (waited === null) {
       console.warn(`DEGRADED session=${session.id} request=${req.id}: new Evidence가 ${POLL_TIMEOUT_MS}ms 안에 오지 않음`);
       m[`degraded_${session.id}`].add(1);
@@ -144,7 +152,7 @@ function runSession(session) {
       const started = Date.now() - waited;
       let settleMax = 0;
       for (const s of req.settle) {
-        for (const stack of ['legacy', 'new']) {
+        for (const stack of legacyOnly ? ['legacy'] : ['legacy', 'new']) {
           const w = waitFor(req.id, stack, s.hop, started);
           if (w === null) {
             console.warn(`SETTLE_TIMEOUT session=${session.id} request=${req.id}: settle ${stack}/${s.hop}(${s.service}) Evidence가 ${POLL_TIMEOUT_MS}ms 안에 오지 않음 — 계속 진행(barrier·엔진이 판단)`);

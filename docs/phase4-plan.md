@@ -301,6 +301,12 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 ### 4.9 (선택) Evidence 수집 오버헤드
 - Legacy `EVIDENCE_ENABLED=false` vs true, VU=1 ×3, k6 p50/p95·CPU·메모리. 판정 없음, 참고값
 
+구현 시 확정 (4.8)
+- **실시**: 4.9 뒤 범위가 VS 렌더링·k6 헤더·barrier New 기대로 작아 반나절 안에 끝난다고 판단(D-4.7a 조건). 엔진·verify 변경 없음
+- **렌더링**: `scoping/render_vs.py`. 레포 VS는 그대로 두고 `/api` 라우트마다 `x-impact-scope: 1` 매치 라우트를 앞에 둔다. mirror는 그 라우트에만, `mirrorPercentage`는 100 그대로(표본 추출에 쓰지 않는다)
+- **기대**: `docs/filter-expectations.json` `F3-mirror`. pair 판정 == 전체 재생 같은 pair, Undelivered(new) = 미러하지 않은 18요청, dbstate 불일치(New가 부분 상태), verify_sameness는 그 18건으로 FAIL이 기대
+- **도구**: `run.sh --mirror`, `run.js` `MIRROR_SESSIONS`, `barrier.py --new-scope`. env가 없으면 기존 동작과 같다
+
 구현 시 확정 (4.9)
 - **결정(D-4.7a)**: 4.9 실시, 4.8은 4.9 뒤 반나절 안에 끝날 때만, 바이트코드 참조는 미실시. 기대 없음, 판정과 무관한 참고값
 - **끄는 방법**: 계획의 `EVIDENCE_ENABLED`는 실제 스위치가 아니다(기동 로그 문구). legacy order·coupon에서 `EVIDENCE_STORE_URL`을 빼면 수집기 전체가 등록되지 않는다. 이미지 동일, 끝나면 overlay 복원

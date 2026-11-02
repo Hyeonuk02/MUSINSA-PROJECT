@@ -60,6 +60,46 @@
       },
       "vus": 3
     },
+    "F3-mirror": {
+      "dbstateEqual": false,
+      "degraded": 0,
+      "fullRunBase": "p36-F3",
+      "image": "order-app:phase3.6-F3",
+      "impact": "scoping/impacts/F3.json",
+      "iterations": 1,
+      "mode": "mirror",
+      "note": "Legacy 48요청 전체, New는 선택 7세션 30요청만. 판정은 pair가 있는 40건이 F3-filter와 같아야 한다. Undelivered(new)는 미러하지 않은 18요청 그대로이고 전달 실패가 아니다. New가 부분 상태라 run 범위 dbstate는 불일치가 기대다(판정 근거 아님). verify_sameness는 Undelivered로 FAIL을 내는 것이 기대다(엔진 고정)",
+      "replayedRequests": 48,
+      "runBase": "p48-F3-m",
+      "sessions": 7,
+      "undelivered": 18,
+      "unmirroredRequests": [
+        "R000015",
+        "R000016",
+        "R000017",
+        "R000018",
+        "R000019",
+        "R000020",
+        "R000021",
+        "R000022",
+        "R000023",
+        "R000024",
+        "R000025",
+        "R000035",
+        "R000036",
+        "R000037",
+        "R000038",
+        "R000039",
+        "R000047",
+        "R000048"
+      ],
+      "variant": "F3",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 7,
+        "SAME": 33
+      },
+      "vus": 3
+    },
     "F3-tag": {
       "dbstateEqual": true,
       "degraded": 0,
@@ -121,5 +161,5 @@
     }
   },
   "impactTool": "impact-v1.1",
-  "version": "filter-expectations-v2"
+  "version": "filter-expectations-v3"
 }

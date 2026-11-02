@@ -4,6 +4,8 @@
 # 사용: k6/run.sh --run-id <base> --iterations N --vus V [--impact impact.json | --tag impact.json]
 #   --impact(Phase 4.4 Filter): impact.json의 선택 세션만 재생, VU=min(V, 세션 수), barrier 기대는 sent 기준이라 재생 세션으로 줄어든다,
 #     보낸 요청이 선택 요청과 다르면 중단. --tag: 전체 재생 그대로, run-meta에 scope만 남긴다(태그는 판정 뒤 scoping/tag.py)
+#   --mirror(Phase 4.8): 전체 재생 + 선택 세션 요청에만 X-Impact-Scope 헤더. 게이트웨이 VS를 scoping/render_vs.py로 바꿔 둔 상태에서 쓴다.
+#     Legacy는 전체, New는 선택 세션만. barrier의 New 기대도 선택 요청으로 줄인다
 #   iteration i의 runId = <base>-<i>. 결과는 runs/<runId>/{legacy.json,new.json,k6-summary.json,run-meta.json}
 #
 # preflight(루프 전 1회) — 하나라도 실패하면 run을 시작하지 않고 exit 1. 자동 복구는 하지 않는다.
@@ -33,7 +35,7 @@ READINESS_PATH=/api/orders/by-key/ok-readiness-check   # corpus에 없는 키 �
 COUPON_READINESS_PATH=/api/coupons/by-key/ck-readiness-check
 READY_TIMEOUT_S=180
 
-BASE=""; ITERATIONS=""; VUS=""; IMPACT=""; SCOPE_MODE=""; SESSIONS=""
+BASE=""; ITERATIONS=""; VUS=""; IMPACT=""; SCOPE_MODE=""; SESSIONS=""; MIRROR_SESSIONS=""
 while [[ $# -gt 0 ]]; do
   case "$1" in
     --run-id) BASE="${2:-}"; shift 2 ;;
@@ -41,6 +43,7 @@ while [[ $# -gt 0 ]]; do
     --vus) VUS="${2:-}"; shift 2 ;;
     --impact) [[ -z "$SCOPE_MODE" ]] || { echo "--impact와 --tag는 함께 쓸 수 없다" >&2; exit 2; }; IMPACT="${2:-}"; SCOPE_MODE=filter; shift 2 ;;
     --tag) [[ -z "$SCOPE_MODE" ]] || { echo "--impact와 --tag는 함께 쓸 수 없다" >&2; exit 2; }; IMPACT="${2:-}"; SCOPE_MODE=tag; shift 2 ;;
+    --mirror) [[ -z "$SCOPE_MODE" ]] || { echo "--impact·--tag·--mirror는 함께 쓸 수 없다" >&2; exit 2; }; IMPACT="${2:-}"; SCOPE_MODE=mirror; shift 2 ;;
     *) echo "unknown argument: $1" >&2; exit 2 ;;
   esac
 done
@@ -54,6 +57,9 @@ fail() { echo "[$(date -u +%H:%M:%S)] FAIL: $*" >&2; exit 1; }
 
 if [[ -n "$IMPACT" ]]; then
   [[ -f "$IMPACT" ]] || fail "impact 파일 없음: $IMPACT"
+fi
+if [[ "$SCOPE_MODE" == mirror ]]; then
+  MIRROR_SESSIONS=$("$PY" -c 'import json,sys; print(",".join(json.load(open(sys.argv[1]))["selectedSessions"]))' "$IMPACT")
 fi
 if [[ "$SCOPE_MODE" == filter ]]; then
   SESSIONS=$("$PY" -c 'import json,sys; print(",".join(json.load(open(sys.argv[1]))["selectedSessions"]))' "$IMPACT")
@@ -212,7 +218,8 @@ barrier() {  # runId dir
   k6/spill-recover.sh --run-id "$1" | sed 's/^/  /' || fail "barrier: spill-recover 실패"
   log "barrier: 기대 집합(진입 + 부모가 선언한 settle + 자식 홉 폐포, 관측 호스트 $OBSERVED_HOSTS, 관측 토픽 $OBSERVED_TOPICS)"
   if ! "$PY" k6/barrier.py --run-dir "$2" --corpus "$CORPUS" --evidence-url "$EVIDENCE_URL" \
-        --observed-hosts "$OBSERVED_HOSTS" --observed-topics "$OBSERVED_TOPICS" | sed 's/^/  /'; then
+        --observed-hosts "$OBSERVED_HOSTS" --observed-topics "$OBSERVED_TOPICS" \
+        ${MIRROR_SESSIONS:+--new-scope "$IMPACT"} | sed 's/^/  /'; then
     export_run "$1" "$2"
     fail "barrier 미달 — export만 하고 중단한다(다음 iteration 진행 안 함): runs/$1"
   fi
@@ -313,7 +320,7 @@ for ((i = 1; i <= ITERATIONS; i++)); do
   reset_seconds=$((SECONDS - reset_start))
   log "  reset 소요 ${reset_seconds}s"
   log "k6: RUN_ID=$run_id VUS=$VUS SESSIONS=${SESSIONS:-전체} k6 run k6/run.js"
-  RUN_ID="$run_id" VUS="$VUS" SESSIONS="$SESSIONS" CORPUS="$(basename "$CORPUS")" BASE_URL="$BASE_URL" EVIDENCE_URL="$EVIDENCE_URL" \
+  RUN_ID="$run_id" VUS="$VUS" SESSIONS="$SESSIONS" MIRROR_SESSIONS="$MIRROR_SESSIONS" CORPUS="$(basename "$CORPUS")" BASE_URL="$BASE_URL" EVIDENCE_URL="$EVIDENCE_URL" \
     k6 run --quiet k6/run.js | sed 's/^/  /'
   [[ -f "$dir/k6-summary.json" ]] || fail "k6-summary.json 없음: $dir"
   if [[ "$SCOPE_MODE" == filter ]]; then

@@ -1,5 +1,5 @@
 #!/usr/bin/env python3
-"""Phase 4.4 — 실제 Filter·Tag run을 docs/filter-expectations.json(사전 등록)과 대조한다. 판정 파일은 읽기만 한다.
+"""Phase 4.4 — 실제 Filter·Tag·선택 미러(4.8) run을 docs/filter-expectations.json(사전 등록)과 대조한다. 판정 파일은 읽기만 한다.
 
 Filter: 재생 pair 판정 == 전체 재생 같은 pair(100%), pair 집합 일치, 세션 검사 동일, run 범위 dbstate 기대, Undelivered·degraded 0,
         재생 수 = impact 선택 수, run-meta(scope·이미지·dirty).
@@ -54,7 +54,8 @@ def check_common(case: dict, verdict: dict, run_dir: Path, full: dict, sessions:
     if dbstate != case["dbstateEqual"]:
         bad.append(f"dbstate_equal: 기대 {case['dbstateEqual']} / 결과 {dbstate}")
     s = verdict["summary"]
-    if any(s["undelivered"].values()) or s["degraded"]:
+    unmirrored = sorted(case.get("unmirroredRequests", []))
+    if s["undelivered"].get("legacy") or sorted(s["undelivered"].get("new", [])) != unmirrored or s["degraded"]:
         bad.append(f"Undelivered {s['undelivered']}, degraded {s['degraded']}")
     summary = json.loads((run_dir / "k6-summary.json").read_text(encoding="utf-8"))
     if len(summary["sent"]) != case["replayedRequests"]:
@@ -93,7 +94,7 @@ def check_tag(run_dir: Path) -> list[str]:
 def run_case(name: str, case: dict) -> tuple[int, list[str]]:
     impact = json.loads((ROOT / case["impact"]).read_text(encoding="utf-8"))
     filter_mode = case["mode"] == "filter"
-    sessions = set(impact["selectedSessions"]) if filter_mode else None
+    sessions = set(impact["selectedSessions"]) if case["mode"] in ("filter", "mirror") else None
     sent_want = set(impact["selectedRequests"]) if filter_mode else None
     lines, failures = [], 0
     for i in range(1, case["iterations"] + 1):
@@ -101,7 +102,7 @@ def run_case(name: str, case: dict) -> tuple[int, list[str]]:
         verdict = load_verdict(run_dir)
         full = load_verdict(ROOT / "runs" / f"{case['fullRunBase']}-{i}")
         bad = check_common(case, verdict, run_dir, full, sessions, sent_want)
-        if not filter_mode:
+        if case["mode"] == "tag":
             bad += check_tag(run_dir)
         failures += bool(bad)
         lines.append(f"{run_dir.name}: pairs {len(verdict['pairs'])} {dict(Counter(p['verdict'] for p in verdict['pairs']))} " + ("기대 일치" if not bad else f"**불일치** {bad}"))
@@ -113,7 +114,7 @@ def summarize() -> list[dict]:
     rows = []
     for name, case in sorted(json.loads(EXPECT.read_text(encoding="utf-8"))["cases"].items()):
         impact = json.loads((ROOT / case["impact"]).read_text(encoding="utf-8"))
-        sessions = set(impact["selectedSessions"]) if case["mode"] == "filter" else None
+        sessions = set(impact["selectedSessions"]) if case["mode"] in ("filter", "mirror") else None
         matched = total = pairs = undelivered = degraded = 0
         dbstate, verdicts = True, {}
         for i in range(1, case["iterations"] + 1):

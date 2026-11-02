@@ -18,8 +18,10 @@
 미달이면 누락 (requestId, hopPath)를 스택별로 출력하고 exit 1 (run.sh는 export만 하고 중단).
 결과는 <run 디렉터리>/barrier.json (스택별 기대 집합·도착 수).
 
+  --new-scope impact.json(Phase 4.8 선택 미러): New 기대를 그 impact의 선택 요청으로 줄인다. Legacy 기대는 sent 전체
+
 사용: barrier.py --run-dir runs/<runId> --corpus corpus/corpus-v2.json --evidence-url http://localhost/_evidence
-             --observed-hosts order,coupon --observed-topics order.paid
+             --observed-hosts order,coupon --observed-topics order.paid [--new-scope impact.json]
 """
 import argparse
 import json
@@ -60,6 +62,7 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--evidence-url", required=True)
     ap.add_argument("--observed-hosts", required=True)
     ap.add_argument("--observed-topics", required=True)
+    ap.add_argument("--new-scope", type=Path)
     args = ap.parse_args(argv)
     run_id = args.run_dir.name
     observed = {h.strip() for h in args.observed_hosts.split(",") if h.strip()}
@@ -71,6 +74,9 @@ def main(argv: list[str]) -> int:
     entries = {(rid, "0") for rid in sent}
     settle_all = {(rid, hop) for rid in sent for hop in settle.get(rid, [])}
     expected = {stack: set(entries) for stack in STACKS}
+    scope = set(json.loads(args.new_scope.read_text(encoding="utf-8"))["selectedRequests"]) if args.new_scope else None
+    if scope is not None:
+        expected["new"] = {k for k in entries if k[0] in scope}
     kinds = {}
     for s in json.loads(args.corpus.read_text(encoding="utf-8"))["sessions"]:
         for r in s["requests"]:
@@ -94,7 +100,8 @@ def main(argv: list[str]) -> int:
             time.sleep(POLL_S)
 
     state, missing = wait(ENTRY_TIMEOUT_S, "1단계", with_settle=True)
-    settle_undeclared = {stack: sorted(f"{r}/{h}" for r, h in settle_all - state[stack][1]) for stack in STACKS}
+    settle_undeclared = {stack: sorted(f"{r}/{h}" for r, h in settle_all - state[stack][1]
+                                       if stack == "legacy" or scope is None or r in scope) for stack in STACKS}
     for stack in STACKS:
         print(f"  1단계 {stack}: 기대 {len(expected[stack])} (진입 {len(entries)} + 선언된 settle {len(expected[stack]) - len(entries)})"
               + (f", 부모가 선언하지 않은 settle {len(settle_undeclared[stack])}: {' '.join(settle_undeclared[stack])} → 엔진(hop 집합)"
