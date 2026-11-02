@@ -1,9 +1,9 @@
 #!/usr/bin/env python3
-"""Phase 4.2 — 영향 산출(D24 + 보완 2건).
+"""Phase 4.2 — 영향 산출(D24 + 보완 3건). impact-v1.1: 상위 타입 확장은 프로젝트 소스에 선언된 타입만(D24 보완 3).
 
 입력: scoping/map.json, git base·head, head의 src/main 소스(정적 참조 폐포, git에서 읽음), corpus
 출력 impact.json (결정론):
-  {base, head, baseCommit, headCommit, pathFilter, nameResolution, ignoreKind, assumedChanged,
+  {toolVersion, base, head, baseCommit, headCommit, pathFilter, nameResolution, ignoreKind, assumedChanged,
    changedFiles[{path, status, kind, fqcns}], changedClasses, observed[],
    unobserved[{fqcn, closurePaths[], reachedClasses[], unresolved}], globalTriggered, globalReasons[], warnings[],
    impactedRequests{rid: reasons[]}, impactedEndpoints, selectedSessions, selectedRequests,
@@ -25,8 +25,10 @@ from pathlib import Path
 from common import ROOT, KINDS, classify_path, corpus_index, dumps, git, load_corpus, match_class, name_status
 from map import DECL, SOURCE_ROOTS, declared_classes
 
+IMPACT_VERSION = "impact-v1.1"
 MAX_DEPTH = 3
 NOISE = re.compile(r'"""[\s\S]*?"""|"(?:\\.|[^"\\\n])*"|\'(?:\\.|[^\'\\\n])\'|//[^\n]*|/\*[\s\S]*?\*/')
+TYPE_DECL = re.compile(r"\b(?:class|interface|record|enum|object)\s+([A-Z]\w*)")
 REFLECTION = re.compile(r"Class\.forName|getBean\(")
 A_A_WARNING = "검증 레이어 변경 — A/A 게이트 필요"
 
@@ -45,10 +47,15 @@ def supertypes(header: str, name: str) -> list[str]:
     return sorted({n.rsplit(".", 1)[-1] for n in re.findall(r"\b[\w.]*[A-Z]\w*\b", rest)})
 
 
+def declared_types(texts) -> set:
+    """소스에 선언된 타입의 단순 이름(중첩 포함)."""
+    return {name for t in texts for name in TYPE_DECL.findall(t)}
+
+
 class Sources:
     """head의 소스 → 클래스·참조. files = {경로: 원문}."""
 
-    def __init__(self, files: dict[str, str], literal: bool = False):
+    def __init__(self, files: dict[str, str], literal: bool = False, project_types: set | None = None):
         self.literal = literal
         self.raw = files
         self.text = {f: clean_source(s) for f, s in files.items()}
@@ -62,12 +69,17 @@ class Sources:
                 self.classes[c["fqcn"]] = {"file": f, "simple": simple, "interface": "interface" in decl.group(0),
                                            "supers": supertypes(header, simple)}
                 self.by_file.setdefault(f, []).append(c["fqcn"])
+        project = project_types if project_types is not None else declared_types(self.text.values())
+        for info in self.classes.values():
+            info["supers"] = [s for s in info["supers"] if s in project]   # D24 보완 3 — 프레임워크 타입 공유는 관계가 아니다
 
     @classmethod
     def at(cls, head: str, repo: Path = ROOT, literal: bool = False) -> "Sources":
-        files = [f for f in git("ls-tree", "-r", "--name-only", head, "--", *SOURCE_ROOTS, repo=repo).splitlines()
-                 if f.endswith((".java", ".kt"))]
-        return cls({f: git("show", f"{head}:{f}", repo=repo) for f in files}, literal)
+        tree = [f for f in git("ls-tree", "-r", "--name-only", head, "--", "services/", repo=repo).splitlines()
+                if "/src/main/" in f and f.endswith((".java", ".kt"))]
+        files = {f: git("show", f"{head}:{f}", repo=repo) for f in tree}
+        scanned = {f: t for f, t in files.items() if f.startswith(SOURCE_ROOTS)}
+        return cls(scanned, literal, declared_types(clean_source(t) for t in files.values()))
 
     def _shadowed(self, text: str, name: str, target: str) -> bool:
         """D24 보완 2: 이 파일에서 name이 target이 아닌 타입으로 해석되는가."""
@@ -216,7 +228,7 @@ def compute(m: dict, corpus: dict, base: str, head: str, repo: Path = ROOT, path
     sessions = sorted({index[r]["session"] for r in impacted})
     selected = [rid for rid, q in index.items() if q["session"] in sessions]
     return {
-        "base": base, "head": head, "pathFilter": path_filter,
+        "toolVersion": IMPACT_VERSION, "base": base, "head": head, "pathFilter": path_filter,
         "baseCommit": git("rev-parse", base, repo=repo).strip(), "headCommit": git("rev-parse", head, repo=repo).strip(),
         "nameResolution": "literal" if literal else "language", "ignoreKind": sorted(ignore_kinds),
         "assumedChanged": sorted(assume_changed),

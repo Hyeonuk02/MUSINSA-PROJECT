@@ -1,0 +1,638 @@
+{
+  "assumedChanged": [],
+  "base": "fd839d6",
+  "baseCommit": "fd839d6cb45c0dd58a206394868b21fdb1e12d58",
+  "changedClasses": [
+    "poc.order.Order",
+    "poc.order.OrderItem",
+    "poc.order.OrderRepository"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.order.Order"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/Order.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderItem"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/OrderItem.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderRepository"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/OrderRepository.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.Order"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/Order.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderItem"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/OrderItem.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderRepository"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/OrderRepository.kt",
+      "status": "A"
+    }
+  ],
+  "globalReasons": [
+    "unresolved:poc.order.Order",
+    "unresolved:poc.order.OrderItem"
+  ],
+  "globalTriggered": true,
+  "head": "fc6e6e2",
+  "headCommit": "fc6e6e214ebdf977962a160615d5e345b5f2c406",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "coupon.create",
+    "coupon.get",
+    "coupon.use",
+    "order.cancel",
+    "order.create",
+    "order.get",
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000001": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000002": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000003": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000004": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000005": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000006": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000007": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000008": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000009": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000010": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000011": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000012": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000013": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000014": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000015": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000016": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000017": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000018": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000019": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000020": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000021": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000022": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000023": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000024": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000025": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000026": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000027": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000028": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000029": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000030": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000031": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000032": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000033": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000034": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000035": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000036": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000037": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000038": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000039": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000040": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000041": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000042": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000043": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "global"
+    ],
+    "R000044": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000045": [
+      "closure:poc.order.Order->poc.coupon.CouponRepository",
+      "closure:poc.order.Order->poc.coupon.CouponService",
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.coupon.CouponRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000046": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000047": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ],
+    "R000048": [
+      "closure:poc.order.Order->poc.order.OrderController",
+      "closure:poc.order.Order->poc.order.OrderRepository",
+      "closure:poc.order.Order->poc.order.OrderService",
+      "closure:poc.order.OrderItem->poc.order.OrderController",
+      "closure:poc.order.OrderItem->poc.order.OrderRepository",
+      "closure:poc.order.OrderItem->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderRepository"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "literal",
+  "observed": [
+    "poc.order.OrderRepository"
+  ],
+  "pathFilter": "services/",
+  "reductionRequests": 0.0,
+  "reductionSessions": 0.0,
+  "selectedRequests": [
+    "R000001",
+    "R000002",
+    "R000003",
+    "R000004",
+    "R000005",
+    "R000006",
+    "R000007",
+    "R000008",
+    "R000009",
+    "R000010",
+    "R000011",
+    "R000012",
+    "R000013",
+    "R000014",
+    "R000015",
+    "R000016",
+    "R000017",
+    "R000018",
+    "R000019",
+    "R000020",
+    "R000021",
+    "R000022",
+    "R000023",
+    "R000024",
+    "R000025",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000035",
+    "R000036",
+    "R000037",
+    "R000038",
+    "R000039",
+    "R000040",
+    "R000041",
+    "R000042",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046",
+    "R000047",
+    "R000048"
+  ],
+  "selectedSessions": [
+    "S001",
+    "S002",
+    "S003",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011"
+  ],
+  "unobserved": [
+    {
+      "closurePaths": [
+        "poc.order.Order <- poc.order.OrderItem",
+        "poc.order.Order <- poc.order.OrderRepository <- poc.coupon.CouponRepository <- poc.coupon.CouponService",
+        "poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService <- poc.order.OrderController",
+        "poc.order.Order <- poc.order.OrderService <- poc.order.OrderController",
+        "poc.order.Order <- poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController",
+        "poc.order.Order <- poc.order.requestlog.RequestLogFilter"
+      ],
+      "fqcn": "poc.order.Order",
+      "reachedClasses": [
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "unresolved": true,
+      "unresolvedClasses": [
+        "poc.order.requestlog.RequestLogFilter"
+      ]
+    },
+    {
+      "closurePaths": [
+        "poc.order.OrderItem <- poc.order.Order <- poc.order.OrderRepository <- poc.coupon.CouponRepository",
+        "poc.order.OrderItem <- poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService",
+        "poc.order.OrderItem <- poc.order.Order <- poc.order.OrderService <- poc.order.OrderController",
+        "poc.order.OrderItem <- poc.order.Order <- poc.order.OrderView <- poc.order.OrderService",
+        "poc.order.OrderItem <- poc.order.Order <- poc.order.requestlog.RequestLogFilter"
+      ],
+      "fqcn": "poc.order.OrderItem",
+      "reachedClasses": [
+        "poc.coupon.CouponRepository",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "unresolved": true,
+      "unresolvedClasses": [
+        "poc.order.requestlog.RequestLogFilter"
+      ]
+    }
+  ],
+  "warnings": []
+}

@@ -41,6 +41,16 @@ def compare(exp: dict, got: dict, sets: dict, sessions: dict) -> list[str]:
     return bad
 
 
+def verdict_cell(name: str, got: dict, bad: list) -> str:
+    """사전 등록 대조 결과. 이전 버전 결과가 보존된 변형은 전후를 남긴다 — 결과를 본 뒤의 변경이라 독립 검증이 아니다."""
+    previous = OUT / "aux" / f"{name}.impact-v1.0.json"
+    if not previous.exists():
+        return "일치" if not bad else "**불일치**"
+    old = json.loads(previous.read_text(encoding="utf-8"))
+    return (f"{'회귀 확인 일치' if not bad else '**불일치**'} — impact-v1.0 {len(old['selectedSessions'])}세션 → "
+            f"{got['toolVersion'].removeprefix('impact-')} {len(got['selectedSessions'])}세션(사전 등록 아님)")
+
+
 def target_coverage(variant: str, got: dict, faults: dict, m: dict) -> str:
     targets = faults.get(variant, {}).get("targets")
     if not targets:
@@ -65,6 +75,7 @@ def main(argv: list[str]) -> int:
     (OUT / "aux").mkdir(parents=True, exist_ok=True)
     failures = 0
 
+    print(f"도구 {impact.IMPACT_VERSION}. 사전 등록에 대한 독립 대조는 impact-v1.0의 11/13이다(phase4.2 보고서). 이 표의 일치는 기존 기대에 대한 회귀 확인이다.\n")
     print("| 변형 | 범위 | 변경 | 관측 | 미관측 | 전역 | 영향 요청 | 세션 | 재생 | 감소(요청) | target 세션 포함 | 사전 등록 |")
     print("|---|---|---|---|---|---|---|---|---|---|---|---|")
     for name, exp in spec["variants"].items():
@@ -77,7 +88,7 @@ def main(argv: list[str]) -> int:
         failures += bool(bad)
         print(f"| {name} | `{exp['base']}..{exp['head']}` | {len(got['changedClasses'])} | {len(got['observed'])} | {len(got['unobserved'])} "
               f"| {'전역' if got['globalTriggered'] else '-'} | {len(got['impactedRequests'])} | {len(got['selectedSessions'])}/11 "
-              f"| {len(got['selectedRequests'])}/48 | {got['reductionRequests']:.1%} | {target_coverage(name, got, faults, m)} | {'일치' if not bad else '**불일치**'} |")
+              f"| {len(got['selectedRequests'])}/48 | {got['reductionRequests']:.1%} | {target_coverage(name, got, faults, m)} | {verdict_cell(name, got, bad)} |")
         for b in bad:
             print(f"<!-- {name} {b} -->")
         if args.explain:
@@ -95,7 +106,7 @@ def main(argv: list[str]) -> int:
         failures += bool(bad)
         cond = exp.get("nameResolution") or ",".join(exp.get("ignoreKind", []))
         print(f"| {name} | {cond} | {'전역' if got['globalTriggered'] else '-'} | {len(got['impactedRequests'])} | {len(got['selectedSessions'])}/11 "
-              f"| {len(got['selectedRequests'])}/48 | {'일치' if not bad else '**불일치**'} |")
+              f"| {len(got['selectedRequests'])}/48 | {verdict_cell(name, got, bad)} |")
         for b in bad:
             print(f"<!-- {name} {b} -->")
         if args.explain:

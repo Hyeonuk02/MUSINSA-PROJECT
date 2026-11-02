@@ -117,68 +117,42 @@
       "global"
     ],
     "R000015": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000016": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000017": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000018": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000019": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000020": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000021": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000022": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000023": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000024": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000025": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000026": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000027": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
@@ -191,8 +165,6 @@
       "global"
     ],
     "R000029": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
@@ -205,21 +177,15 @@
       "global"
     ],
     "R000031": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000032": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
       "global"
     ],
     "R000033": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
@@ -232,21 +198,15 @@
       "global"
     ],
     "R000035": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000036": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
       "global"
     ],
     "R000037": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
@@ -259,8 +219,6 @@
       "global"
     ],
     "R000039": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000040": [
@@ -282,21 +240,15 @@
       "global"
     ],
     "R000043": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "global"
     ],
     "R000044": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
       "global"
     ],
     "R000045": [
-      "closure:poc.order.Order->poc.coupon.CouponRepository",
-      "closure:poc.order.Order->poc.coupon.CouponService",
       "closure:poc.order.Order->poc.order.OrderController",
       "closure:poc.order.Order->poc.order.OrderRepository",
       "closure:poc.order.Order->poc.order.OrderService",
@@ -393,11 +345,11 @@
     "S010",
     "S011"
   ],
+  "toolVersion": "impact-v1.1",
   "unobserved": [
     {
       "closurePaths": [
         "poc.order.Order <- poc.order.OrderItem",
-        "poc.order.Order <- poc.order.OrderRepository <- poc.coupon.CouponRepository <- poc.coupon.CouponService",
         "poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService <- poc.order.OrderController",
         "poc.order.Order <- poc.order.OrderService <- poc.order.OrderController",
         "poc.order.Order <- poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController",
@@ -405,8 +357,6 @@
       ],
       "fqcn": "poc.order.Order",
       "reachedClasses": [
-        "poc.coupon.CouponRepository",
-        "poc.coupon.CouponService",
         "poc.order.OrderController",
         "poc.order.OrderRepository",
         "poc.order.OrderService"

@@ -78,7 +78,7 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 |---|---|---|
 | 4.0 | 준비 — 계획·결정 기록, scoping/ 골격, Phase 3 입력 점검, engine-v1.3 additive matcher | 완료(결정 대기 2건: 사다리 diff 범위·교수님 피드백) — docs/reports/phase4.0.md |
 | 4.1 | 맵 합성 — 요청 → {클래스}(+자식 홉 합산), 엔드포인트 요약, 커버리지 | 완료(결정 대기 3건: R000008·C2 ablation·@Order 폐포) — docs/reports/phase4.1.md |
-| 4.2 | 영향 산출 + 15 변형 사전 등록(scope-expectations.json) | 멈춤 — 13 변형 중 11 일치, v1.2·F2 불일치(결정 대기 1건: JpaRepository 폐포) — docs/reports/phase4.2.md |
+| 4.2 | 영향 산출 + 15 변형 사전 등록(scope-expectations.json) | 완료 — 사전 등록 대조 11/13(impact-v1.0), impact-v1.1(사전 등록 아님) 후 회귀 확인 13/13 — docs/reports/phase4.2.md |
 | 4.3 | 오프라인 평가 — 13 변형 + B2-S 전체 조합 + ablation 2종 | |
 | 4.4 | 파이프라인 Tag/Filter + 실제 run(Filter F3·F9 ×3, Tag F8·F3 ×1) | |
 | 4.5 | 서비스 간 변경 — Coupon C1(Kafka 홉)·C2(HTTP 홉) | |

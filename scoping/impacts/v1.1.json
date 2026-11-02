@@ -272,6 +272,7 @@
     "S010",
     "S011"
   ],
+  "toolVersion": "impact-v1.1",
   "unobserved": [],
   "warnings": []
 }

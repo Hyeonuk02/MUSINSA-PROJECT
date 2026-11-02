@@ -1,2 +1,2 @@
-66 passed in 1.92s
-37 passed in 1.65s
+70 passed in 1.82s
+37 passed in 1.70s

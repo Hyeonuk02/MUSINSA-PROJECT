@@ -130,5 +130,7 @@
 - 봤다: `Order` 폐포가 `OrderRepository` ← `CouponRepository`(둘 다 `JpaRepository` 상속) ← `CouponService`로 이어져 v1.2·F2가 전역 없이 11세션·48요청이 됐다. 사전 등록은 9세션·37요청. 13 변형 중 이 2건만 불일치
 - 근거: `docs/reports/logs/phase4.2-scope-check.txt`, `scoping/impacts/{v1.2,F2}.json`, 선택지 계산 `docs/reports/logs/phase4.2-whatif.txt`
 - 왜 중요: "상위 타입 이름도 참조로 본다"는 규칙이 프레임워크 타입에서는 관계의 증거가 아니다. 서비스 하나 안에서만 쓰면 드러나지 않고, 서비스 둘 이상이 같은 프레임워크 타입을 쓰면서 나타났다. O17(이름 충돌)을 고친 뒤에야 보였다 — 전역이 그 아래 층의 오탐을 가리고 있었다. 기대를 손으로 도출할 때도 이 간선을 놓쳤다
+- 결정: D-4.2a (A) — 상위 타입 확장은 프로젝트 소스에 선언된 타입만(impact-v1.1, D24 보완 3, 결과를 본 뒤 변경·사전 등록 아님)
+- 한계: extends/implements 절에서만 이름이 나오는 파일은 그 타입의 소비자가 아니라 형제다. (A)는 이 경우를 프레임워크 타입에 한해 막은 것이고, 프로젝트에 선언된 공통 상위 타입(`BaseRepository` 같은)에서는 같은 오탐이 다시 생긴다(`test_known_limit_siblings_of_project_declared_supertype_stay_connected`로 고정). 프레임워크 타입으로 주입받는 참조자의 누락은 그대로 한계로 둔다 — 타입 모호 검사가 막아준다고 가정하지 않는다
 - 후속: 4.2 보고서 D-4.2a
 

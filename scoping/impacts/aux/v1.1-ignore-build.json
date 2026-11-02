@@ -114,6 +114,7 @@
     "S009",
     "S010"
   ],
+  "toolVersion": "impact-v1.1",
   "unobserved": [],
   "warnings": []
 }

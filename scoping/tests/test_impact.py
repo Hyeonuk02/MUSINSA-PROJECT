@@ -72,6 +72,45 @@ def test_referrers_via_supertype_name():
     assert Sources(files).referrers("poc.order.Impl") == ["poc.order.User"]
 
 
+REPO_FILES = {
+    J + "OrderRepository.java": "package poc.order;\nimport org.springframework.data.jpa.repository.JpaRepository;\n"
+                                "public interface OrderRepository extends JpaRepository<Order, Long> {}\n",
+    "services/coupon/src/main/java/poc/coupon/CouponRepository.java":
+        "package poc.coupon;\nimport org.springframework.data.jpa.repository.JpaRepository;\n"
+        "public interface CouponRepository extends JpaRepository<Coupon, Long> {}\n",
+}
+
+
+def test_siblings_sharing_framework_supertype_are_not_connected():
+    assert Sources(REPO_FILES).referrers("poc.order.OrderRepository") == []
+    assert Sources(REPO_FILES).referrers("poc.coupon.CouponRepository") == []
+
+
+def test_closure_order_to_repository_to_service_is_kept():
+    files = {**REPO_FILES, J + "Order.java": TARGET,
+             J + "OrderService.java": "package poc.order;\npublic class OrderService { OrderRepository r; Order o; }\n",
+             J + "OrderController.java": "package poc.order;\npublic class OrderController { OrderService s; }\n"}
+    observed = {f"poc.order.{n}" for n in ("OrderRepository", "OrderService", "OrderController")} | {"poc.coupon.CouponRepository"}
+    r = closure("poc.order.Order", Sources(files), observed)
+    assert r["reachedClasses"] == ["poc.order.OrderController", "poc.order.OrderRepository", "poc.order.OrderService"]
+    assert not r["unresolved"]
+
+
+def test_known_limit_siblings_of_project_declared_supertype_stay_connected():
+    """D24 보완 3의 한계를 고정: 프로젝트에 선언된 공통 상위 타입에서는 형제가 연결된다(findings O18)."""
+    files = {J + "BaseRepository.java": "package poc.order;\npublic interface BaseRepository {}\n",
+             J + "ARepository.java": "package poc.order;\npublic interface ARepository extends BaseRepository {}\n",
+             J + "BRepository.java": "package poc.order;\npublic interface BRepository extends BaseRepository {}\n"}
+    assert Sources(files).referrers("poc.order.ARepository") == ["poc.order.BRepository"]
+
+
+def test_project_types_include_sources_outside_the_scanned_roots():
+    files = {J + "A.java": "package poc.order;\npublic class A extends Shared {}\n",
+             J + "B.java": "package poc.order;\npublic class B extends Shared {}\n"}
+    assert Sources(files).referrers("poc.order.A") == []
+    assert Sources(files, project_types={"Shared"}).referrers("poc.order.A") == ["poc.order.B"]
+
+
 def graph(**edges):
     """edges: 클래스 → 그 클래스가 참조하는 클래스들."""
     return Sources({J + n + ".java": f"package poc.order;\npublic class {n} {{ {' '.join(t + ' a' + str(i) + ';' for i, t in enumerate(ts))} }}"

@@ -1,0 +1,127 @@
+도구 impact-v1.1. 사전 등록에 대한 독립 대조는 impact-v1.0의 11/13이다(phase4.2 보고서). 이 표의 일치는 기존 기대에 대한 회귀 확인이다.
+
+| 변형 | 범위 | 변경 | 관측 | 미관측 | 전역 | 영향 요청 | 세션 | 재생 | 감소(요청) | target 세션 포함 | 사전 등록 |
+|---|---|---|---|---|---|---|---|---|---|---|---|
+| C1 | `phase3.3-base..change/C1` | 4.5에서 실행 | | | | | | | | | 대기 |
+| C2 | `phase3.3-base..change/C2` | 4.5에서 실행 | | | | | | | | | 대기 |
+| F1 | `phase3.5-v1.4..fault/F1` | 1 | 1 | 0 | - | 32 | 9/11 | 37/48 | 22.9% | 1/1 | 일치 |
+<!-- phase3.5-v1.4..fault/F1 변경 클래스 1, 관측 ['poc.order.OrderService'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| F2 | `phase3.5-v1.4..fault/F2` | 1 | 0 | 1 | - | 32 | 9/11 | 37/48 | 22.9% | 27/27 | 회귀 확인 일치 — impact-v1.0 11세션 → v1.1 9세션(사전 등록 아님) |
+<!-- phase3.5-v1.4..fault/F2 변경 클래스 1, 관측 [] -->
+<!--   미관측 poc.order.Order: 도달 ['poc.order.OrderController', 'poc.order.OrderRepository', 'poc.order.OrderService'], 미해결 [] -->
+<!--     poc.order.Order <- poc.order.OrderItem -->
+<!--     poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| F3 | `phase3.5-v1.4..fault/F3` | 1 | 1 | 0 | - | 7 | 7/11 | 30/48 | 37.5% | 7/7 | 일치 |
+<!-- phase3.5-v1.4..fault/F3 변경 클래스 1, 관측 ['poc.order.OrderEventPublisher'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 7, 선택 7세션·30요청 -->
+| F4 | `phase3.5-v1.4..fault/F4` | 1 | 1 | 0 | - | 32 | 9/11 | 37/48 | 22.9% | 2/2 | 일치 |
+<!-- phase3.5-v1.4..fault/F4 변경 클래스 1, 관측 ['poc.order.OrderService'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| F5 | `phase3.5-v1.4..fault/F5` | 2 | 2 | 0 | - | 32 | 9/11 | 37/48 | 22.9% | 13/13 | 일치 |
+<!-- phase3.5-v1.4..fault/F5 변경 클래스 2, 관측 ['poc.order.OrderRepository', 'poc.order.OrderService'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| F6 | `phase3.5-v1.4..fault/F6` | 1 | 0 | 1 | - | 32 | 9/11 | 37/48 | 22.9% | 26/26 | 일치 |
+<!-- phase3.5-v1.4..fault/F6 변경 클래스 1, 관측 [] -->
+<!--   미관측 poc.order.OrderView: 도달 ['poc.order.OrderController', 'poc.order.OrderService'], 미해결 [] -->
+<!--     poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| F7 | `phase3.5-v1.4..fault/F7` | 1 | 1 | 0 | - | 7 | 7/11 | 30/48 | 37.5% | 2/2 | 일치 |
+<!-- phase3.5-v1.4..fault/F7 변경 클래스 1, 관측 ['poc.order.PaymentGatewayClient'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 7, 선택 7세션·30요청 -->
+| F8 | `phase3.5-v1.4..fault/F8` | 2 | 2 | 0 | - | 32 | 9/11 | 37/48 | 22.9% | 10/10 | 일치 |
+<!-- phase3.5-v1.4..fault/F8 변경 클래스 2, 관측 ['poc.order.OrderRepository', 'poc.order.OrderService'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| F9 | `phase3.5-v1.4..fault/F9` | 1 | 1 | 0 | - | 32 | 9/11 | 37/48 | 22.9% | 4/4 | 일치 |
+<!-- phase3.5-v1.4..fault/F9 변경 클래스 1, 관측 ['poc.order.OrderService'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| v1.1 | `phase3.3-base..fd839d6` | 1 | 1 | 0 | 전역 | 48 | 11/11 | 48/48 | 0.0% | - | 일치 |
+<!-- phase3.3-base..fd839d6 변경 클래스 1, 관측 ['poc.order.PaymentGatewayClient'] -->
+<!--   전역 True ['build:services/order/pom.xml'] -->
+<!--   영향 요청 48, 선택 11세션·48요청 -->
+| v1.2 | `fd839d6..fc6e6e2` | 3 | 1 | 2 | - | 32 | 9/11 | 37/48 | 22.9% | - | 회귀 확인 일치 — impact-v1.0 11세션 → v1.1 9세션(사전 등록 아님) |
+<!-- fd839d6..fc6e6e2 변경 클래스 3, 관측 ['poc.order.OrderRepository'] -->
+<!--   미관측 poc.order.Order: 도달 ['poc.order.OrderController', 'poc.order.OrderRepository', 'poc.order.OrderService'], 미해결 [] -->
+<!--     poc.order.Order <- poc.order.OrderItem -->
+<!--     poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController -->
+<!--   미관측 poc.order.OrderItem: 도달 ['poc.order.OrderController', 'poc.order.OrderRepository', 'poc.order.OrderService'], 미해결 [] -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderView <- poc.order.OrderService -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| v1.3 | `fc6e6e2..c64618f` | 3 | 2 | 1 | - | 32 | 9/11 | 37/48 | 22.9% | - | 일치 |
+<!-- fc6e6e2..c64618f 변경 클래스 3, 관측 ['poc.order.OrderEventPublisher', 'poc.order.OrderService'] -->
+<!--   미관측 poc.order.OrderPaid: 도달 ['poc.order.OrderController', 'poc.order.OrderEventPublisher', 'poc.order.OrderService'], 미해결 [] -->
+<!--     poc.order.OrderPaid <- poc.order.OrderEventPublisher -->
+<!--     poc.order.OrderPaid <- poc.order.OrderService <- poc.order.OrderController -->
+<!--   전역 False [] -->
+<!--   영향 요청 32, 선택 9세션·37요청 -->
+| v1.4 | `c64618f..120b212` | 7 | 2 | 5 | 전역 | 48 | 11/11 | 48/48 | 0.0% | - | 일치 |
+<!-- c64618f..120b212 변경 클래스 7, 관측 ['poc.order.CouponClient', 'poc.order.OrderController'] -->
+<!--   미관측 poc.order.ClockConfig: 도달 [], 미해결 ['poc.order.ClockConfig'] -->
+<!--   미관측 poc.order.OrderApplication: 도달 [], 미해결 ['poc.order.OrderApplication'] -->
+<!--   미관측 poc.order.OrderView: 도달 ['poc.order.OrderController', 'poc.order.OrderService'], 미해결 [] -->
+<!--     poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController -->
+<!--   미관측 poc.order.requestlog.CachedBodyRequest: 도달 [], 미해결 ['poc.order.requestlog.CachedBodyRequest', 'poc.order.requestlog.RequestLogFilter'] -->
+<!--     poc.order.requestlog.CachedBodyRequest <- poc.order.requestlog.RequestLogFilter -->
+<!--   미관측 poc.order.requestlog.RequestLogFilter: 도달 [], 미해결 ['poc.order.requestlog.RequestLogFilter'] -->
+<!--   전역 True ['unresolved:poc.order.ClockConfig', 'unresolved:poc.order.OrderApplication', 'unresolved:poc.order.requestlog.CachedBodyRequest', 'unresolved:poc.order.requestlog.RequestLogFilter'] -->
+<!--   영향 요청 48, 선택 11세션·48요청 -->
+
+| 보조 | 조건 | 전역 | 영향 요청 | 세션 | 재생 | 사전 등록 |
+|---|---|---|---|---|---|---|
+| E5-literal | literal | 전역 | 48 | 11/11 | 48/48 | 회귀 확인 일치 — impact-v1.0 11세션 → v1.1 11세션(사전 등록 아님) |
+<!-- phase3.5-v1.4..phase3.5-v1.4 변경 클래스 1, 관측 [] -->
+<!--   미관측 poc.order.OrderItem: 도달 ['poc.order.OrderController', 'poc.order.OrderRepository', 'poc.order.OrderService'], 미해결 ['poc.order.requestlog.RequestLogFilter'] -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderView <- poc.order.OrderService -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.requestlog.RequestLogFilter -->
+<!--   전역 True ['unresolved:poc.order.OrderItem'] -->
+<!--   영향 요청 48, 선택 11세션·48요청 -->
+| F2-literal | literal | 전역 | 48 | 11/11 | 48/48 | 회귀 확인 일치 — impact-v1.0 11세션 → v1.1 11세션(사전 등록 아님) |
+<!-- phase3.5-v1.4..fault/F2 변경 클래스 1, 관측 [] -->
+<!--   미관측 poc.order.Order: 도달 ['poc.order.OrderController', 'poc.order.OrderRepository', 'poc.order.OrderService'], 미해결 ['poc.order.requestlog.RequestLogFilter'] -->
+<!--     poc.order.Order <- poc.order.OrderItem -->
+<!--     poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.requestlog.RequestLogFilter -->
+<!--   전역 True ['unresolved:poc.order.Order'] -->
+<!--   영향 요청 48, 선택 11세션·48요청 -->
+| v1.1-ignore-build | build | - | 7 | 7/11 | 30/48 | 일치 |
+<!-- phase3.3-base..fd839d6 변경 클래스 1, 관측 ['poc.order.PaymentGatewayClient'] -->
+<!--   전역 False [] -->
+<!--   영향 요청 7, 선택 7세션·30요청 -->
+| v1.2-literal | literal | 전역 | 48 | 11/11 | 48/48 | 회귀 확인 일치 — impact-v1.0 11세션 → v1.1 11세션(사전 등록 아님) |
+<!-- fd839d6..fc6e6e2 변경 클래스 3, 관측 ['poc.order.OrderRepository'] -->
+<!--   미관측 poc.order.Order: 도달 ['poc.order.OrderController', 'poc.order.OrderRepository', 'poc.order.OrderService'], 미해결 ['poc.order.requestlog.RequestLogFilter'] -->
+<!--     poc.order.Order <- poc.order.OrderItem -->
+<!--     poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.Order <- poc.order.requestlog.RequestLogFilter -->
+<!--   미관측 poc.order.OrderItem: 도달 ['poc.order.OrderController', 'poc.order.OrderRepository', 'poc.order.OrderService'], 미해결 ['poc.order.requestlog.RequestLogFilter'] -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderRepository <- poc.order.OrderService -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderService <- poc.order.OrderController -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.OrderView <- poc.order.OrderService -->
+<!--     poc.order.OrderItem <- poc.order.Order <- poc.order.requestlog.RequestLogFilter -->
+<!--   전역 True ['unresolved:poc.order.Order', 'unresolved:poc.order.OrderItem'] -->
+<!--   영향 요청 48, 선택 11세션·48요청 -->
+
+불일치 0건
