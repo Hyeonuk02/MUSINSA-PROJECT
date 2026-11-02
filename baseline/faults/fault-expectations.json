@@ -1,0 +1,313 @@
+{
+  "_doc": "E2 결함별 기대 판정 사전 등록(PF run 전 커밋, legacy-decision-log L16·L18). 형식은 hyeonuk-dev docs/fault-expectations.json과 맞췄다. pair 키 = <replayRequestId>/<service>.<kind>.<요청 안 n번째>(engine/compare.py pair_index). targets 밖의 pair는 A/A 판정(SAME)과 같아야 한다(정상 경로 오탐 0). legacyOnly/newOnly = 한쪽 스택에만 생겨 짝이 없는 pair(판정은 그 요청의 진입 pair에 귀속). cvDisposition = CV의 사람 처분 기대(fault | accept, L16: 응답 status 변경은 항상 CV). learn/eval은 corpus-v1.1 split(learn: S01 S02 S10 S11). 기대는 코드(패치)와 A/A Evidence(aa-003)만 보고 정했다 — 결함 run 결과는 보지 않았다.",
+  "baseline": {
+    "runs": "aa-003",
+    "corpus": "corpus-v1.1",
+    "expectedVerdict": "SAME (B1 0)"
+  },
+  "PF1": {
+    "kind": "real-defect",
+    "targets": {
+      "R000001/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000006/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000007/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000008/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000009/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000010/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000012/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000013/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000014/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000018/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000022/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000026/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000029/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000030/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000033/wiremock.external.1": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "external.calls(POST /v1/orders 1→2)"
+    ],
+    "cvDisposition": "fault",
+    "note": "R000011(PGFAIL)은 첫 createOrder가 거절로 예외 → 두 번째 호출에 닿지 않음 → SAME. PG 호출은 Feign이 아니라 payment.http outbound에는 없고 external에만 보인다"
+  },
+  "PF2": {
+    "kind": "real-defect",
+    "targets": {
+      "R000002/payment.http.1": "CONTRACT_VIOLATION",
+      "R000020/payment.http.1": "CONTRACT_VIOLATION",
+      "R000023/payment.http.1": "CONTRACT_VIOLATION",
+      "R000034/payment.http.1": "CONTRACT_VIOLATION",
+      "R000035/payment.http.1": "CONTRACT_VIOLATION",
+      "R000003/order.http.1": "CONTRACT_VIOLATION",
+      "R000004/order.http.1": "CONTRACT_VIOLATION",
+      "R000005/order.http.1": "CONTRACT_VIOLATION",
+      "R000021/order.http.1": "CONTRACT_VIOLATION",
+      "R000024/order.http.1": "CONTRACT_VIOLATION",
+      "R000025/order.http.1": "CONTRACT_VIOLATION",
+      "R000036/order.http.1": "CONTRACT_VIOLATION"
+    },
+    "legacyOnly": [
+      "R000002/kafka.event.1",
+      "R000002/order.consume.1",
+      "R000002/wiremock.external.1",
+      "R000020/kafka.event.1",
+      "R000020/order.consume.1",
+      "R000020/wiremock.external.1",
+      "R000023/kafka.event.1",
+      "R000023/order.consume.1",
+      "R000023/wiremock.external.1",
+      "R000034/kafka.event.1",
+      "R000034/order.consume.1",
+      "R000034/wiremock.external.1",
+      "R000035/kafka.event.1",
+      "R000035/order.consume.1",
+      "R000035/wiremock.external.1"
+    ],
+    "axes": [
+      "events(1→0)",
+      "consume 누락(legacyOnly)",
+      "external(consumer의 audit·shipments·notification 누락)",
+      "response.body(orderStatus·paymentStatus)",
+      "dbstate"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    },
+    "cvDisposition": "fault",
+    "note": "verify 뒤 주문을 읽는 GET·목록·취소 응답의 orderStatus/paymentStatus가 달라진다(R24 취소: CANCELLED/PAID → CANCELLED/UNPAID). S12 목록(R31·R32)은 verify가 없어 SAME. dbstate: order.orders·order_status_history"
+  },
+  "PF3": {
+    "kind": "real-defect",
+    "targets": {
+      "R000001/order.http.1": "CONTRACT_VIOLATION",
+      "R000001/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000006/order.http.1": "CONTRACT_VIOLATION",
+      "R000006/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000007/order.http.1": "CONTRACT_VIOLATION",
+      "R000007/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000008/order.http.1": "CONTRACT_VIOLATION",
+      "R000008/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000009/order.http.1": "CONTRACT_VIOLATION",
+      "R000009/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000010/order.http.1": "CONTRACT_VIOLATION",
+      "R000010/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000011/order.http.1": "CONTRACT_VIOLATION",
+      "R000011/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000012/order.http.1": "CONTRACT_VIOLATION",
+      "R000012/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000013/order.http.1": "CONTRACT_VIOLATION",
+      "R000013/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000014/order.http.1": "CONTRACT_VIOLATION",
+      "R000014/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000018/order.http.1": "CONTRACT_VIOLATION",
+      "R000018/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000022/order.http.1": "CONTRACT_VIOLATION",
+      "R000022/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000026/order.http.1": "CONTRACT_VIOLATION",
+      "R000026/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000029/order.http.1": "CONTRACT_VIOLATION",
+      "R000029/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000030/order.http.1": "CONTRACT_VIOLATION",
+      "R000030/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000033/order.http.1": "CONTRACT_VIOLATION",
+      "R000033/wiremock.external.1": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "outbound.sequence(reduce-stock ↔ cart/clear)",
+      "external.calls 순서"
+    ],
+    "cvDisposition": "fault",
+    "note": "재고 차감 실패 시 장바구니가 이미 비워지는 결함. corpus에는 차감 실패가 없어 순서 차이로만 보인다(R000011 포함 16개 주문)"
+  },
+  "PF4": {
+    "kind": "real-defect",
+    "targets": {
+      "R000015/order.http.1": "CONTRACT_VIOLATION",
+      "R000015/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000019/order.http.1": "CONTRACT_VIOLATION",
+      "R000019/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000024/order.http.1": "CONTRACT_VIOLATION",
+      "R000024/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000027/order.http.1": "CONTRACT_VIOLATION",
+      "R000027/wiremock.external.1": "CONTRACT_VIOLATION"
+    },
+    "axes": [
+      "outbound(POST /inventory/add-stock-bulk 누락)",
+      "external.calls(2→1)"
+    ],
+    "cvDisposition": "fault",
+    "note": "재고는 WireMock이라 dbstate는 같다. 결제 실패 보상(handlePaymentFailure, R000011)은 cancelOrder가 아니라 SAME. 404 취소(R000016)는 addStock 전에 실패 → SAME"
+  },
+  "PF5": {
+    "kind": "normal-refactor",
+    "targets": {
+      "R000015/order.http.1": "UNCERTAIN",
+      "R000019/order.http.1": "UNCERTAIN",
+      "R000024/order.http.1": "UNCERTAIN",
+      "R000027/order.http.1": "UNCERTAIN",
+      "R000016/order.http.1": "UNCERTAIN"
+    },
+    "learnLabels": {
+      "R000024/order.http.1": "improvement",
+      "R000027/order.http.1": "improvement"
+    },
+    "afterLearnLabels": {
+      "R000015/order.http.1": "IMPROVEMENT",
+      "R000019/order.http.1": "IMPROVEMENT",
+      "R000024/order.http.1": "IMPROVEMENT",
+      "R000027/order.http.1": "IMPROVEMENT",
+      "R000016/order.http.1": "UNCERTAIN"
+    },
+    "axes": [
+      "dbAccess.count(SELECT 2→1)",
+      "dbAccess.fingerprint(orders+order_items → fetch join)"
+    ],
+    "note": "learn = S10 R24·S11 R27(성공 취소). R000016(이미 취소된 주문 재취소 404)은 SELECT 1→1 fingerprint 교체라 성공 취소에서 배운 규칙과 유형이 다르다 → 라벨 후에도 UNC로 남는다고 등록(규칙 일반화 한계 측정). 응답은 items가 @JsonIgnore라 같다"
+  },
+  "PF6": {
+    "kind": "normal-change",
+    "status": "pending",
+    "note": "Payment Boot 4 업그레이드. 패치를 만든 뒤 run 전에 따로 등록한다"
+  },
+  "PF7": {
+    "kind": "approved-improvement",
+    "fixes": "B4",
+    "targets": {
+      "R000020/order.consume.1": "IMPROVEMENT",
+      "R000021/order.http.1": "IMPROVEMENT",
+      "R000002/order.consume.1": "UNCERTAIN",
+      "R000023/order.consume.1": "UNCERTAIN",
+      "R000034/order.consume.1": "UNCERTAIN",
+      "R000035/order.consume.1": "UNCERTAIN"
+    },
+    "legacyOnly": [
+      "R000020/wiremock.external.1"
+    ],
+    "learnLabels": {
+      "R000002/order.consume.1": "improvement",
+      "R000023/order.consume.1": "improvement"
+    },
+    "afterLearnLabels": {
+      "R000020/order.consume.1": "IMPROVEMENT",
+      "R000021/order.http.1": "IMPROVEMENT",
+      "R000002/order.consume.1": "IMPROVEMENT",
+      "R000023/order.consume.1": "IMPROVEMENT",
+      "R000034/order.consume.1": "IMPROVEMENT",
+      "R000035/order.consume.1": "IMPROVEMENT"
+    },
+    "axes": [
+      "consume(취소 주문: history INSERT·orders UPDATE·outbound 4건 없음)",
+      "response.body(R21 CONFIRMED/PAID → CANCELLED/UNPAID)",
+      "dbAccess.count(+1 SELECT, findById 트랜잭션 +1)",
+      "dbstate"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    },
+    "approvedRule": "PF7 의도(취소 주문은 PaymentCompleted로 확정하지 않음)를 승인 규칙으로 판정 전에 커밋(E3). 결함 run 결과에서 만들지 않는다",
+    "note": "모든 consume에 getOrderByIdForAdmin(SimpleJpaRepository.findById, readOnly 트랜잭션) SELECT가 하나 늘어난다 → 대상 밖 consume 4건은 UNC, learn(R2·R23) 라벨 후 IMP"
+  },
+  "PF8": {
+    "kind": "performance",
+    "targets": {
+      "R000004/order.http.1": "UNCERTAIN",
+      "R000032/order.http.1": "UNCERTAIN"
+    },
+    "targetsMaxSelects": {
+      "R000004/order.http.1": "CONTRACT_VIOLATION",
+      "R000032/order.http.1": "CONTRACT_VIOLATION"
+    },
+    "maxSelects": {
+      "GET /orders/my-orders": 1
+    },
+    "axes": [
+      "dbAccess.count(SELECT 1→2, 1→3)",
+      "dbAccess.fingerprint(order_items 추가)",
+      "max_selects(선언 시)"
+    ],
+    "note": "R4(S01, 주문 1건) +1, R32(S12, 주문 2건) +2. /orders/history(R5·R31)는 다른 메서드라 SAME. items는 @JsonIgnore라 응답 같음. PF5 learn 규칙(취소)은 맞지 않아 가리지 않아야 한다"
+  },
+  "PF9": {
+    "kind": "approved-improvement",
+    "fixes": "S13 재확정 중복(이력·배송·감사·알림)",
+    "targets": {
+      "R000035/order.consume.1": "IMPROVEMENT",
+      "R000002/order.consume.1": "UNCERTAIN",
+      "R000020/order.consume.1": "UNCERTAIN",
+      "R000023/order.consume.1": "UNCERTAIN",
+      "R000034/order.consume.1": "UNCERTAIN"
+    },
+    "legacyOnly": [
+      "R000035/wiremock.external.1"
+    ],
+    "learnLabels": {
+      "R000002/order.consume.1": "improvement",
+      "R000023/order.consume.1": "improvement"
+    },
+    "afterLearnLabels": {
+      "R000035/order.consume.1": "IMPROVEMENT",
+      "R000002/order.consume.1": "IMPROVEMENT",
+      "R000020/order.consume.1": "IMPROVEMENT",
+      "R000023/order.consume.1": "IMPROVEMENT",
+      "R000034/order.consume.1": "IMPROVEMENT"
+    },
+    "axes": [
+      "consume(이미 CONFIRMED+PAID: history INSERT·orders UPDATE·outbound 4건 없음)",
+      "dbAccess.count(+1 SELECT)",
+      "dbstate(order_status_history -1)"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    },
+    "approvedRule": "PF9 의도(이미 확정·결제된 주문의 재확정 무시)를 승인 규칙으로 판정 전에 커밋(E3)",
+    "note": "R36(같은 주문 조회)은 상태가 같아 SAME. R20(취소 주문, B4)은 CONFIRMED가 아니라 건너뛰지 않음 → 추가 SELECT만(UNC)"
+  },
+  "PF10": {
+    "kind": "approved-improvement",
+    "fixes": "B1",
+    "targets": {
+      "R000006/coupon.http.2": "CONTRACT_VIOLATION",
+      "R000006/order.http.2": "CONTRACT_VIOLATION",
+      "R000006/order.http.1": "CONTRACT_VIOLATION",
+      "R000006/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000008/coupon.http.2": "CONTRACT_VIOLATION",
+      "R000008/order.http.2": "CONTRACT_VIOLATION",
+      "R000008/order.http.1": "CONTRACT_VIOLATION",
+      "R000008/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000011/coupon.http.2": "CONTRACT_VIOLATION",
+      "R000011/order.http.2": "CONTRACT_VIOLATION",
+      "R000011/order.http.1": "CONTRACT_VIOLATION",
+      "R000011/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000012/coupon.http.2": "CONTRACT_VIOLATION",
+      "R000012/order.http.2": "CONTRACT_VIOLATION",
+      "R000012/order.http.1": "CONTRACT_VIOLATION",
+      "R000012/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000007/coupon.http.1": "CONTRACT_VIOLATION",
+      "R000007/order.http.1": "CONTRACT_VIOLATION",
+      "R000007/payment.http.1": "CONTRACT_VIOLATION",
+      "R000007/wiremock.external.1": "CONTRACT_VIOLATION",
+      "R000013/coupon.http.1": "CONTRACT_VIOLATION",
+      "R000013/order.http.1": "CONTRACT_VIOLATION",
+      "R000013/payment.http.1": "CONTRACT_VIOLATION",
+      "R000013/wiremock.external.1": "CONTRACT_VIOLATION"
+    },
+    "legacyOnly": [
+      "R000007/coupon.http.2",
+      "R000007/order.http.2",
+      "R000013/coupon.http.2",
+      "R000013/order.http.2"
+    ],
+    "axes": [
+      "response.status(coupon /use 404→200, coupon이 부른 GET /orders/order/{id} 404→200)",
+      "outbound.sequence(use가 payments/process 뒤로)",
+      "external(+audit COUPON_CONSUMED)",
+      "R7·R13: validate valid true→false(alreadyUsed) → B3로 정가 100,000·결제 금액·use 호출 없음",
+      "dbstate(coupon_usage 1→5, orders·payments 금액)"
+    ],
+    "runCheck": {
+      "dbstate_equal": false
+    },
+    "cvDisposition": "accept",
+    "note": "L16: 응답 status 변경은 항상 CV, 사람이 accept로 처분. R7·R13의 금액 변화도 B1 수정의 직접 결과라 accept 기대. R28(S11 직접 use)·R37·R38은 SAME"
+  }
+}

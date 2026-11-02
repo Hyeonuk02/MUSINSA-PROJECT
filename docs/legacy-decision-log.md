@@ -410,3 +410,40 @@ S13은 멱등성 결함(팀원 F1에 대응) 주입 자리, S12는 L5의 동점 
 **대안**
 - 사전 승인 규칙으로 status 변경을 IMP 인정 — 위 엣지 케이스로 배제.
 - 팀원 엔진을 그대로 사용 — Prince Mart의 여러 서비스·Kafka·실제 Legacy 버그를 다루는 축이 팀원 엔진에 없어 이 트랙에서 먼저 확인한다.
+
+### L17. 완료 대기를 고정 건수에서 스택별 폐포(closure)로
+
+**결정** (2026-11-02, E2)
+- k6의 요청별 대기와 run.py barrier가 corpus의 `expect.evidence` 건수 대신 **스택이 스스로 선언한 하위 처리**로 완료를 판단한다.
+  스택 하나의 완료 = 진입 Evidence(`x-replay-request-id`를 받은 http)가 있고, 도착한 Evidence의 `outbound` 중 응답을 받은
+  내부 서비스 호출(ORDER/COUPON/PAYMENT-SERVICE) 수와 `events` 수만큼 서비스별 하위 http·consume Evidence가 도착함.
+  barrier는 여기에 두 스택 consumer lag 0을 더한다. 같은 규칙이 `k6/run.js`와 `k6/run.py`의 `closure()` 두 곳에 있다.
+- legacy는 corpus `expect.evidence`와도 대조해 `legacyCountOk`(k6 결과)·`legacyCountMismatch`(barrier)로 남긴다.
+- run-meta에 떠 있는 컨테이너의 스택별 이미지(`stackImages`)와 `newVersion`, arm(A/A 또는 `fault <버전>`)을 기록한다.
+  유효성 해시의 images는 legacy 스택만 덮는다 — 조건이 같고 arm만 다른 run(A/A와 PF<n>)이 같은 해시를 갖게.
+
+**근거**
+- 결함 버전은 하위 호출·이벤트 수를 바꾼다(PF2는 consume이 없고 PF10은 coupon use가 사라진다). 고정 건수로 기다리면
+  new가 타임아웃 → degraded → 남은 요청을 건너뛰어, 결함이 '전달 실패'로 보이고 판정 대상이 사라진다.
+- 팀원의 2단계 settle(부모가 선언한 hop을 기다림)과 같은 발상이다. 선언하지 않은 하위 처리는 기다리지 않으므로
+  "부르지 않은 것"과 "아직 안 온 것"이 구분된다.
+- aa-003(재빌드한 legacy 이미지, A/A 1회): 38/38, barrier ok, legacy 80/80 일치, settle 최대 224ms(aa-002 217ms), B1 0.
+  offline으로 aa-002-1의 38개 요청 모두 closure 완료, consume 하나를 빼면 미완료로 판정됨을 확인.
+
+**대안**
+- 결함별로 기대 건수를 corpus에 따로 둠 — 기대 판정과 대기 조건이 섞이고, 사전 등록 전에 결함 결과를 알아야 해서 배제.
+
+### L18. 결함 카탈로그 PF<n>와 기대 판정 사전 등록
+
+**결정** (2026-11-02, E2)
+- 결함 9개(PF1~5, PF7~10; PF6은 마지막에 따로)를 `baseline/faults/PF<n>-<svc>.patch`로 두고 기대 판정을
+  `baseline/faults/fault-expectations.json`에 **결함 run 전에 커밋**한다. 기대는 패치와 A/A Evidence(aa-003)만 보고 정했다.
+- pair 키는 `<replayRequestId>/<service>.<kind>.<n>`(compare.py pair_index). 한쪽 스택에만 생기는 pair는 `legacyOnly`/`newOnly`로 따로 둔다.
+- CV에는 기대 처분(`cvDisposition`: fault | accept)을 같이 등록한다. 승인된 개선 중 status를 바꾸는 PF10은 CV + accept(L16).
+- 승인된 개선(PF7·PF9)의 승인 규칙은 결함 의도(패치 설명)로 판정 전에 커밋하고, 결함 run 결과로 만들지 않는다.
+
+**근거**
+- 결과를 본 뒤 기대를 고치면 탐지율을 잴 수 없다(팀원 Phase 3.6과 같은 원칙).
+- 코드와 A/A 데이터를 읽으며 처음 계획과 달라진 점을 그대로 등록했다: PF1은 PGFAIL(R11)에서 첫 호출이 예외라 SAME(15건),
+  PF7·PF9는 모든 consume에 SELECT가 하나 늘어 대상 밖 consume도 UNC, PF5의 404 취소(R16)는 learn 규칙과 유형이 달라 라벨 후에도 UNC,
+  PF10은 B1 수정으로 같은 사용자 재사용(R7·R13)이 alreadyUsed가 되어 B3 경로(정가)로 바뀐다.
