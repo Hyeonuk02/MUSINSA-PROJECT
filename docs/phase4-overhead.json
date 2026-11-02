@@ -1,0 +1,276 @@
+{
+  "evidenceBytes": {
+    "all": {
+      "max": 3014,
+      "p50": 1900,
+      "p95": 2976,
+      "records": 180,
+      "sumPerRun": 120937
+    },
+    "coupon": {
+      "max": 1901,
+      "p50": 1755,
+      "p95": 1900,
+      "records": 84,
+      "sumPerRun": 46701
+    },
+    "order": {
+      "max": 3014,
+      "p50": 2120,
+      "p95": 2998,
+      "records": 96,
+      "sumPerRun": 74236
+    }
+  },
+  "medianOfRuns": {
+    "off": {
+      "cpuCoreSeconds": {
+        "coupon/coupon": 0.626,
+        "coupon/istio-proxy": 0.085,
+        "order/istio-proxy": 0.103,
+        "order/order": 0.835
+      },
+      "p50": 11.41,
+      "p95": 32.35,
+      "workingSetMiB": {
+        "coupon/coupon": 421.7,
+        "coupon/istio-proxy": 40.5,
+        "order/istio-proxy": 41.7,
+        "order/order": 403.0
+      }
+    },
+    "on": {
+      "cpuCoreSeconds": {
+        "coupon/coupon": 0.85,
+        "coupon/istio-proxy": 0.111,
+        "order/istio-proxy": 0.115,
+        "order/order": 0.955
+      },
+      "p50": 13.96,
+      "p95": 44.64,
+      "workingSetMiB": {
+        "coupon/coupon": 368.3,
+        "coupon/istio-proxy": 38.2,
+        "order/istio-proxy": 36.1,
+        "order/order": 414.3
+      }
+    }
+  },
+  "note": "참고값. 기대 없음, 판정과 무관. VU=1 × 3, 표본 run당 48요청",
+  "runs": {
+    "off": [
+      {
+        "cpuCoreSeconds": {
+          "coupon/coupon": 0.626,
+          "coupon/istio-proxy": 0.1,
+          "order/istio-proxy": 0.112,
+          "order/order": 1.053
+        },
+        "max": 2026.07,
+        "meta": {
+          "evidenceStoreUrl": {
+            "coupon": "",
+            "order": ""
+          },
+          "git": {
+            "dirty": false,
+            "rev": "d0ba9b95f3e7694e4e352d6eb57f5fcf36f72051"
+          },
+          "images": {
+            "coupon": "coupon-app:phase3.3-base",
+            "order": "order-app:phase3.3-base"
+          },
+          "mode": "off",
+          "runId": "p49-off-1"
+        },
+        "p50": 15.54,
+        "p95": 50.75,
+        "requests": 48,
+        "run": "p49-off-1",
+        "workingSetMiB": {
+          "coupon/coupon": 403.4,
+          "coupon/istio-proxy": 38.5,
+          "order/istio-proxy": 39.6,
+          "order/order": 399.8
+        }
+      },
+      {
+        "cpuCoreSeconds": {
+          "coupon/coupon": 0.654,
+          "coupon/istio-proxy": 0.085,
+          "order/istio-proxy": 0.103,
+          "order/order": 0.835
+        },
+        "max": 2139.87,
+        "meta": {
+          "evidenceStoreUrl": {
+            "coupon": "",
+            "order": ""
+          },
+          "git": {
+            "dirty": false,
+            "rev": "d0ba9b95f3e7694e4e352d6eb57f5fcf36f72051"
+          },
+          "images": {
+            "coupon": "coupon-app:phase3.3-base",
+            "order": "order-app:phase3.3-base"
+          },
+          "mode": "off",
+          "runId": "p49-off-2"
+        },
+        "p50": 11.41,
+        "p95": 31.82,
+        "requests": 48,
+        "run": "p49-off-2",
+        "workingSetMiB": {
+          "coupon/coupon": 421.7,
+          "coupon/istio-proxy": 40.5,
+          "order/istio-proxy": 41.7,
+          "order/order": 403.0
+        }
+      },
+      {
+        "cpuCoreSeconds": {
+          "coupon/coupon": 0.461,
+          "coupon/istio-proxy": 0.076,
+          "order/istio-proxy": 0.093,
+          "order/order": 0.757
+        },
+        "max": 2032.06,
+        "meta": {
+          "evidenceStoreUrl": {
+            "coupon": "",
+            "order": ""
+          },
+          "git": {
+            "dirty": false,
+            "rev": "d0ba9b95f3e7694e4e352d6eb57f5fcf36f72051"
+          },
+          "images": {
+            "coupon": "coupon-app:phase3.3-base",
+            "order": "order-app:phase3.3-base"
+          },
+          "mode": "off",
+          "runId": "p49-off-3"
+        },
+        "p50": 11.34,
+        "p95": 32.35,
+        "requests": 48,
+        "run": "p49-off-3",
+        "workingSetMiB": {
+          "coupon/coupon": 423.6,
+          "coupon/istio-proxy": 40.6,
+          "order/istio-proxy": 41.8,
+          "order/order": 423.5
+        }
+      }
+    ],
+    "on": [
+      {
+        "cpuCoreSeconds": {
+          "coupon/coupon": 0.912,
+          "coupon/istio-proxy": 0.115,
+          "order/istio-proxy": 0.124,
+          "order/order": 1.168
+        },
+        "max": 2041.89,
+        "meta": {
+          "evidenceStoreUrl": {
+            "coupon": "http://evidence-store.verify.svc.cluster.local:8080",
+            "order": "http://evidence-store.verify.svc.cluster.local:8080"
+          },
+          "git": {
+            "dirty": false,
+            "rev": "d0ba9b95f3e7694e4e352d6eb57f5fcf36f72051"
+          },
+          "images": {
+            "coupon": "coupon-app:phase3.3-base",
+            "order": "order-app:phase3.3-base"
+          },
+          "mode": "on",
+          "runId": "p49-on-1"
+        },
+        "p50": 14.63,
+        "p95": 54.44,
+        "requests": 48,
+        "run": "p49-on-1",
+        "workingSetMiB": {
+          "coupon/coupon": 353.9,
+          "coupon/istio-proxy": 36.1,
+          "order/istio-proxy": 34.0,
+          "order/order": 399.2
+        }
+      },
+      {
+        "cpuCoreSeconds": {
+          "coupon/coupon": 0.85,
+          "coupon/istio-proxy": 0.111,
+          "order/istio-proxy": 0.113,
+          "order/order": 0.955
+        },
+        "max": 2033.04,
+        "meta": {
+          "evidenceStoreUrl": {
+            "coupon": "http://evidence-store.verify.svc.cluster.local:8080",
+            "order": "http://evidence-store.verify.svc.cluster.local:8080"
+          },
+          "git": {
+            "dirty": false,
+            "rev": "d0ba9b95f3e7694e4e352d6eb57f5fcf36f72051"
+          },
+          "images": {
+            "coupon": "coupon-app:phase3.3-base",
+            "order": "order-app:phase3.3-base"
+          },
+          "mode": "on",
+          "runId": "p49-on-2"
+        },
+        "p50": 13.96,
+        "p95": 44.64,
+        "requests": 48,
+        "run": "p49-on-2",
+        "workingSetMiB": {
+          "coupon/coupon": 368.3,
+          "coupon/istio-proxy": 38.2,
+          "order/istio-proxy": 36.1,
+          "order/order": 414.3
+        }
+      },
+      {
+        "cpuCoreSeconds": {
+          "coupon/coupon": 0.716,
+          "coupon/istio-proxy": 0.1,
+          "order/istio-proxy": 0.115,
+          "order/order": 0.818
+        },
+        "max": 2042.88,
+        "meta": {
+          "evidenceStoreUrl": {
+            "coupon": "http://evidence-store.verify.svc.cluster.local:8080",
+            "order": "http://evidence-store.verify.svc.cluster.local:8080"
+          },
+          "git": {
+            "dirty": false,
+            "rev": "d0ba9b95f3e7694e4e352d6eb57f5fcf36f72051"
+          },
+          "images": {
+            "coupon": "coupon-app:phase3.3-base",
+            "order": "order-app:phase3.3-base"
+          },
+          "mode": "on",
+          "runId": "p49-on-3"
+        },
+        "p50": 13.18,
+        "p95": 42.95,
+        "requests": 48,
+        "run": "p49-on-3",
+        "workingSetMiB": {
+          "coupon/coupon": 371.0,
+          "coupon/istio-proxy": 38.3,
+          "order/istio-proxy": 38.3,
+          "order/order": 417.0
+        }
+      }
+    ]
+  }
+}
