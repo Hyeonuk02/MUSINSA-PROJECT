@@ -435,6 +435,7 @@ A/A 표준 조건을 VU=3으로 둔다. Phase 3에서 diff가 나오면 같은 c
 근거: Controller→Service→Repository→Entity 계층에서 비-빈 클래스에서 빈까지 최대 3간선. Spring DI의 타입 주입·@Bean·@Qualifier·프록시·리플렉션은 소스 텍스트로 복원되지 않으므로 전역으로 흡수하는 것이 유일한 보장이다. 안전성이 증명된 회귀 테스트 선택이 아니라 fail-closed 휴리스틱이다.
 한계: 과포함(전역 발동)은 Filter 이득을 0으로 만든다 — impact.json에 미관측 수·전역 사유를 항상 남긴다.
 보완(2026-11-02, D-4.0a): 변형의 diff 범위 — 사다리 = 직전 단계 코드 커밋..그 단계 코드 커밋, pathspec `services/`(v1.1 `phase3.3-base..fd839d6`, v1.2 `fd839d6..fc6e6e2`, v1.3 `fc6e6e2..c64618f`, v1.4 `c64618f..120b212`), 결함 = `phase3.5-v1.4..fault/F<n>`, Coupon 변경 = `phase3.3-base..change/C<n>` 전체 diff. overlay 이미지 태그 교체는 변경의 배포이지 변경이 아니며 운영에서는 별도 커밋이다. `services/` 안의 pom·Dockerfile은 그대로 build → 전역.
+보완 2(2026-11-02, D-4.1c — 4.1 사실 확인에서 발견, 4.2 등록 전 수정): 토큰 참조는 언어의 이름 해석 규칙대로 센다. 다른 패키지 클래스를 단일 타입 import하거나 같은 파일에 같은 이름의 타입을 선언하면 대상 참조로 세지 않는다. 와일드카드 import·별칭 import(`import x.Order as Y`)는 같은 패키지 클래스를 가리지 않으므로 참조로 센다. 원래 문구의 결과(v1.2·F2·E5 전역 — Spring `@Order` 오탐, findings O17)는 4.2 보고서에 함께 남긴다. 전역을 줄이는 방향의 수정이다.
 
 ### D25. 스코핑 평가는 Phase 3 전체 재생 verdict의 오프라인 부분집합이 주, 실제 Filter run은 부분집합 실행의 동등성 확인 (2026-10-14)
 결정: 감소율·요청 단위 Observed-diff Recall(F0 제외 주·포함 보조, 분모 0은 N/A)·요청 단위 결함 탐지 유지·세션 범위 검사·B2-S 전체 조합·Tag 순위 품질·ablation은 오프라인으로 계산한다. run 범위 dbstate·Undelivered·degraded·시간·세션 독립성은 오프라인으로 재지 않고(not evaluated offline) 실제 Filter run(F3·F9·C1·C2 × 3)에서 "부분집합 재생의 pair 판정 == 전체 재생의 같은 pair 판정 + dbstate 판정 기대와 일치"로 확인한다.

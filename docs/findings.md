@@ -107,7 +107,9 @@
 - 봤다: `order.pay` 8건 중 7건만 `PaymentGatewayClient`·`OrderEventPublisher`·`OrderPaidListener`를 실행한다. R000008(S002, 같은 Idempotency-Key 재요청)은 `OrderController`·`OrderService`·`OrderRepository`만
 - 근거: `docs/reports/logs/phase4.1-plan-compare.txt` A·C절, `scoping/map.json`
 - 왜 중요: 요청 단위 맵은 같은 엔드포인트 안의 실행 경로 차이까지 구분한다. 계획의 "모든 `order.pay` 요청" 표현은 엔드포인트 단위 사고가 남은 것이다. S002가 첫 결제 R000007로 선택되므로 세션·재생 수는 그대로다(7세션·30요청)
+- 한계(추가): Legacy 레코드로만 만든 맵은 Legacy가 실행하지 않고 New만 실행하는 경로(F1의 R000008 게이트웨이 재호출)를 볼 수 없다. 이번에는 변경 클래스 `OrderService`가 R000008에서도 관측됐고 같은 세션의 R000007이 선택돼 빠지지 않았지만, 변경이 결제 경로 클래스에만 있었다면 요청 단위 영향에서는 빠졌을 것이다. 세션 단위 선택이 이 한계를 덮는다는 근거로 기록한다
 - 후속: 4.1 보고서 D-4.1a
+- 결정: D-4.1a (A) — 4.2 영향 요청은 첫 결제 7건(R000008 제외), 세션·재생 수 기대 유지
 
 ### O16. 세션 단위 선택이 홉 합산의 효과를 가린다 — 쿠폰 세션은 진입 홉 `coupon.create`로도 잡힌다
 - 날짜·단계: 2026-11-02, 4.1

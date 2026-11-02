@@ -1,0 +1,614 @@
+{
+  "_doc": "Phase 4.2 영향 기대 사전 등록 — impact.py 실행 전 커밋. 소스의 코드 참조(주석·문자열 제외)와 scoping/map.json에서 손으로 도출했다. 결과를 보고 고치지 않는다 — 고치면 버전·사유·전후 결과·사전 등록 아님을 명시. 경계 사례 E1~E7의 정본 기대는 4.6에서 등록.",
+  "aux": {
+    "E5-literal": {
+      "assumeChanged": [
+        "poc.order.OrderItem"
+      ],
+      "base": "phase3.5-v1.4",
+      "global": true,
+      "head": "phase3.5-v1.4",
+      "impactedRequestSet": "all",
+      "nameResolution": "literal",
+      "note": "같은 오탐. 정본 기대는 4.6에서 등록(order.*)",
+      "of": "E5(OrderItem만 — 4.6 경계 사례)",
+      "selectedRequests": 48,
+      "selectedSessionSet": "all"
+    },
+    "F2-literal": {
+      "global": true,
+      "impactedRequestSet": "all",
+      "nameResolution": "literal",
+      "note": "같은 오탐",
+      "of": "F2",
+      "selectedRequests": 48,
+      "selectedSessionSet": "all"
+    },
+    "v1.1-ignore-build": {
+      "global": false,
+      "ignoreKind": [
+        "build"
+      ],
+      "impactedRequestSet": "first_pay",
+      "observed": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "of": "v1.1",
+      "selectedRequests": 30,
+      "selectedSessionSet": "first_pay"
+    },
+    "v1.2-literal": {
+      "global": true,
+      "impactedRequestSet": "all",
+      "nameResolution": "literal",
+      "note": "D24 원래 문구 — Spring @Order → RequestLogFilter → 참조 없음. 텍스트 폐포 오탐 사례",
+      "of": "v1.2",
+      "selectedRequests": 48,
+      "selectedSessionSet": "all"
+    }
+  },
+  "mapBodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+  "requestSets": {
+    "all": [
+      "R000001",
+      "R000002",
+      "R000003",
+      "R000004",
+      "R000005",
+      "R000006",
+      "R000007",
+      "R000008",
+      "R000009",
+      "R000010",
+      "R000011",
+      "R000012",
+      "R000013",
+      "R000014",
+      "R000015",
+      "R000016",
+      "R000017",
+      "R000018",
+      "R000019",
+      "R000020",
+      "R000021",
+      "R000022",
+      "R000023",
+      "R000024",
+      "R000025",
+      "R000026",
+      "R000027",
+      "R000028",
+      "R000029",
+      "R000030",
+      "R000031",
+      "R000032",
+      "R000033",
+      "R000034",
+      "R000035",
+      "R000036",
+      "R000037",
+      "R000038",
+      "R000039",
+      "R000040",
+      "R000041",
+      "R000042",
+      "R000043",
+      "R000044",
+      "R000045",
+      "R000046",
+      "R000047",
+      "R000048"
+    ],
+    "coupon_service": [
+      "R000015",
+      "R000016",
+      "R000017",
+      "R000018",
+      "R000019",
+      "R000020",
+      "R000021",
+      "R000022",
+      "R000023",
+      "R000024",
+      "R000025",
+      "R000026",
+      "R000027",
+      "R000029",
+      "R000031",
+      "R000032",
+      "R000033",
+      "R000035",
+      "R000036",
+      "R000037",
+      "R000039",
+      "R000043",
+      "R000044",
+      "R000045"
+    ],
+    "first_pay": [
+      "R000003",
+      "R000007",
+      "R000012",
+      "R000029",
+      "R000033",
+      "R000041",
+      "R000045"
+    ],
+    "order_all": [
+      "R000001",
+      "R000002",
+      "R000003",
+      "R000004",
+      "R000005",
+      "R000006",
+      "R000007",
+      "R000008",
+      "R000009",
+      "R000010",
+      "R000011",
+      "R000012",
+      "R000013",
+      "R000014",
+      "R000027",
+      "R000028",
+      "R000029",
+      "R000030",
+      "R000032",
+      "R000033",
+      "R000034",
+      "R000036",
+      "R000037",
+      "R000038",
+      "R000040",
+      "R000041",
+      "R000042",
+      "R000044",
+      "R000045",
+      "R000046",
+      "R000047",
+      "R000048"
+    ]
+  },
+  "rules": {
+    "closure": "BFS는 관측 클래스를 지나서도 깊이 3까지 계속(첫 도달에서 멈추지 않는다). 미관측 클래스가 관측 클래스에 닿지 못하면 미해결(순환은 미해결 사유가 아니다)",
+    "nameResolution": "decision-log D24 보완 2(D-4.1c)",
+    "requestSet": "order.pay 영향은 첫 결제 7건(R000008 제외, D-4.1a). 세션·재생 수는 계획 그대로",
+    "variantRange": "decision-log D24 보완(D-4.0a)"
+  },
+  "sessionSets": {
+    "all": [
+      "S001",
+      "S002",
+      "S003",
+      "S004",
+      "S005",
+      "S006",
+      "S007",
+      "S008",
+      "S009",
+      "S010",
+      "S011"
+    ],
+    "coupon_service": [
+      "S004",
+      "S005",
+      "S006",
+      "S007",
+      "S008",
+      "S010"
+    ],
+    "first_pay": [
+      "S001",
+      "S002",
+      "S003",
+      "S006",
+      "S007",
+      "S009",
+      "S010"
+    ],
+    "order_all": [
+      "S001",
+      "S002",
+      "S003",
+      "S006",
+      "S007",
+      "S008",
+      "S009",
+      "S010",
+      "S011"
+    ]
+  },
+  "variants": {
+    "C1": {
+      "ablationB": {
+        "expected": "미관측 → 참조 없음 → 전역",
+        "selectedSessions": 11
+      },
+      "base": "phase3.3-base",
+      "changedClasses": [
+        "poc.coupon.OrderPaidListener"
+      ],
+      "global": false,
+      "head": "change/C1",
+      "impactedRequestSet": "first_pay",
+      "note": "target 쿠폰 결제 3 ⊂. 영향 요청 7건(R000008 제외, D-4.1a). 브랜치·판정 기대는 4.5",
+      "observed": [
+        "poc.coupon.OrderPaidListener"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.375,
+      "reductionSessions": 0.3636,
+      "selectedRequests": 30,
+      "selectedSessionSet": "first_pay",
+      "status": "4.5에서 실행",
+      "unobserved": {}
+    },
+    "C2": {
+      "ablationA": {
+        "reductionRequests": 0.0,
+        "selectedSessions": 11
+      },
+      "ablationB": {
+        "impactedRequests": {
+          "merged": 24,
+          "noHopMerge": 16
+        },
+        "note": "계획 4.5의 2세션·Recall < 1을 run 전에 대체(D-4.1b, findings O16)",
+        "recallExpected": 1.0,
+        "selectedRequests": 29,
+        "selectedSessions": 6,
+        "tagRankQuality": "보조 결과로 계산 — 요청 단위 차이는 Tag에서 드러난다(D-4.1b)"
+      },
+      "base": "phase3.3-base",
+      "changedClasses": [
+        "poc.coupon.CouponService"
+      ],
+      "global": false,
+      "head": "change/C2",
+      "impactedRequestSet": "coupon_service",
+      "note": "target 직접 use + 0.h1 ⊂. 브랜치·판정 기대는 4.5",
+      "observed": [
+        "poc.coupon.CouponService"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.3958,
+      "reductionSessions": 0.4545,
+      "selectedRequests": 29,
+      "selectedSessionSet": "coupon_service",
+      "status": "4.5에서 실행",
+      "unobserved": {}
+    },
+    "F1": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.OrderService"
+      ],
+      "global": false,
+      "head": "fault/F1",
+      "impactedRequestSet": "order_all",
+      "note": "target R000008(S002) ⊂",
+      "observed": [
+        "poc.order.OrderService"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {}
+    },
+    "F2": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.Order"
+      ],
+      "global": false,
+      "head": "fault/F2",
+      "impactedRequestSet": "order_all",
+      "note": "D24 보완 2 적용 결과 — 원래 문구는 aux.F2-literal",
+      "observed": [],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {
+        "poc.order.Order": {
+          "reachedClasses": [
+            "poc.order.OrderController",
+            "poc.order.OrderRepository",
+            "poc.order.OrderService"
+          ],
+          "unresolved": false
+        }
+      }
+    },
+    "F3": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.OrderEventPublisher"
+      ],
+      "global": false,
+      "head": "fault/F3",
+      "impactedRequestSet": "first_pay",
+      "note": "target 첫 결제 7 ⊂. 영향 요청 7건(R000008 제외, D-4.1a)",
+      "observed": [
+        "poc.order.OrderEventPublisher"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.375,
+      "reductionSessions": 0.3636,
+      "selectedRequests": 30,
+      "selectedSessionSet": "first_pay",
+      "unobserved": {}
+    },
+    "F4": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.OrderService"
+      ],
+      "global": false,
+      "head": "fault/F4",
+      "impactedRequestSet": "order_all",
+      "note": "target S008 ⊂",
+      "observed": [
+        "poc.order.OrderService"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {}
+    },
+    "F5": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "global": false,
+      "head": "fault/F5",
+      "impactedRequestSet": "order_all",
+      "observed": [
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {}
+    },
+    "F6": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.OrderView"
+      ],
+      "global": false,
+      "head": "fault/F6",
+      "impactedRequestSet": "order_all",
+      "observed": [],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {
+        "poc.order.OrderView": {
+          "reachedClasses": [
+            "poc.order.OrderController",
+            "poc.order.OrderService"
+          ],
+          "unresolved": false
+        }
+      }
+    },
+    "F7": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "global": false,
+      "head": "fault/F7",
+      "impactedRequestSet": "first_pay",
+      "note": "target S009 ⊂. 영향 요청 7건(R000008 제외, D-4.1a)",
+      "observed": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.375,
+      "reductionSessions": 0.3636,
+      "selectedRequests": 30,
+      "selectedSessionSet": "first_pay",
+      "unobserved": {}
+    },
+    "F8": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "global": false,
+      "head": "fault/F8",
+      "impactedRequestSet": "order_all",
+      "observed": [
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {}
+    },
+    "F9": {
+      "base": "phase3.5-v1.4",
+      "changedClasses": [
+        "poc.order.OrderService"
+      ],
+      "global": false,
+      "head": "fault/F9",
+      "impactedRequestSet": "order_all",
+      "observed": [
+        "poc.order.OrderService"
+      ],
+      "pathFilter": null,
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {}
+    },
+    "v1.1": {
+      "base": "phase3.3-base",
+      "changedClasses": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "global": true,
+      "globalReasonsInclude": [
+        "build:services/order/pom.xml"
+      ],
+      "head": "fd839d6",
+      "impactedRequestSet": "all",
+      "note": "정본 전역(pom). 보조 산출은 aux.v1.1-ignore-build",
+      "observed": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "pathFilter": "services/",
+      "reductionRequests": 0.0,
+      "reductionSessions": 0.0,
+      "selectedRequests": 48,
+      "selectedSessionSet": "all",
+      "unobserved": {}
+    },
+    "v1.2": {
+      "base": "fd839d6",
+      "changedClasses": [
+        "poc.order.Order",
+        "poc.order.OrderItem",
+        "poc.order.OrderRepository"
+      ],
+      "global": false,
+      "head": "fc6e6e2",
+      "impactedRequestSet": "order_all",
+      "note": "규칙 3 실례. D24 보완 2(언어 이름 해석) 적용 결과 — 원래 문구는 aux.v1.2-literal",
+      "observed": [
+        "poc.order.OrderRepository"
+      ],
+      "pathFilter": "services/",
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {
+        "poc.order.Order": {
+          "reachedClasses": [
+            "poc.order.OrderController",
+            "poc.order.OrderRepository",
+            "poc.order.OrderService"
+          ],
+          "unresolved": false
+        },
+        "poc.order.OrderItem": {
+          "reachedClasses": [
+            "poc.order.OrderController",
+            "poc.order.OrderRepository",
+            "poc.order.OrderService"
+          ],
+          "unresolved": false
+        }
+      }
+    },
+    "v1.3": {
+      "base": "fc6e6e2",
+      "changedClasses": [
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderPaid",
+        "poc.order.OrderService"
+      ],
+      "global": false,
+      "head": "c64618f",
+      "impactedRequestSet": "order_all",
+      "note": "Outcome·NewItem은 OrderService 중첩 — 바깥 클래스로",
+      "observed": [
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderService"
+      ],
+      "pathFilter": "services/",
+      "reductionRequests": 0.2292,
+      "reductionSessions": 0.1818,
+      "selectedRequests": 37,
+      "selectedSessionSet": "order_all",
+      "unobserved": {
+        "poc.order.OrderPaid": {
+          "reachedClasses": [
+            "poc.order.OrderController",
+            "poc.order.OrderEventPublisher",
+            "poc.order.OrderService"
+          ],
+          "unresolved": false
+        }
+      }
+    },
+    "v1.4": {
+      "base": "c64618f",
+      "changedClasses": [
+        "poc.order.ClockConfig",
+        "poc.order.CouponClient",
+        "poc.order.OrderApplication",
+        "poc.order.OrderController",
+        "poc.order.OrderView",
+        "poc.order.requestlog.CachedBodyRequest",
+        "poc.order.requestlog.RequestLogFilter"
+      ],
+      "global": true,
+      "globalReasonsInclude": [
+        "unresolved:poc.order.requestlog.CachedBodyRequest",
+        "unresolved:poc.order.requestlog.RequestLogFilter",
+        "unresolved:poc.order.ClockConfig",
+        "unresolved:poc.order.OrderApplication"
+      ],
+      "head": "120b212",
+      "impactedRequestSet": "all",
+      "note": "설정·필터·메인 fail-closed. 계획 표의 3개(참조 없음)에 CachedBodyRequest(→ RequestLogFilter → 참조 없음)가 더해진다",
+      "observed": [
+        "poc.order.CouponClient",
+        "poc.order.OrderController"
+      ],
+      "pathFilter": "services/",
+      "reductionRequests": 0.0,
+      "reductionSessions": 0.0,
+      "selectedRequests": 48,
+      "selectedSessionSet": "all",
+      "unobserved": {
+        "poc.order.ClockConfig": {
+          "reachedClasses": [],
+          "unresolved": true
+        },
+        "poc.order.OrderApplication": {
+          "reachedClasses": [],
+          "unresolved": true
+        },
+        "poc.order.OrderView": {
+          "reachedClasses": [
+            "poc.order.OrderController",
+            "poc.order.OrderService"
+          ],
+          "unresolved": false
+        },
+        "poc.order.requestlog.CachedBodyRequest": {
+          "reachedClasses": [],
+          "unresolved": true
+        },
+        "poc.order.requestlog.RequestLogFilter": {
+          "reachedClasses": [],
+          "unresolved": true
+        }
+      }
+    }
+  },
+  "version": "scope-expectations-v1"
+}
