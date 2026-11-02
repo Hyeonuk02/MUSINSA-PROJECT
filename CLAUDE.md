@@ -81,7 +81,7 @@ Git Diff → Call Graph → 영향 API → k6 → Istio Mirroring → Legacy / N
 | 4.2 | 영향 산출 + 15 변형 사전 등록(scope-expectations.json) | 완료 — 사전 등록 대조 11/13(impact-v1.0), impact-v1.1(사전 등록 아님) 후 회귀 확인 13/13 — docs/reports/phase4.2.md |
 | 4.3 | 오프라인 평가 — 13 변형 + B2-S 전체 조합 + ablation 2종 | 완료(결정 대기 1건: tags.json 입도) — docs/reports/phase4.3.md (F Recall 9/9 = 1.0, 감소율 0/22.9/37.5%) |
 | 4.4 | 파이프라인 Tag/Filter + 실제 run(Filter F3·F9 ×3, Tag F8·F3 ×1) | 완료(결정 대기 1건: C2 리팩터링) — docs/reports/phase4.4.md (Filter 89/89 pair 일치 ×3, dbstate 기대 일치, Tag 비-SAME 전부 inScope) |
-| 4.5 | 서비스 간 변경 — Coupon C1(Kafka 홉)·C2(HTTP 홉) | |
+| 4.5 | 서비스 간 변경 — Coupon C1(Kafka 홉)·C2(HTTP 홉) | 완료 — docs/reports/phase4.5.md (C1 CV 3·dbstate 위반, C2 Uncertain 9 → same 라벨 → eval 0, Recall 1.0, Filter 동일, 관측된 차이 정의 D26) |
 | 4.6 | 스코핑 경계 사례 E1~E7 (impact만) | |
 | 4.7 | 지표·보고 + Phase 4 마감(phase4-done) | |
 | 4.8 | (선택) 선택적 미러 시연 — VirtualService match | |

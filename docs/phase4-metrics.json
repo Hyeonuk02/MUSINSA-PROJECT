@@ -12,6 +12,233 @@
   "recallBelowOne": [],
   "tool": "impact-v1.1",
   "variants": {
+    "C1": {
+      "ablation": {
+        "endpointUnion": {
+          "global": false,
+          "impactedRequests": 8,
+          "recall": 1.0,
+          "reductionRequests": 0.375,
+          "selectedRequests": 30,
+          "selectedSessions": 7,
+          "tag": {
+            "request": {
+              "budget": 0.25,
+              "diffs": 3,
+              "diffsInScope": 3,
+              "inScopePairs": 15,
+              "rate": 1.0
+            },
+            "session": {
+              "budget": 0.6667,
+              "diffs": 3,
+              "diffsInScope": 3,
+              "inScopePairs": 40,
+              "rate": 1.0
+            }
+          }
+        },
+        "noHopMerge": {
+          "global": true,
+          "impactedRequests": 48,
+          "recall": 1.0,
+          "reductionRequests": 0.0,
+          "selectedRequests": 48,
+          "selectedSessions": 11,
+          "tag": {
+            "request": {
+              "budget": 1.0,
+              "diffs": 3,
+              "diffsInScope": 3,
+              "inScopePairs": 60,
+              "rate": 1.0
+            },
+            "session": {
+              "budget": 1.0,
+              "diffs": 3,
+              "diffsInScope": 3,
+              "inScopePairs": 60,
+              "rate": 1.0
+            }
+          }
+        }
+      },
+      "b2s": {
+        "k": 7,
+        "requestBudget": {
+          "budget": 30,
+          "fullRecallRate": 0.0775,
+          "mean": 0.4496,
+          "min": 0.0,
+          "subsets": 1651
+        },
+        "sameSessionCount": {
+          "fullRecallRate": 0.2121,
+          "mean": 0.6364,
+          "min": 0.0,
+          "subsets": 330
+        }
+      },
+      "detection": {
+        "ratio": 1.0,
+        "selected": 3,
+        "total": 3
+      },
+      "global": false,
+      "impactedRequests": 7,
+      "precision": 0.075,
+      "recall": 1.0,
+      "recallPerRun": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "recallWithF0": 0.75,
+      "reductionRequests": 0.375,
+      "reductionSessions": 0.3636,
+      "selectedRequests": 30,
+      "selectedSessions": 7,
+      "sessionChecks": {
+        "full": 0,
+        "inSelected": 0
+      },
+      "tag": {
+        "request": {
+          "budget": 0.2333,
+          "diffs": 3,
+          "diffsInScope": 3,
+          "inScopePairs": 14,
+          "rate": 1.0
+        },
+        "session": {
+          "budget": 0.6667,
+          "diffs": 3,
+          "diffsInScope": 3,
+          "inScopePairs": 40,
+          "rate": 1.0
+        }
+      },
+      "toolVersion": "impact-v1.1"
+    },
+    "C2": {
+      "ablation": {
+        "endpointUnion": {
+          "global": false,
+          "impactedRequests": 34,
+          "recall": 1.0,
+          "reductionRequests": 0.0,
+          "selectedRequests": 48,
+          "selectedSessions": 11,
+          "tag": {
+            "request": {
+              "budget": 0.7667,
+              "diffs": 9,
+              "diffsInScope": 9,
+              "inScopePairs": 46,
+              "rate": 1.0
+            },
+            "session": {
+              "budget": 1.0,
+              "diffs": 9,
+              "diffsInScope": 9,
+              "inScopePairs": 60,
+              "rate": 1.0
+            }
+          }
+        },
+        "noHopMerge": {
+          "global": false,
+          "impactedRequests": 16,
+          "recall": 1.0,
+          "reductionRequests": 0.3958,
+          "selectedRequests": 29,
+          "selectedSessions": 6,
+          "tag": {
+            "request": {
+              "budget": 0.2667,
+              "diffs": 9,
+              "diffsInScope": 4,
+              "inScopePairs": 16,
+              "rate": 0.4444
+            },
+            "session": {
+              "budget": 0.6167,
+              "diffs": 9,
+              "diffsInScope": 9,
+              "inScopePairs": 37,
+              "rate": 1.0
+            }
+          }
+        }
+      },
+      "b2s": {
+        "k": 6,
+        "requestBudget": {
+          "budget": 29,
+          "fullRecallRate": 0.0006,
+          "mean": 0.4309,
+          "min": 0.0,
+          "subsets": 1570
+        },
+        "sameSessionCount": {
+          "fullRecallRate": 0.0022,
+          "mean": 0.5455,
+          "min": 0.1111,
+          "subsets": 462
+        }
+      },
+      "detection": {
+        "ratio": 1.0,
+        "selected": 9,
+        "total": 9
+      },
+      "global": false,
+      "impactedRequests": 24,
+      "precision": 0.2432,
+      "recall": 1.0,
+      "recallPerRun": [
+        1.0,
+        1.0,
+        1.0
+      ],
+      "recallWithF0": 0.9,
+      "reductionRequests": 0.3958,
+      "reductionSessions": 0.4545,
+      "review": {
+        "evalUncertainAfter": 0,
+        "evalUncertainBefore": 3,
+        "learnUncertainAfter": 0,
+        "learnUncertainBefore": 6,
+        "sameWithRules": 9,
+        "uncertainDiffKinds": [
+          "callTree.sequenceReplaced",
+          "dbRead.countDelta"
+        ]
+      },
+      "selectedRequests": 29,
+      "selectedSessions": 6,
+      "sessionChecks": {
+        "full": 0,
+        "inSelected": 0
+      },
+      "tag": {
+        "request": {
+          "budget": 0.5333,
+          "diffs": 9,
+          "diffsInScope": 9,
+          "inScopePairs": 32,
+          "rate": 1.0
+        },
+        "session": {
+          "budget": 0.6167,
+          "diffs": 9,
+          "diffsInScope": 9,
+          "inScopePairs": 37,
+          "rate": 1.0
+        }
+      },
+      "toolVersion": "impact-v1.1"
+    },
     "F1": {
       "ablation": {
         "endpointUnion": {
@@ -1429,6 +1656,8 @@
     }
   },
   "verdictSameAcrossRuns": {
+    "C1": true,
+    "C2": true,
     "F1": true,
     "F2": true,
     "F3": true,

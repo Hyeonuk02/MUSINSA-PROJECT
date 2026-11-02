@@ -28,10 +28,11 @@ OFFLINE_GAPS = ("dbstate_equal", "undelivered", "degraded", "settleTimeouts", "r
 LADDER = ("v1.1", "v1.2", "v1.3", "v1.4")
 FAULTS = tuple(f"F{i}" for i in range(1, 10))
 DUAL = ("v1.2", "F2")     # impact-v1.0과 나란히 싣는 변형(D-4.2a)
+CHANGES = ("C1", "C2")    # 서비스 간 변경(4.5)
 
 
 def run_ids(variant: str) -> list[str]:
-    prefix = "p35" if variant.startswith("v") else "p36"
+    prefix = {"v": "p35", "F": "p36", "C": "p45"}[variant[0]]
     return [f"{prefix}-{variant}-{i}" for i in (1, 2, 3)]
 
 
@@ -144,6 +145,16 @@ def ablation_row(variant_map: dict, imp: dict, pairs: dict, corpus: dict) -> dic
             "recall": recall(pairs, sessions), "tag": tag_quality(pairs, sessions, set(other["impactedRequests"]))}
 
 
+def review_effect(before: dict, after: dict) -> dict:
+    """사람 검토 감소: 규칙 적용 전(라벨 전)과 후의 Uncertain — 규칙 적용 후 verdict 기준(D26)."""
+    def count(v, split):
+        return sum(p["verdict"] == "UNCERTAIN" and p["split"] == split for p in v["pairs"])
+    kinds = sorted({u["diffKind"] for p in before["pairs"] if p["verdict"] == "UNCERTAIN" for u in p["uncertain"]})
+    return {"evalUncertainBefore": count(before, "eval"), "evalUncertainAfter": count(after, "eval"),
+            "learnUncertainBefore": count(before, "learn"), "learnUncertainAfter": count(after, "learn"),
+            "uncertainDiffKinds": kinds, "sameWithRules": sum(p["verdict"] == "SAME" and bool(p["appliedRules"]) for p in after["pairs"])}
+
+
 def fmt(v) -> str:
     return "N/A" if v is None else f"{v:.4g}"
 
@@ -158,7 +169,7 @@ def table(metrics: dict) -> str:
         bb = f"{b['requestBudget']['mean']:.3f}·{b['requestBudget']['fullRecallRate']:.4f} ({b['requestBudget']['subsets']})" if b else "N/A"
         return (f"| {name} | {r['toolVersion'].removeprefix('impact-')} | {r['selectedSessions']}/11 | {r['selectedRequests']}/48 | {r['reductionRequests']:.1%} | {r['reductionSessions']:.1%} "
                 f"| {fmt(r['recall'])} | {fmt(r['recallWithF0'])} | {f'{d['selected']}/{d['total']}' if d else 'N/A'} | {fmt(r['precision'])} | {r['sessionChecks']['inSelected']}/{r['sessionChecks']['full']} | {bs} | {bb} |")
-    for v in FAULTS:
+    for v in FAULTS + tuple(c for c in CHANGES if c in metrics["variants"]):
         if f"{v}@impact-v1.0" in metrics["variants"]:
             out.append(row(v, metrics["variants"][f"{v}@impact-v1.0"]))
         out.append(row(v, metrics["variants"][v]))
@@ -170,7 +181,7 @@ def table(metrics: dict) -> str:
         out.append(row(v, metrics["variants"][v]))
     out += ["", "## ablation (impact-v1.1)", "", "| 변형 | 맵 | 전역 | 세션 | 요청 | 영향 요청 | 감소(요청) | Recall | Tag 세션 입도(예산·포함) | Tag 요청 입도(예산·포함) |",
             "|---|---|---|---|---|---|---|---|---|---|"]
-    for v in FAULTS + LADDER:
+    for v in FAULTS + LADDER + tuple(c for c in CHANGES if c in metrics["variants"]):
         r = metrics["variants"][v]
         rows = [("정본", {**r, "tag": r["tag"]}), ("(a) 엔드포인트", r["ablation"]["endpointUnion"]), ("(b) 합산 없음(보조: Tag)", r["ablation"]["noHopMerge"])]
         for label, x in rows:
@@ -198,7 +209,8 @@ def main(argv: list[str]) -> int:
     union_map, no_hop_map = endpoint_union_map(m), no_hop_merge_map(m)
 
     variants, determinism = {}, {}
-    for v in FAULTS + LADDER:
+    changes = tuple(c for c in CHANGES if (args.impacts / f"{c}.json").exists())
+    for v in FAULTS + LADDER + changes:
         verdicts = [load_verdict(args.runs / r) for r in run_ids(v)]
         per_run = [pair_verdicts(x) for x in verdicts]
         determinism[v] = all(p == per_run[0] for p in per_run)
@@ -208,12 +220,15 @@ def main(argv: list[str]) -> int:
         row = evaluate_selection(imp, pairs, verdict, targets, index, sizes)
         row["recallPerRun"] = [recall(p, set(imp["selectedSessions"])) for p in per_run]
         row["ablation"] = {"endpointUnion": ablation_row(union_map, imp, pairs, corpus), "noHopMerge": ablation_row(no_hop_map, imp, pairs, corpus)}
+        prelabel = args.runs / run_ids(v)[0] / "verdict-prelabel.json"
+        if v in CHANGES and prelabel.exists():
+            row["review"] = review_effect(load_verdict(args.runs / run_ids(v)[0], "verdict-prelabel.json"), verdict)
         variants[v] = row
         if v in DUAL:
             old = json.loads((args.impacts / "aux" / f"{v}.impact-v1.0.json").read_text(encoding="utf-8"))
             variants[f"{v}@impact-v1.0"] = evaluate_selection(old, pairs, verdict, targets, index, sizes)
 
-    fn = [v for v in FAULTS if variants[v]["recall"] != 1.0]
+    fn = [v for v in FAULTS + changes if variants[v]["recall"] != 1.0]
     metrics = {"tool": impact.IMPACT_VERSION, "mapBodySha256": m["bodySha256"], "f0Pair": F0_PAIR,
                "notEvaluatedOffline": {k: NOT_OFFLINE for k in OFFLINE_GAPS}, "verdictSameAcrossRuns": determinism,
                "variants": variants, "recallBelowOne": fn}

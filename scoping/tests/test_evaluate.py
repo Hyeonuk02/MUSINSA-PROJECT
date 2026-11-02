@@ -88,3 +88,14 @@ def test_same_with_applied_rules_is_observed_diff_before_rules():
     assert ev.precision(pairs, {"S1"}) == 1.0
     assert ev.b2s(pairs, ["S1"], 1, {"S1": 1, "S2": 1})["sameSessionCount"]["fullRecallRate"] == 0.5
     assert ev.tag_quality(pairs, {"S1"}, {"R1"})["request"]["rate"] == 1.0
+
+
+def test_review_effect_uses_verdict_after_rules():
+    def p(split, verdict, rules=(), kinds=()):
+        return {"split": split, "verdict": verdict, "appliedRules": list(rules), "uncertain": [{"diffKind": k} for k in kinds]}
+    before = {"pairs": [p("eval", "UNCERTAIN", kinds=["dbRead.countDelta"]), p("learn", "UNCERTAIN", kinds=["callTree.sequenceReplaced"])]}
+    after = {"pairs": [p("eval", "SAME", rules=[{"rule": "r"}]), p("learn", "SAME", rules=[{"rule": "r"}])]}
+    r = ev.review_effect(before, after)
+    assert (r["evalUncertainBefore"], r["evalUncertainAfter"], r["learnUncertainBefore"], r["sameWithRules"]) == (1, 0, 1, 2)
+    assert r["uncertainDiffKinds"] == ["callTree.sequenceReplaced", "dbRead.countDelta"]
+

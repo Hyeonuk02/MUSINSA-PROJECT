@@ -151,3 +151,10 @@
 - 왜 중요: 기록된 복구 절차(`phase2-plan` 2.6)는 ingressgateway·order만 적었지만 Phase 3 이후 메시 구성원이 늘어 sidecar Deployment 12개와 도구 pod 2개가 모두 대상이다. 그대로 두면 run이 시작되지 않는다(fail-closed는 의도대로 동작). 호스트 sleep 후 원인이라는 것은 추정이다
 - 후속: 장기 run이나 4.5 전에는 preflight 실패 시 전체 재시작. 자동 복구는 넣지 않는다
 
+### O21. 해상도·홉 합산의 효과는 Coupon 변경에서만 나타나고, HTTP 홉 합산은 Tag에서만 보인다
+- 날짜·단계: 2026-11-02, 4.5
+- 봤다: 13 변형에서는 ablation 2종의 선택이 정본과 같았는데, C2는 엔드포인트 합집합이면 39.6% → 0%(11세션), C1은 홉 합산이 없으면 37.5% → 0%(미관측 → 전역)다. C2는 홉 합산이 없어도 6세션·Recall 1.0이고 요청 입도 Tag 포함만 9 → 4로 떨어진다(`0.h1` 5 pair)
+- 근거: `docs/phase4-metrics.json` C1·C2 `ablation`, `docs/reports/logs/phase4.5-metrics.txt`
+- 왜 중요: 스코핑 이득은 맵 해상도와 변경 위치의 곱이다. O16의 예상이 실측으로 확인됐다 — 세션 단위 재생은 HTTP 홉 합산 부재를 가리지만 "왜 이 pair를 봐야 하는가"라는 리뷰 근거에서는 차이가 난다. Kafka 소비 홉 전용 클래스는 합산이 없으면 fail-closed로 이득을 전부 잃는다
+- 후속: 4.7 지표·보고
+
