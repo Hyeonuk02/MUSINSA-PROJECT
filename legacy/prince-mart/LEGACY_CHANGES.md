@@ -124,6 +124,21 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
   (공통 필드 이름은 hyeonuk-dev Phase 2 계약과 같게 맞춤: schemaVersion, sessionId, version, request.path, 소문자 헤더 맵,
   `sha256:` 해시, ISO 시각 + nano. legacy-decision-log L11)
 
+### L-I3. Evidence 타임라인과 트랜잭션 경계 (Evidence v1)
+
+- 이유: 응답·SQL만 비교하면 "커밋 전 발행", 롤백 누락, 중복 호출 같은 결함을 놓친다(hyeonuk-dev findings O11).
+  요청 하나 안에서 SQL·호출·이벤트·트랜잭션 경계를 같은 seq 타임라인에 올려 순서로 판정할 수 있게 한다. 비즈니스 결과는 바꾸지 않는다.
+- 변경(원본 `evidence/core/`, `sync.sh`로 세 서비스에 복사)
+  - `EvidenceContext`: 요청마다 타임라인 카운터. `dbAccess.statements`가 `{seq, sql}`, `outbound`·`events`에 `seq`, `transactions[]` 추가.
+    Feign 호출의 seq는 호출 시작 시점
+  - 신규 `EvidenceTransactionListener`: Spring 6.1+ `TransactionExecutionListener`를 BeanPostProcessor로 트랜잭션 매니저에 붙인다.
+    새로 시작된 트랜잭션만 `{seq, name, phase: COMMIT_BEGIN|COMPLETED, outcome: COMMITTED|ROLLED_BACK|FAILED}`로 기록
+    (API는 Spring 6.2·7.0에서 같다)
+  - `EvidenceRecorder`: `schemaVersion` v0 → v1
+- 실측으로 드러난 Legacy 성질(고치지 않음): payment verify는 **커밋 전에 이벤트를 발행**한다(PUBLISH → COMMIT_BEGIN → UPDATE).
+  order 주문 생성은 `coupons/use`를 커밋 전에 호출한다(B1의 원인이 타임라인에 보인다).
+- 스키마: [`docs/legacy-evidence-schema-v1.md`](../../docs/legacy-evidence-schema-v1.md)
+
 ---
 
 ## F — 기능 패치

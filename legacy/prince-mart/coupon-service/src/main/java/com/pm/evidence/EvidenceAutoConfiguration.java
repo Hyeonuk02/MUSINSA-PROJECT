@@ -46,4 +46,10 @@ public class EvidenceAutoConfiguration {
     EvidenceFeignCapability evidenceFeignCapability() {
         return new EvidenceFeignCapability();
     }
+
+    // [L-I3] 트랜잭션 경계. BeanPostProcessor라 static으로 등록한다(다른 빈보다 먼저 만들어져야 한다).
+    @Bean
+    static EvidenceTransactionListener.Registrar evidenceTransactionListenerRegistrar() {
+        return new EvidenceTransactionListener.Registrar();
+    }
 }

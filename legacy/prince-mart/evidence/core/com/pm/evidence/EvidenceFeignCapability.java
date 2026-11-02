@@ -16,14 +16,15 @@ public final class EvidenceFeignCapability implements Capability {
     public Client enrich(Client client) {
         return (request, options) -> {
             EvidenceContext.Record r = EvidenceContext.current();
+            int seq = r == null ? 0 : r.nextSeq();   // [L-I3] 타임라인 seq는 호출 시작 시점
             long start = System.nanoTime();
             try {
                 Response response = client.execute(request, options);
-                if (r != null) r.outbound(request.httpMethod().name(), request.url(), response.status(), null,
+                if (r != null) r.outbound(seq, request.httpMethod().name(), request.url(), response.status(), null,
                         (System.nanoTime() - start) / 1_000_000);
                 return response;
             } catch (java.io.IOException | RuntimeException e) {
-                if (r != null) r.outbound(request.httpMethod().name(), request.url(), null, e.getClass().getName(),
+                if (r != null) r.outbound(seq, request.httpMethod().name(), request.url(), null, e.getClass().getName(),
                         (System.nanoTime() - start) / 1_000_000);
                 throw e;
             }

@@ -12,7 +12,8 @@ import java.util.Map;
  */
 public final class EvidenceRecorder {
 
-    public static final String SCHEMA_VERSION = "v0";
+    // v1(L-I3): dbAccess.statements가 {seq, sql}, outbound·events에 seq, transactions 추가(요청 안 하나의 타임라인)
+    public static final String SCHEMA_VERSION = "v1";
 
     private final EvidenceSender sender;
     private final String stack;
@@ -48,6 +49,7 @@ public final class EvidenceRecorder {
         e.put("dbAccess", r.dbAccess());
         e.put("outbound", r.outbound);
         e.put("events", r.events);
+        e.put("transactions", r.transactions);
 
         Map<String, Object> timing = new LinkedHashMap<>();
         timing.put("arrivedAt", Instant.ofEpochMilli(r.arrivedAt).toString());
