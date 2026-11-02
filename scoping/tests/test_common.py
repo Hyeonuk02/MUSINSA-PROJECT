@@ -85,8 +85,3 @@ def test_name_status_ladder_and_fault_shapes():
     assert all(r["path"].startswith("services/") for r in only_services) and len(only_services) == 3
     f1 = common.name_status("phase3.5-v1.4", "fault/F1")
     assert f1 == [{"status": "M", "path": "services/order/src/main/kotlin/poc/order/OrderService.kt"}]
-
-
-def test_skeleton_clis_exit_2():
-    import evaluate
-    assert evaluate.main([]) == 2

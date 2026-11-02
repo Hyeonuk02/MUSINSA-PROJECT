@@ -220,6 +220,13 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 - 13 변형 표. 기대: F 변형 Recall 1.0, v1.x는 N/A(감소율만), 감소율 세 묶음(0% / 23% / 37.5%), F3·F7에서 B2-S 전체 조합의 Recall 1.0 비율이 1 미만(예: 7/11 선택에서 S009 포함 확률 7/11)
 - Recall < 1.0인 결함 변형이 있으면 규칙 6 위반(FN) — 멈추고 보고
 
+구현 시 확정 (4.3)
+- **입력 verdict**: `runs/<run>/verdict.json`(C, 규칙 후). 사다리 `p35-v1.x-1..3`, 결함 `p36-F<n>-1..3`. 지표는 run 1로 계산하고 3 run 판정 동일을 `verdictSameAcrossRuns`로, Recall은 `recallPerRun`으로 확인
+- **비-SAME**: `verdict != SAME` 전부(IMPROVEMENT·UNCERTAIN 포함). Precision 분자에는 선택 세션에 든 F0가 포함된다
+- **B2-S 보조**: 2,048개 부분집합(빈 집합 포함) 중 요청 수 ≤ 선택 요청 수인 것
+- **ablation 맵**: (a) 클래스 → 그 클래스가 든 엔드포인트의 진입·자식 홉 요청 전부 (b) 진입 홉 callTree만. 같은 `impact.compute`, impact-v1.1만
+- **Tag**: session·request 두 입도(D-4.3a 대기). v1.2·F2는 impact-v1.0 결과를 `<변형>@impact-v1.0` 키로 나란히
+
 ### 4.4 파이프라인 Tag/Filter + 실제 run
 
 할 것
