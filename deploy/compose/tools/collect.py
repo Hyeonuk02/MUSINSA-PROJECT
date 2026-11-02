@@ -87,7 +87,7 @@ def main():
                 "headers": {k: r["headers"][k] for k in sorted(r.get("headers", {}))},
             })
         for rid, calls in by_req.items():
-            evidence.append({"schemaVersion": "v0", "runId": args.run_id, "replayRequestId": rid, "sessionId": sessions.get(rid),
+            evidence.append({"schemaVersion": "v1", "runId": args.run_id, "replayRequestId": rid, "sessionId": sessions.get(rid),
                              "stack": st, "service": "wiremock", "kind": "external", "seq": 1, "calls": calls})
 
         events, untagged_ev = 0, 0
@@ -97,7 +97,7 @@ def main():
                 if not b.get("replayRequestId") or b.get("runId") != args.run_id:
                     untagged_ev += 1
                     continue
-                evidence.append({"schemaVersion": "v0", "runId": args.run_id, "replayRequestId": b["replayRequestId"],
+                evidence.append({"schemaVersion": "v1", "runId": args.run_id, "replayRequestId": b["replayRequestId"],
                                  "sessionId": b.get("sessionId"), "stack": st, "service": "kafka", "kind": "event",
                                  "seq": rec["offset"] + 1, "message": rec})
                 events += 1

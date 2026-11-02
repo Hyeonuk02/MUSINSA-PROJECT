@@ -1,7 +1,7 @@
 #!/usr/bin/env python3
 """Prince Mart 베이스라인 run script (Step 7-4, v10.1 §4.3)
 
-  python3 baseline/k6/run.py --run-id base-001 [--iterations 3] [--vus 1]
+  python3 baseline/k6/run.py --run-id base-001 [--iterations 3] [--vus 1] [--corpus baseline/corpus/corpus-v1.json]
 
 iteration마다:
   1. reset      deploy/compose/reset.sh (두 스택 S0)
@@ -27,7 +27,7 @@ import urllib.request
 ROOT = pathlib.Path(__file__).resolve().parents[2]
 COMPOSE = ROOT / "deploy" / "compose"
 BASELINE = ROOT / "baseline"
-CORPUS = BASELINE / "corpus" / "corpus-v1.json"
+CORPUS = BASELINE / "corpus" / "corpus-v1.1.json"   # --corpus로 바꿀 수 있다(v1 결과 재현)
 NORMALIZATION = BASELINE / "engine" / "normalization.json"   # Step 8에서 생긴다. 없으면 "none"
 STORE = "http://localhost:8099"
 K6_IMAGE = "grafana/k6@sha256:e66db15b860113878fa74670e31f5e274830b7b6e42c8bff28b2f2d86a257603"  # k6 v2.3.0
@@ -141,7 +141,7 @@ def one_run(run_id, base, iteration, vus):
     t = time.time()
     k6 = subprocess.run(["docker", "run", "--rm", "--network", NETWORK,
                          "-v", f"{BASELINE / 'k6'}:/k6:ro", "-v", f"{BASELINE / 'corpus'}:/corpus:ro", "-v", f"{out}:/out",
-                         "-e", f"RUN_ID={run_id}", "-e", f"VUS={vus}",
+                         "-e", f"RUN_ID={run_id}", "-e", f"VUS={vus}", "-e", f"CORPUS=/corpus/{CORPUS.name}",
                          K6_IMAGE, "run", "--quiet", "--log-format", "raw", "/k6/run.js"],
                         capture_output=True, text=True)
     k6_s = round(time.time() - t, 1)
@@ -183,7 +183,11 @@ def main():
     ap.add_argument("--run-id", required=True, help="기본 runId. iteration이 2 이상이면 <run-id>-<i>")
     ap.add_argument("--iterations", type=int, default=1)
     ap.add_argument("--vus", type=int, default=1)
+    ap.add_argument("--corpus", help="corpus 파일(기본 corpus-v1.1.json)")
     args = ap.parse_args()
+    global CORPUS
+    if args.corpus:
+        CORPUS = pathlib.Path(args.corpus).resolve()
 
     v = subprocess.run([sys.executable, str(BASELINE / "corpus" / "validate.py"), str(CORPUS)], capture_output=True, text=True)
     if v.returncode != 0:

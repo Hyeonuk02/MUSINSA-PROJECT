@@ -341,3 +341,72 @@ SQLite다(L10, v10.1 §11-2 미결). API가 같아 바꿔도 k6·엔진은 영�
 **대안**
 - corpus를 YAML로 — k6가 YAML을 읽지 못하고 Python 표준 라이브러리에도 없다. 팀원 계약도 JSON.
 - 요청마다 lag 0 확인 — k6에서 불가, consume Evidence로 같은 의미를 얻는다.
+
+### L13. 비교 엔진: export만 입력, B0/B1, 짝 맞춤은 요청 안 순서(norm-v1.1)
+
+**결정**
+- `baseline/engine/`의 비교 도구는 run export(`legacy.json`, `new.json`, `db-*.json`, `run-meta.json`, `k6-results.jsonl`)만 입력으로 받는다.
+- B0 = 식별 필드(`stack`)만 빼고 그대로 비교, 차이를 범주(trace 헤더·시각·소요 시간·그 밖)로 센다. B1 = `normalization.json` 적용 후 비교.
+- 짝 맞춤 키는 `(replayRequestId, service, kind, 그 요청 안에서 몇 번째)`. 서비스 단위 순번(`seq`)과 Kafka `offset`은 요청 단위 비교에서 뺀다(위치 값).
+  실행 순서는 서비스별 처리 순서 검사가 따로 본다.
+- 자동 증가 ID 마스킹은 A/A에서 끈다(켜면 결정성 깨짐을 숨긴다).
+
+**근거**
+- 실패 경로 실측(F1)에서 `seq`를 키로 쓰자 consume 1건 누락이 그 뒤 order Evidence 전체를 밀어 Undelivered 27 / Unexpected 18로 과다 보고했다
+  (실제 누락 9). New 비교에서도 내부 호출 하나가 늘거나 줄면 이후 전체가 차이로 쏟아져 진짜 차이가 묻힌다.
+  요청 안 위치로 짝지은 뒤 F1 보고가 실제 누락과 정확히 일치했고 aa-001 결과는 그대로였다.
+
+**대안**
+- hyeonuk-dev의 hopPath(`0.h1`, `0.e1`) 키 — 부모·자식 호출 관계까지 담아 더 정밀하다. 홉 경로 헤더를 서비스 사이에 전파하는 계측이 필요해
+  이번에는 요청 안 위치로 충분한지 먼저 본다(E3에서 재검토).
+
+### L14. Evidence v1: 요청 안 하나의 seq 타임라인과 트랜잭션 경계
+
+**결정**
+요청 하나 안에서 SQL·Feign 호출·이벤트 발행·트랜잭션 경계(`COMMIT_BEGIN`, `COMPLETED`)가 같은 카운터로 seq를 받는다(LEGACY_CHANGES L-I3).
+트랜잭션 경계는 Spring `TransactionExecutionListener`를 BeanPostProcessor로 매니저에 붙여 코드 변경 없이 잡는다.
+
+**근거**
+hyeonuk-dev Phase 3 결과(findings O11): 응답 + SQL 비교(B1)만으로는 멱등성·발행 시점·롤백·중복 호출 결함 13 pair를 놓쳤다.
+"커밋 전 발행"은 콜백 순서가 아니라 `publish.seq < COMMIT_BEGIN.seq`로 판정해야 한다(O9). 같은 축을 이 트랙에도 둔다.
+실측: payment verify는 Legacy에서 원래 커밋 전에 발행한다(PUBLISH 3 → COMMIT_BEGIN 4 → UPDATE 5). 팀원이 F3 결함으로 주입한 패턴이
+이 Legacy에서는 기준 동작이다. order 주문 생성은 `coupons/use`(9)를 커밋(14) 전에 호출한다 — B1의 원인이 타임라인에 보인다.
+
+**대안**
+- `TransactionSynchronization`을 요청마다 등록 — 트랜잭션을 여는 코드에 손을 대야 한다.
+- Hibernate 이벤트 리스너 — JPA 범위만 보인다(트랜잭션 이름·롤백 결과가 약하다).
+
+### L15. corpus v1.1: flow·split, 빈 곳 보강
+
+**결정**
+- v1의 세션 11개는 그대로 두고 세션마다 `flow`(order·order-coupon·coupon)와 `split`(learn·eval)을 붙였다(hyeonuk-dev corpus v2와 같은 의미·규칙:
+  flow마다 learn·eval 각 1개 이상). learn 4(S01·S02·S10·S11), eval 10.
+- 세션 3개 추가: S12(사용자당 주문 2건 → history·my-orders, 시각 동점), S13(같은 결제 재확정, Legacy 멱등성 없음),
+  S14(쿠폰 API 직접 호출). 세션 전용 쿠폰 `S14-FIX5000`을 S0 시드에 추가. 14세션·38요청, 스택당 앱 Evidence 80.
+- v1 결과(aa-001)는 보존한다. run script는 `--corpus`로 v1을 다시 돌릴 수 있다.
+
+**근거**
+규칙은 learn에서만 만들고 지표는 eval로 센다(팀원 방식). 결정론적 재생이라 run 반복은 새 표본이 아니므로 세션 단위로 홀드아웃한다.
+S13은 멱등성 결함(팀원 F1에 대응) 주입 자리, S12는 L5의 동점 정렬이 드러나는 자리다.
+
+### L16. 엔진 정렬 방침: 각자 완성하되 평가 입력·지표는 팀원과 맞춘다
+
+**결정** (2026-11-02, hyeonuk-dev `30e9c2c` Phase 3·4 문서를 읽고)
+- 두 엔진은 각자 완성한 뒤 결과를 비교해 고르거나 장점을 합친다. 그래서 형식은 맞춘다:
+  `fault-expectations.json`(run 전에 기대 판정을 커밋), `verdict.json`(pair별 판정·위반·적용 규칙, 요약),
+  Rule YAML과 uid(match에 요청·세션 ID 금지), learn/eval 분리, 지표 정의와 arm(B0 / B1 / C_norules / C_rules).
+- 결함 New 버전은 브랜치가 아니라 `baseline/faults/PF<n>.patch` + Docker 빌드 인자로 만든다(이미지 `prince-mart/*:PF<n>`).
+- **응답 status 변경은 항상 Contract Violation**이고 사전 승인 규칙으로 덮지 않는다. 대신 변경 내역(엔드포인트, legacy/new status, 예외 class)을
+  남기고, Human Review가 CV uid마다 처분 `accept`(의도된 계약 변경) / `fault`(결함)를 붙인다. 판정은 CV 그대로이고 지표에서 둘을 나눠 센다.
+- 팀원 쪽에서 가져올 것: 트랜잭션 경계·타임라인(L14), SELECT 수 변화는 기본 UNC이고 `max_selects` 선언 시에만 CV,
+  세션 범위 위반은 Legacy와 다르게 기여한 pair에만 귀속.
+
+**근거**
+- 평가 입력과 지표가 같아야 두 엔진을 같은 기준으로 비교하고 장점을 빼 올 수 있다.
+- 브랜치를 만들지 않는 것은 branch-park만 수정한다는 작업 원칙과 리소스 때문이다.
+- status 변경에 사전 승인 규칙을 두면 "어떤 status 변경까지 개선인가"에서 엣지 케이스가 생긴다(B6 수정 404→409/403 등).
+  판정은 보수적으로 두고 처분으로 구분하면 판정 기준이 흔들리지 않는다.
+
+**대안**
+- 사전 승인 규칙으로 status 변경을 IMP 인정 — 위 엣지 케이스로 배제.
+- 팀원 엔진을 그대로 사용 — Prince Mart의 여러 서비스·Kafka·실제 Legacy 버그를 다루는 축이 팀원 엔진에 없어 이 트랙에서 먼저 확인한다.

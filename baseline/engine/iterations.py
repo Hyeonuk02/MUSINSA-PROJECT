@@ -14,16 +14,12 @@ import pathlib
 import sys
 
 sys.path.insert(0, str(pathlib.Path(__file__).parent))
-from compare import diff_paths, normalize  # noqa: E402
+from compare import diff_paths, normalize, pair_index  # noqa: E402
 
 
 def legacy_normalized(run, rules, run_id):
     ev = json.loads((run / "legacy.json").read_text())
-    out = {}
-    for e in ev:
-        k = (e["replayRequestId"], e["service"], e["kind"], int(e.get("seq") or 0))
-        out[k] = json.loads(json.dumps(normalize(e, rules)).replace(run_id, "<RUN>"))
-    return out
+    return {k: json.loads(json.dumps(normalize(e, rules)).replace(run_id, "<RUN>")) for k, e in pair_index(ev).items()}
 
 
 def main():

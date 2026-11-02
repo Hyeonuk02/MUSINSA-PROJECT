@@ -9,6 +9,8 @@
 - 세션 독립성: userId가 세션마다 다르다. 쿠폰 코드(body.couponCode, path의 code=)가 세션 사이에 겹치지 않는다
 - ${변수}는 같은 세션의 앞선 요청이 capture한 것만 쓴다
 - 실행 시점 값 금지: 본문·경로에 Date/now/random/uuid 같은 토큰이 없다
+- (v1.1~) flow·split: 한 세션이라도 split이 있으면 모든 세션에 flow(order|order-coupon|coupon)·split(learn|eval)이 있어야 하고,
+  flow마다 learn·eval이 각각 1개 이상(hyeonuk-dev corpus v2와 같은 규칙)
 """
 import json
 import re
@@ -68,6 +70,17 @@ def main(path):
                 if owner != sid:
                     err(f"{rid}: 쿠폰 {code}를 {owner}와 공유(세션 독립성)")
             captured |= set((r.get("capture") or {}).keys())
+    sessions = c.get("sessions", [])
+    if any("split" in s for s in sessions):
+        seen = {}
+        for s in sessions:
+            if s.get("flow") not in ("order", "order-coupon", "coupon") or s.get("split") not in ("learn", "eval"):
+                err(f"{s.get('id')}: flow/split 누락 또는 값 오류")
+            else:
+                seen.setdefault(s["flow"], set()).add(s["split"])
+        for f, splits in seen.items():
+            if splits != {"learn", "eval"}:
+                err(f"flow {f}: learn·eval이 각각 1개 이상이어야 함(현재 {sorted(splits)})")
     print(json.dumps({"corpus": path, "version": c.get("version"), "sessions": len(seen_sessions),
                       "requests": len(seen_requests), "expectedEvidencePerStack": total_ev,
                       "errors": errors}, ensure_ascii=False, indent=1))

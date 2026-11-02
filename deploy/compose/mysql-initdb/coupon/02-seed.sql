@@ -31,3 +31,7 @@ INSERT INTO coupons (code, discount_type, discount_value, max_discount, min_orde
 ('S06-PGFAIL1', 'fixed',         1.00, NULL,             0.00,  '2026-12-31 23:59:59', NULL),
 ('S07-LIMIT1',  'fixed',      3000.00, NULL,             0.00,  '2026-12-31 23:59:59', 1),
 ('S11-FIX5000', 'fixed',      5000.00, NULL,        50000.00,  '2026-12-31 23:59:59', NULL);
+
+-- corpus-v1.1 추가 세션 전용 쿠폰(S14: 쿠폰 API 직접 검증).
+INSERT INTO coupons (code, discount_type, discount_value, max_discount, min_order_value, expiry_date, usage_limit) VALUES
+('S14-FIX5000', 'fixed',      5000.00, NULL,        50000.00,  '2026-12-31 23:59:59', NULL);

@@ -7,7 +7,7 @@
 출력: <run>/compare.json + 요약 출력
 
 비교 항목
-  pairing    legacy·new Evidence를 (replayRequestId, service, kind, seq)로 짝짓는다. 한쪽에만 있으면 Undelivered/Unexpected.
+  pairing    legacy·new Evidence를 (replayRequestId, service, kind, 요청 안 순서)로 짝짓는다. 한쪽에만 있으면 Undelivered/Unexpected.
              http는 request의 method·path·query·headers·bodyHash를 전건 대조한다(Phase 2.7).
   B0         exact diff: 짝지은 Evidence 전체를 그대로 비교(식별 필드 stack만 제외). 차이를 범주로 나눈다.
   B1         normalization.json 규칙을 적용한 뒤 비교. A/A 기대값 0.
@@ -36,7 +36,17 @@ def load(run):
 
 
 def key(e):
+    """정렬용 원래 키(seq 포함)."""
     return (e["replayRequestId"], e["service"], e["kind"], int(e.get("seq") or 0))
+
+
+def pair_index(evidence):
+    """짝 맞춤 키 = (replayRequestId, service, kind, 그 요청 안에서 몇 번째). 서비스 전체 순번(seq)을 쓰면 앞쪽 Evidence
+    하나가 빠질 때 뒤가 모두 밀려 짝이 어긋난다(norm-v1.1, 실패 경로 실측 F1)."""
+    groups = {}
+    for e in sorted(evidence, key=key):
+        groups.setdefault((e["replayRequestId"], e["service"], e["kind"]), []).append(e)
+    return {g + (i + 1,): e for g, items in groups.items() for i, e in enumerate(items)}
 
 
 def flatten(v, prefix=""):
@@ -84,6 +94,11 @@ def normalize(e, rules):
     e = json.loads(json.dumps(e))  # deep copy
     for f in rules["identityFields"]["fields"]:
         e.pop(f, None)
+    for p in rules.get("positionFields", {}).get("paths", []):
+        parent, _, field = p.rpartition(".")
+        target = e.get(parent) if parent else e
+        if isinstance(target, dict):
+            target.pop(field, None)
     for p in rules["ignoreFields"]["paths"]:
         if p.endswith("[].durationMs"):
             for item in e.get(p.split("[]")[0], []) or []:
@@ -165,7 +180,7 @@ def table_summary(t):
 # ------------------------------------------------------------------ main
 def compare(run, rules):
     ev, db, meta, k6 = load(run)
-    idx = {st: {key(e): e for e in ev[st]} for st in STACKS}
+    idx = {st: pair_index(ev[st]) for st in STACKS}
     keys_l, keys_n = set(idx["legacy"]), set(idx["new"])
     paired = sorted(keys_l & keys_n)
 
