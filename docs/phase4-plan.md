@@ -301,6 +301,13 @@ corpus v2.1(세션 11·요청 48). 선택 단위는 세션. 매칭은 클래스 
 ### 4.9 (선택) Evidence 수집 오버헤드
 - Legacy `EVIDENCE_ENABLED=false` vs true, VU=1 ×3, k6 p50/p95·CPU·메모리. 판정 없음, 참고값
 
+구현 시 확정 (4.9)
+- **결정(D-4.7a)**: 4.9 실시, 4.8은 4.9 뒤 반나절 안에 끝날 때만, 바이트코드 참조는 미실시. 기대 없음, 판정과 무관한 참고값
+- **끄는 방법**: 계획의 `EVIDENCE_ENABLED`는 실제 스위치가 아니다(기동 로그 문구). legacy order·coupon에서 `EVIDENCE_STORE_URL`을 빼면 수집기 전체가 등록되지 않는다. 이미지 동일, 끝나면 overlay 복원
+- **도구**: `k6/overhead.sh`·`k6/overhead.js`(Store 폴링 없음, 요청 간격 0.1초 고정), `scoping/overhead_report.py`. `run.sh`는 Legacy Evidence를 전제하므로 쓰지 않는다. `run.js`·`run.sh`는 바꾸지 않았다
+- **자원**: metrics-server가 없어 노드 `crictl stats`의 누적 CPU 차이와 working set. 앱과 sidecar를 나눠 기록
+- **웜업**: 모드마다 재생 1회를 버린다. 측정 반복 사이에는 DB만 리셋하고 앱은 재시작하지 않는다
+
 ### Phase 4 종료 조건
 4.1~4.7 완료 + `docs/phase4-result.md` + `git tag phase4-done`. 4.8·4.9는 밀리면 제외.
 
