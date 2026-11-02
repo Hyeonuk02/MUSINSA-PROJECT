@@ -1,0 +1,523 @@
+{
+  "assumedChanged": [],
+  "base": "c64618f",
+  "baseCommit": "c64618fa894bec7958bbd8defa728745f9b11c29",
+  "changedClasses": [
+    "poc.order.ClockConfig",
+    "poc.order.CouponClient",
+    "poc.order.OrderApplication",
+    "poc.order.OrderController",
+    "poc.order.OrderView",
+    "poc.order.requestlog.CachedBodyRequest",
+    "poc.order.requestlog.RequestLogFilter"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.order.ClockConfig"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/ClockConfig.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.CouponClient"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/CouponClient.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderApplication"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/OrderApplication.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderController"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/OrderController.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderView"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/OrderView.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.requestlog.CachedBodyRequest"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/requestlog/CachedBodyRequest.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.requestlog.RequestLogFilter"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/java/poc/order/requestlog/RequestLogFilter.java",
+      "status": "D"
+    },
+    {
+      "fqcns": [
+        "poc.order.ClockConfig"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/ClockConfig.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.CouponClient"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/CouponClient.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderApplication"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/OrderApplication.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderController"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/OrderController.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.OrderView"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/OrderView.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.requestlog.CachedBodyRequest"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/requestlog/CachedBodyRequest.kt",
+      "status": "A"
+    },
+    {
+      "fqcns": [
+        "poc.order.requestlog.RequestLogFilter"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/requestlog/RequestLogFilter.kt",
+      "status": "A"
+    }
+  ],
+  "globalReasons": [
+    "unresolved:poc.order.ClockConfig",
+    "unresolved:poc.order.OrderApplication",
+    "unresolved:poc.order.requestlog.CachedBodyRequest",
+    "unresolved:poc.order.requestlog.RequestLogFilter"
+  ],
+  "globalTriggered": true,
+  "head": "120b212",
+  "headCommit": "120b2126381f6f59a3dfc6940b522b6844482f6e",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "coupon.create",
+    "coupon.get",
+    "coupon.use",
+    "order.cancel",
+    "order.create",
+    "order.get",
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000001": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000002": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000003": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000004": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000005": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000006": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000007": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000008": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000009": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000010": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000011": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000012": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000013": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000014": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000015": [
+      "global"
+    ],
+    "R000016": [
+      "global"
+    ],
+    "R000017": [
+      "global"
+    ],
+    "R000018": [
+      "global"
+    ],
+    "R000019": [
+      "global"
+    ],
+    "R000020": [
+      "global"
+    ],
+    "R000021": [
+      "global"
+    ],
+    "R000022": [
+      "global"
+    ],
+    "R000023": [
+      "global"
+    ],
+    "R000024": [
+      "global"
+    ],
+    "R000025": [
+      "global"
+    ],
+    "R000026": [
+      "global"
+    ],
+    "R000027": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.CouponClient",
+      "observed:poc.order.OrderController"
+    ],
+    "R000028": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000029": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000030": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000031": [
+      "global"
+    ],
+    "R000032": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.CouponClient",
+      "observed:poc.order.OrderController"
+    ],
+    "R000033": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000034": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000035": [
+      "global"
+    ],
+    "R000036": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.CouponClient",
+      "observed:poc.order.OrderController"
+    ],
+    "R000037": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.CouponClient",
+      "observed:poc.order.OrderController"
+    ],
+    "R000038": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000039": [
+      "global"
+    ],
+    "R000040": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000041": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000042": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000043": [
+      "global"
+    ],
+    "R000044": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.CouponClient",
+      "observed:poc.order.OrderController"
+    ],
+    "R000045": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000046": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000047": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ],
+    "R000048": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService",
+      "global",
+      "observed:poc.order.OrderController"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [
+    "poc.order.CouponClient",
+    "poc.order.OrderController"
+  ],
+  "pathFilter": "services/",
+  "reductionRequests": 0.0,
+  "reductionSessions": 0.0,
+  "selectedRequests": [
+    "R000001",
+    "R000002",
+    "R000003",
+    "R000004",
+    "R000005",
+    "R000006",
+    "R000007",
+    "R000008",
+    "R000009",
+    "R000010",
+    "R000011",
+    "R000012",
+    "R000013",
+    "R000014",
+    "R000015",
+    "R000016",
+    "R000017",
+    "R000018",
+    "R000019",
+    "R000020",
+    "R000021",
+    "R000022",
+    "R000023",
+    "R000024",
+    "R000025",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000035",
+    "R000036",
+    "R000037",
+    "R000038",
+    "R000039",
+    "R000040",
+    "R000041",
+    "R000042",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046",
+    "R000047",
+    "R000048"
+  ],
+  "selectedSessions": [
+    "S001",
+    "S002",
+    "S003",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011"
+  ],
+  "unobserved": [
+    {
+      "closurePaths": [],
+      "fqcn": "poc.order.ClockConfig",
+      "reachedClasses": [],
+      "unresolved": true,
+      "unresolvedClasses": [
+        "poc.order.ClockConfig"
+      ]
+    },
+    {
+      "closurePaths": [],
+      "fqcn": "poc.order.OrderApplication",
+      "reachedClasses": [],
+      "unresolved": true,
+      "unresolvedClasses": [
+        "poc.order.OrderApplication"
+      ]
+    },
+    {
+      "closurePaths": [
+        "poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController"
+      ],
+      "fqcn": "poc.order.OrderView",
+      "reachedClasses": [
+        "poc.order.OrderController",
+        "poc.order.OrderService"
+      ],
+      "unresolved": false,
+      "unresolvedClasses": []
+    },
+    {
+      "closurePaths": [
+        "poc.order.requestlog.CachedBodyRequest <- poc.order.requestlog.RequestLogFilter"
+      ],
+      "fqcn": "poc.order.requestlog.CachedBodyRequest",
+      "reachedClasses": [],
+      "unresolved": true,
+      "unresolvedClasses": [
+        "poc.order.requestlog.CachedBodyRequest",
+        "poc.order.requestlog.RequestLogFilter"
+      ]
+    },
+    {
+      "closurePaths": [],
+      "fqcn": "poc.order.requestlog.RequestLogFilter",
+      "reachedClasses": [],
+      "unresolved": true,
+      "unresolvedClasses": [
+        "poc.order.requestlog.RequestLogFilter"
+      ]
+    }
+  ],
+  "warnings": []
+}

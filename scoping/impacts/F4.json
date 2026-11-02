@@ -1,0 +1,190 @@
+{
+  "assumedChanged": [],
+  "base": "phase3.5-v1.4",
+  "baseCommit": "120b2126381f6f59a3dfc6940b522b6844482f6e",
+  "changedClasses": [
+    "poc.order.OrderService"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.order.OrderService"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/OrderService.kt",
+      "status": "M"
+    }
+  ],
+  "globalReasons": [],
+  "globalTriggered": false,
+  "head": "fault/F4",
+  "headCommit": "f83e2117bc3c9a3e66ccf86ff2900692802d6103",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "order.cancel",
+    "order.create",
+    "order.get",
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000001": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000002": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000003": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000004": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000005": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000006": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000007": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000008": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000009": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000010": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000011": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000012": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000013": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000014": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000027": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000028": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000029": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000030": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000032": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000033": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000034": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000036": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000037": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000038": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000040": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000041": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000042": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000044": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000045": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000046": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000047": [
+      "observed:poc.order.OrderService"
+    ],
+    "R000048": [
+      "observed:poc.order.OrderService"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [
+    "poc.order.OrderService"
+  ],
+  "pathFilter": null,
+  "reductionRequests": 0.2292,
+  "reductionSessions": 0.1818,
+  "selectedRequests": [
+    "R000001",
+    "R000002",
+    "R000003",
+    "R000004",
+    "R000005",
+    "R000006",
+    "R000007",
+    "R000008",
+    "R000009",
+    "R000010",
+    "R000011",
+    "R000012",
+    "R000013",
+    "R000014",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000035",
+    "R000036",
+    "R000037",
+    "R000038",
+    "R000039",
+    "R000040",
+    "R000041",
+    "R000042",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046",
+    "R000047",
+    "R000048"
+  ],
+  "selectedSessions": [
+    "S001",
+    "S002",
+    "S003",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011"
+  ],
+  "unobserved": [],
+  "warnings": []
+}

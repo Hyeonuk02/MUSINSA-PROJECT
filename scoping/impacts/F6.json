@@ -1,0 +1,233 @@
+{
+  "assumedChanged": [],
+  "base": "phase3.5-v1.4",
+  "baseCommit": "120b2126381f6f59a3dfc6940b522b6844482f6e",
+  "changedClasses": [
+    "poc.order.OrderView"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.order.OrderView"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/OrderView.kt",
+      "status": "M"
+    }
+  ],
+  "globalReasons": [],
+  "globalTriggered": false,
+  "head": "fault/F6",
+  "headCommit": "84bd197baf6d1d08dbb79b35305a02b15b76f6ea",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "order.cancel",
+    "order.create",
+    "order.get",
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000001": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000002": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000003": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000004": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000005": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000006": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000007": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000008": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000009": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000010": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000011": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000012": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000013": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000014": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000027": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000028": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000029": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000030": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000032": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000033": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000034": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000036": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000037": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000038": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000040": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000041": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000042": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000044": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000045": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000046": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000047": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ],
+    "R000048": [
+      "closure:poc.order.OrderView->poc.order.OrderController",
+      "closure:poc.order.OrderView->poc.order.OrderService"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [],
+  "pathFilter": null,
+  "reductionRequests": 0.2292,
+  "reductionSessions": 0.1818,
+  "selectedRequests": [
+    "R000001",
+    "R000002",
+    "R000003",
+    "R000004",
+    "R000005",
+    "R000006",
+    "R000007",
+    "R000008",
+    "R000009",
+    "R000010",
+    "R000011",
+    "R000012",
+    "R000013",
+    "R000014",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000035",
+    "R000036",
+    "R000037",
+    "R000038",
+    "R000039",
+    "R000040",
+    "R000041",
+    "R000042",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046",
+    "R000047",
+    "R000048"
+  ],
+  "selectedSessions": [
+    "S001",
+    "S002",
+    "S003",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011"
+  ],
+  "unobserved": [
+    {
+      "closurePaths": [
+        "poc.order.OrderView <- poc.order.OrderService <- poc.order.OrderController"
+      ],
+      "fqcn": "poc.order.OrderView",
+      "reachedClasses": [
+        "poc.order.OrderController",
+        "poc.order.OrderService"
+      ],
+      "unresolved": false,
+      "unresolvedClasses": []
+    }
+  ],
+  "warnings": []
+}

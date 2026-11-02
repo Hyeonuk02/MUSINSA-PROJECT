@@ -1,0 +1,103 @@
+{
+  "assumedChanged": [],
+  "base": "phase3.5-v1.4",
+  "baseCommit": "120b2126381f6f59a3dfc6940b522b6844482f6e",
+  "changedClasses": [
+    "poc.order.PaymentGatewayClient"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/PaymentGatewayClient.kt",
+      "status": "M"
+    }
+  ],
+  "globalReasons": [],
+  "globalTriggered": false,
+  "head": "fault/F7",
+  "headCommit": "31363ce3e071d2d0268f4f9495839740c6ed7be0",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000003": [
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000007": [
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000012": [
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000029": [
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000033": [
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000041": [
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000045": [
+      "observed:poc.order.PaymentGatewayClient"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [
+    "poc.order.PaymentGatewayClient"
+  ],
+  "pathFilter": null,
+  "reductionRequests": 0.375,
+  "reductionSessions": 0.3636,
+  "selectedRequests": [
+    "R000001",
+    "R000002",
+    "R000003",
+    "R000004",
+    "R000005",
+    "R000006",
+    "R000007",
+    "R000008",
+    "R000009",
+    "R000010",
+    "R000011",
+    "R000012",
+    "R000013",
+    "R000014",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000040",
+    "R000041",
+    "R000042",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046"
+  ],
+  "selectedSessions": [
+    "S001",
+    "S002",
+    "S003",
+    "S006",
+    "S007",
+    "S009",
+    "S010"
+  ],
+  "unobserved": [],
+  "warnings": []
+}
