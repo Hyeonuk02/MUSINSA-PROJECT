@@ -1,0 +1,59 @@
+== A. 사전 등록 예상 맵 (4.1)
+[OK] coupon.create: 예상 맵 만족 6/6
+[OK] coupon.get: 예상 맵 만족 6/6
+[OK] coupon.use: 예상 맵 만족 4/4
+[OK] order.cancel: 예상 맵 만족 1/1
+[OK] order.create: 예상 맵 만족 10/10
+[OK] order.get: 예상 맵 만족 13/13
+[DIFF] order.pay: 예상 맵 만족 7/8 — R000008(S002) 없음: OrderEventPublisher, OrderPaidListener, PaymentGatewayClient
+     쿠폰 주문 생성 5건 ['R000027', 'R000032', 'R000036', 'R000037', 'R000044'], 쿠폰 결제 3건 ['R000029', 'R000033', 'R000045']
+== B. 4.2 기대의 전제
+[OK] CouponService ∈ coupon.create 진입 홉 6/6
+[OK] CouponService ∈ coupon.get 진입 홉 6/6
+[OK] CouponService ∈ coupon.use 진입 홉 4/4
+[OK] OrderPaidListener는 소비 홉에만: 7개 홉 전부 0.e* = True
+[OK] 쿠폰 없는 결제의 소비 홉에도 있음: 4건 ['R000003', 'R000007', 'R000012', 'R000041']
+[OK] CouponService.settle은 소비 홉에만: [('R000029', '0.e1'), ('R000033', '0.e1'), ('R000045', '0.e1')]
+== C. 클래스별 관측·선택 (0절 표·4.2 표)
+[OK] CouponController: 실행 요청 21, 선택 6/11세션·29/48요청 (예측 6·29)
+[OK] CouponRepository: 실행 요청 24, 선택 6/11세션·29/48요청 (예측 6·29)
+[OK] CouponService: 실행 요청 24, 선택 6/11세션·29/48요청 (예측 6·29)
+[OK] OrderPaidListener: 실행 요청 7, 선택 7/11세션·30/48요청 (예측 7·30)
+[OK] OrderController: 실행 요청 32, 선택 9/11세션·37/48요청 (예측 9·37)
+[OK] OrderEventPublisher: 실행 요청 7, 선택 7/11세션·30/48요청 (예측 7·30)
+[OK] OrderRepository: 실행 요청 32, 선택 9/11세션·37/48요청 (예측 9·37)
+[OK] OrderService: 실행 요청 32, 선택 9/11세션·37/48요청 (예측 9·37)
+[OK] PaymentGatewayClient: 실행 요청 7, 선택 7/11세션·30/48요청 (예측 7·30)
+[DIFF] OrderPaidListener: order.pay 8건 중 7건 실행 (예측 문구 '모든 order.pay'·'order.pay 전부')
+[DIFF] OrderEventPublisher: order.pay 8건 중 7건 실행 (예측 문구 '모든 order.pay'·'order.pay 전부')
+[DIFF] PaymentGatewayClient: order.pay 8건 중 7건 실행 (예측 문구 '모든 order.pay'·'order.pay 전부')
+[OK] Order: 미관측 예측 — 맵에 없음
+[OK] OrderItem: 미관측 예측 — 맵에 없음
+[OK] OrderPaid: 미관측 예측 — 맵에 없음
+[OK] OrderView: 미관측 예측 — 맵에 없음
+[OK] ClockConfig: 미관측 예측 — 맵에 없음
+[OK] OrderApplication: 미관측 예측 — 맵에 없음
+[OK] RequestLogFilter: 미관측 예측 — 맵에 없음
+[OK] CachedBodyRequest: 미관측 예측 — 맵에 없음
+== D. 홉 합산 없는 맵 (3절·4.5 ablation b)
+[OK] OrderPaidListener: 합산 없는 맵 선택 없음(미관측) 0요청 (예측 없음 → 미관측)
+[DIFF] CouponService: 합산 없는 맵 선택 ['S004', 'S005', 'S006', 'S007', 'S008', 'S010'] 29요청 (예측 ['S004', 'S005'])
+     CouponService 영향 요청: 합산 24 / 합산 없음 16 — 합산에서만 잡히는 ['R000027', 'R000029', 'R000032', 'R000033', 'R000036', 'R000037', 'R000044', 'R000045']
+     S004·S005 밖 진입 홉 실행: [('S006', 'R000026', 'coupon.create'), ('S007', 'R000031', 'coupon.create'), ('S008', 'R000035', 'coupon.create'), ('S008', 'R000039', 'coupon.get'), ('S010', 'R000043', 'coupon.create')]
+== E. 미관측 클래스의 단순 이름 참조자 (텍스트 사실 — 폐포 계산은 4.2)
+-- fc6e6e2
+   Order: ['poc.order.OrderService', 'poc.order.OrderView 미관측', 'poc.order.requestlog.RequestLogFilter 미관측 import org.springframework.core.annotation.Order', 'poc.order.OrderItem 미관측', 'poc.order.OrderRepository']
+   OrderItem: ['poc.order.Order 미관측']
+   OrderPaid: ['poc.coupon.OrderPaidListener 동명 중첩 선언', 'poc.order.OrderEventPublisher', 'poc.order.OrderService']
+   OrderView: ['poc.order.OrderService']
+-- c64618f
+   Order: ['poc.order.OrderView 미관측', 'poc.order.requestlog.RequestLogFilter 미관측 import org.springframework.core.annotation.Order', 'poc.order.OrderItem 미관측', 'poc.order.OrderRepository', 'poc.order.OrderService']
+   OrderItem: ['poc.order.Order 미관측']
+   OrderPaid: ['poc.coupon.OrderPaidListener 동명 중첩 선언', 'poc.order.OrderEventPublisher', 'poc.order.OrderService']
+   OrderView: ['poc.order.OrderService']
+-- phase3.5-v1.4
+   Order: ['poc.order.OrderItem 미관측', 'poc.order.OrderRepository', 'poc.order.OrderService', 'poc.order.OrderView 미관측', 'poc.order.requestlog.RequestLogFilter 미관측 import org.springframework.core.annotation.Order']
+   OrderItem: ['poc.order.Order 미관측']
+   OrderPaid: ['poc.coupon.OrderPaidListener 동명 중첩 선언', 'poc.order.OrderEventPublisher', 'poc.order.OrderService']
+   OrderView: ['poc.order.OrderService']
+== [DIFF] 5건

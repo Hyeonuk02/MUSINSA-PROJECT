@@ -101,3 +101,25 @@
 - 근거: `docs/reports/logs/phase4.0-inputs.txt`, `scoping/tests/test_common.py::test_name_status_ladder_and_fault_shapes`
 - 왜 중요: D24를 글자 그대로 적용하면 deploy 변경 → 전역, 클래스 삭제(D) → 전역이라 사다리 4단계가 모두 전역이 된다(계획 4.2 기대: v1.2·v1.3은 order.* 9세션). 실험을 위해 한 커밋에 배포 설정을 함께 바꾼 것이 스코핑 결과를 바꾼다 — 실제 레포에서도 "코드 + 배포 매니페스트" 동시 커밋은 흔하다
 - 후속: 4.0 보고서 0절(사다리 diff 범위), 구현 시 확정(같은 FQCN D+A = 수정)
+
+### O15. `order.pay`인데 결제·발행·소비가 없는 요청이 있다 — 중복 결제 R000008
+- 날짜·단계: 2026-11-02, 4.1
+- 봤다: `order.pay` 8건 중 7건만 `PaymentGatewayClient`·`OrderEventPublisher`·`OrderPaidListener`를 실행한다. R000008(S002, 같은 Idempotency-Key 재요청)은 `OrderController`·`OrderService`·`OrderRepository`만
+- 근거: `docs/reports/logs/phase4.1-plan-compare.txt` A·C절, `scoping/map.json`
+- 왜 중요: 요청 단위 맵은 같은 엔드포인트 안의 실행 경로 차이까지 구분한다. 계획의 "모든 `order.pay` 요청" 표현은 엔드포인트 단위 사고가 남은 것이다. S002가 첫 결제 R000007로 선택되므로 세션·재생 수는 그대로다(7세션·30요청)
+- 후속: 4.1 보고서 D-4.1a
+
+### O16. 세션 단위 선택이 홉 합산의 효과를 가린다 — 쿠폰 세션은 진입 홉 `coupon.create`로도 잡힌다
+- 날짜·단계: 2026-11-02, 4.1
+- 봤다: 자식 홉 합산이 없는 맵에서도 `CouponService`는 S006·S007·S008·S010의 진입 홉(`coupon.create` 4건, S008은 `coupon.get`도)에서 실행되므로 선택이 6세션·29요청으로 합산 맵과 같다. 영향 요청 수만 다르다(합산 24 / 합산 없음 16). 계획의 예측은 S004·S005 2세션
+- 근거: `docs/reports/logs/phase4.1-plan-compare.txt` D절
+- 왜 중요: 쿠폰을 쓰는 세션은 먼저 쿠폰을 발급하므로 Order 쪽 `0.h1` pair가 같은 세션에 함께 들어온다. 이 corpus에서 홉 합산의 효과는 세션 선택 지표로는 C1(Kafka 홉 전용 클래스)에서만 드러난다
+- 후속: 4.1 보고서 D-4.1b
+
+### O17. 단순 이름 토큰이 다른 타입을 참조로 잡는다 — Spring `@Order`, Coupon의 중첩 `OrderPaid`
+- 날짜·단계: 2026-11-02, 4.1
+- 봤다: `RequestLogFilter`의 `@Order(Ordered.HIGHEST_PRECEDENCE)`(`org.springframework.core.annotation.Order` import)가 `poc.order.Order`의 토큰 참조로 잡힌다. `RequestLogFilter`는 미관측이고 참조자가 없다. `OrderPaidListener`의 중첩 record `OrderPaid`도 `poc.order.OrderPaid`의 토큰 참조로 잡힌다(이 가지는 관측 클래스라 세션 수 영향 없음)
+- 근거: `docs/reports/logs/phase4.1-plan-compare.txt` E절 — 사다리 v1.2·v1.3 head와 `phase3.5-v1.4`에서 동일
+- 왜 중요: D24 문구 그대로면 `Order` 폐포에 미해결 가지가 생겨 v1.2·F2·E5가 전역이 된다(계획은 order.* 9세션). 텍스트 폐포의 오탐이 Filter 이득을 없애는 실례다. 안전한 쪽의 실패라 Recall은 잃지 않는다
+- 후속: 4.1 보고서 D-4.1c. 폐포 계산 자체는 4.2
+
