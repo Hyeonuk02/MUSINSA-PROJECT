@@ -46,6 +46,9 @@ public class CouponService {
      */
     @Transactional
     public Outcome use(String couponKey, String orderKey) {
+        if (!couponRepository.existsByCouponKey(couponKey)) {
+            return Outcome.of(Kind.NOT_FOUND);
+        }
         Coupon coupon = couponRepository.findByCouponKey(couponKey).orElse(null);
         if (coupon == null) {
             return Outcome.of(Kind.NOT_FOUND);
