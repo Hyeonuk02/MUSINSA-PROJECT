@@ -1,10 +1,11 @@
 {
-  "version": "norm-v1.1",
+  "version": "norm-v1.2",
   "description": "B1(정규화 후 diff) 규칙. B0(exact diff)는 이 규칙 없이 비교한다. 이 파일은 비교 유효 조건 해시에 들어간다(run.py).",
   "identityFields": {
-    "note": "짝을 짓는 키와 스택 식별자. 비교 대상이 아니다(B0·B1 모두 제외).",
+    "note": "짝을 짓는 키와 스택·버전 식별자. 비교 대상이 아니다(B0·B1 모두 제외). norm-v1.2에서 version 추가: 결함 run(PF1)에서 New의 version(prince-mart-PF<n>)이 모든 pair의 차이로 잡혔다(A/A는 양쪽 같아 드러나지 않음).",
     "fields": [
-      "stack"
+      "stack",
+      "version"
     ]
   },
   "ignoreFields": {
