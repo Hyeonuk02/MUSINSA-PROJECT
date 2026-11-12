@@ -48,10 +48,29 @@ verdict.py --arm C → CV 7, SAME 33, Undelivered new 18
 
 - **`mirrorPercentage` 100은 남겼다**: 표본 추출이 아니라 원래 값이다. 선택은 헤더 match로만 한다
 - **mirror 없는 세션은 Legacy 도착을 폴링**: 세션 순서를 유지하려고 `run.js`에 분기를 넣었다. `MIRROR_SESSIONS`가 없으면 기존 동작과 같다
-- **`run.js`·`run.sh`·`barrier.py` 변경**: verify 레이어 변경이다. 기본 경로는 그대로이고, 변경 뒤 전체 재생 A/A는 돌리지 않았다
+- **`run.js`·`run.sh`·`barrier.py` 변경**: verify 레이어 변경이다. 기본 경로는 그대로이고, 변경 뒤 전체 재생 A/A는 6.1에서 추가로 돌렸다(VU=3 × 3 diff ∅)
 
 ## 6. 문제·해결·남은 한계
 
 - **barrier 출력 표기**: `1단계 new: 기대 40 (진입 48 + 선언된 settle -8)`처럼 내역이 어긋나게 찍힌다. 기대 수는 맞다. 표시만의 문제라 고치지 않았다
 - **선택 미러는 Filter를 대체하지 못한다**: findings O23
 - 1 run 시연이다. 결정론 확인이 아니다
+
+### 6.1 (추가, 2026-11-12) 검증 레이어 변경 뒤 A/A 게이트 — PASS
+
+main 머지 전 확인. 4.8에서 바뀐 `run.sh`·`run.js`·`barrier.py`(rev `36aac52`)로 기본 경로(`--impact`·`--tag`·`--mirror` 없음)를 돌렸다.
+
+- 조건: Order·Coupon 양쪽 `phase3.3-base`(New Order만 `kubectl set image`로 임시 교체, 저장소 overlay는 그대로), 게이트웨이 VS는 기본(헤더 match 없음, mirror 100), VU=3 × 3, corpus v2.1
+- 명령: `k6/run.sh --run-id p48-aa2 --iterations 3 --vus 3` → exit 0. 그 뒤 run마다 `engine/diff_v0.py`·`engine/verify_sameness.py`·`engine/verdict.py --arm C`(engine-v1.3)
+- 끝나고 New Order를 `phase3.5-v1.4`로 되돌렸다. `kubectl diff -k deploy/k8s/new` 차이 없음
+
+| run | dirty | diff_v0 (7축 + dbstate + wiremock) | verify_sameness | barrier legacy / new | 판정 C |
+|---|---|---|---|---|---|
+| p48-aa2-1 | false | ∅ (exit 0) | PASS | 60/60, 60/60 | SAME 60 |
+| p48-aa2-2 | false | ∅ (exit 0) | PASS | 60/60, 60/60 | SAME 60 |
+| p48-aa2-3 | false | ∅ (exit 0) | PASS | 60/60, 60/60 | SAME 60 |
+
+Undelivered 0·degraded 0·sessionViolations 0, `dbstate_equal` ok ×3. 로그: `logs/phase4.8-aa-{run,diff,verify,verdict}.txt`
+
+- **첫 시도 `p48-aa`는 쓰지 않았다**: 실행 로그를 `docs/reports/logs/`로 바로 리다이렉트해서 미추적 파일이 생겼고 run-meta가 `dirty: true`로 찍혔다. 코드 변경은 없었고 diff_v0·verify_sameness는 3 run 모두 ∅·PASS였지만, 게이트 조건(dirty=false)을 못 맞춰 로그를 저장소 밖에 두고 `p48-aa2`로 다시 돌렸다. `runs/p48-aa-1..3`은 지우지 않고 남겼다. findings O25
+- **덮은 범위는 기본 경로뿐이다**: `--mirror`·`--impact`·`--tag` 분기는 이 A/A로 확인되지 않는다. 각각 4.8 시연, 4.4·4.5 Filter·Tag run이 근거다

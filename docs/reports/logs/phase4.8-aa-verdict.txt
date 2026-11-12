@@ -1,0 +1,42 @@
+== p48-aa2-1  arm C  pairs 60  {'SAME': 60}
+  split eval   {'SAME': 35}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'SAME': 10}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  → runs/p48-aa2-1/verdict.json
+== p48-aa2-2  arm C  pairs 60  {'SAME': 60}
+  split eval   {'SAME': 35}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'SAME': 10}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  → runs/p48-aa2-2/verdict.json
+== p48-aa2-3  arm C  pairs 60  {'SAME': 60}
+  split eval   {'SAME': 35}
+  split learn  {'SAME': 25}
+  consume.order.paid   {'SAME': 7}
+  coupon.create        {'SAME': 6}
+  coupon.get           {'SAME': 6}
+  coupon.use           {'SAME': 9}
+  order.cancel         {'SAME': 1}
+  order.create         {'SAME': 10}
+  order.get            {'SAME': 13}
+  order.pay            {'SAME': 8}
+  run dbstate_equal: OK 
+  Undelivered legacy 0 / new 0, degraded 0
+  → runs/p48-aa2-3/verdict.json
