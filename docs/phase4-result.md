@@ -88,6 +88,81 @@ Evidence 건당 p50 1,900B, p95 2,976B, 최대 3,014B, run당 약 121KB. 차이�
 - **검증 레이어 변경 뒤 A/A는 마지막 상태(4.8 뒤, rev `36aac52`)에서 한 번 돌렸다.** 4.4·4.8의 k6·run.sh·barrier.py 변경을 모두 포함한 기본 경로로 base 이미지 양쪽, VU=3 × 3, diff ∅·SAME 60 ×3·dirty false(`p48-aa2-1..3`, `docs/reports/phase4.8.md` 6.1). 4.4~4.8 사이의 중간 상태는 A/A로 확인하지 않았고, `--mirror`·`--impact`·`--tag` 분기는 A/A가 덮지 않는다
 - **`dbstate`는 집계 해시다.** 행 값을 직접 읽지 못한다
 
+### 판정 엔진·규칙의 한계 (Phase 4 완료 뒤 추가 검증, 2026-11-13)
+
+Phase 4 결과를 낸 뒤 더한 검증이다. Phase 3·4 실험 당시에 한 검증이 아니며, 기존 수치·판정 파일·엔진(engine-v1.3)·규칙은 바꾸지 않았다. 근거는 코드(`engine/verdict.py`·`ruleset.py`·`fault_check.py`·`metrics.py`), `engine/rules/`, `docs/phase3-metrics.json`과 신규 단위 테스트 `engine/tests/test_rule_scope.py`다. 신규 테스트는 클러스터 run이 아니라 fixture `p33-mini` 사본을 고친 **합성 Evidence**를 실제 `judge_run()`·`RuleSet`(engine/rules 전체 사본)으로 판정한다. 합성 레코드는 입력 계약(스키마·seq 불변식)을 통과하고, 변조한 pair 외 24 pair는 모두 SAME·sessionViolations 없음·dbstate ok로 확인했다.
+
+| 테스트 | 합성 (New만, (c)(e)는 양쪽 기반 변경 포함) | 실제 판정 | appliedRules | violations | uncertain |
+|---|---|---|---|---|---|
+| (a-1) | order.get R000002: SELECT 2 → JOIN 1, Repository 메서드 교체 | IMPROVEMENT | F5 countDelta·callTree | 없음 | 없음 |
+| (a-2) | order.get R000038(404): SELECT 1 → JOIN 1 | IMPROVEMENT | F5 fingerprintReplaced·callTree | 없음 | 없음 |
+| (b) | (a-1) + `amount` 10000 → 1 | CONTRACT_VIOLATION | F5 2건 유지 | `response_body_compatible: response.valueChanged amount` | 없음 |
+| (c) | 양쪽 외부 호출 1건(wiremock) + New만 2건, (a-1) | CONTRACT_VIOLATION | F5 2건 유지 | `externalCalls: legacy=[1건] new=[2건]` | `externalCalls.responseHashChanged`(규칙 없음, 판정은 CV 우선) |
+| (d) | (a-1) + 응답 필드 `note` 추가 | UNCERTAIN | F5 2건 유지 | 없음 | `response.addedFields [note]` |
+| (e) | 양쪽 items 2개, New만 `itemCount: 0` | **IMPROVEMENT** (한계) | `order-view-item-count` | 없음 | 없음 |
+| (f) | coupon.get R000039, New만 `itemCount: 0` | **IMPROVEMENT** (한계) | `order-view-item-count` | 없음 | 없음 |
+
+`countDelta`와 `fingerprintReplaced`는 한 pair에서 함께 나오지 않는다(`execution_items`: SELECT 수가 다르면 countDelta, 같을 때만 fingerprintReplaced). 그래서 F5 규칙 3개를 한 pair에 동시에 적용하는 테스트는 없다. (c)의 대조로 양쪽에 같은 호출 1건만 더하면 25/25 SAME임도 확인했다.
+
+- **① 판정 우선순위.** `verdict.py`는 CONTRACT_VIOLATION > UNCERTAIN > IMPROVEMENT > SAME 순서다. pair에 violations가 하나라도 있으면 appliedRules와 무관하게 CV다. 위반은 두 경로로 생긴다.
+  - **직접 계약 검사**: status, content-type, writeSet, externalCalls, events·event, tx outcome 순서, error, consumeOutcome, hop 집합, 커밋 전 발행, max_selects, 세션 검사. 이 검사는 규칙 적용 전에 확정되고, 규칙으로 해제할 수 없다.
+  - **응답·이벤트 본문**: 규칙이 설명하지 못한 `response.removedFields`·`response.valueChanged`는 `response_body_compatible` 위반이 된다. `events.payloadFieldsRemoved`·`payloadValueChanged`는 `events_equal` 위반이 된다.
+  - **정확한 경계**: `response.removedFields`·`valueChanged`는 규칙이 덮을 수 있는 diffKind다(`RULE_COVERABLE`·`DIFF_KINDS`). 이 유형의 승인 규칙이 있으면 위반이 아니라 규칙 판정을 따른다. 현재 규칙 세트에는 그런 규칙이 없다.
+  - **실제 동작 확인**: (b)~(d)에서 승인된 F5 규칙이 appliedRules에 남은 채 다른 위반이나 미승인 차이를 덮지 못했다.
+  - **보장 범위**: 이 보장은 구현된 검사와 관측된 Evidence에 한정된다. 모든 의미적 결함을 탐지한다는 뜻이 아니다(③④).
+- **② 오판정 0/129의 정확한 의미.** `phase3-metrics.json` `misjudgment`의 값은 `realTargetPairs` 43, `realTargetPairRuns` 129, `hidden` [], `rate` 0.0이다.
+  - **분모**: 진짜 결함 F1·F2·F3·F4·F7·F9(`metrics.py` `REAL`)의 target pair 43개 × 3 run이다.
+  - **분자**: 같은 run을 규칙 없이 판정한 결과(`C_norules`)와 규칙을 넣은 결과(`C_rules`)를 비교한다. 규칙 때문에 SAME·IMPROVEMENT로 바뀐 판정의 수이고, 0건이었다.
+  - **당시 규칙**: Phase 3 시점의 4개(learned F5 3 + 사전 승인 1)다. C2 same 규칙 2개(4.5)는 이 계산에 들어가지 않았다.
+  - **적용 범위**: 기존 결함 카탈로그 안의 관측값이다. 미관측 결함이나 새 유형에 대한 일반적인 오판정률 0%가 아니다. 반례 (e)(f)가 있다.
+- **③ 정규화·축약에 따른 탐지 한계.** 정규화·축약 과정에서 제거된 정보는 해당 비교 축에서 직접 검출할 수 없다. 일부 차이는 응답, 외부 호출, 최종 DB 상태 등 다른 Evidence로 발견할 수 있다. 그러나 다른 관측 축에도 드러나지 않고 최종 상태에 남지 않는 중간 실행 차이는 탐지하지 못할 수 있다. 따라서 차등 비교만으로 모든 실행 행동의 동등성을 보장할 수는 없다. 코드에서 확인한 축약은 다음과 같다(`normalize.py`).
+  - writeSet은 쓰기 SQL의 (종류, 테이블)뿐이라 쓰기 값의 차이를 그 축에서 직접 검출할 수 없다. 최종 상태 해시(`dbstate_equal`, run 범위)가 달라지면 발견할 수 있지만, 같은 행을 썼다가 되돌리는 중간 차이는 남지 않는다.
+  - SQL은 원문의 fingerprint(소문자·공백·alias 정리, 바인딩 자리 `?`)만 비교한다. 바인딩 값은 Evidence에 없다.
+  - callTree는 class.method 시퀀스뿐이다(인자 없음, 합성 메서드 제외).
+  - 응답·payload의 `id` 키 값은 `<id>`로 가린다.
+  - 외부 호출 응답 본문은 hash로만 비교하며 실행 특성 축이다.
+- **④ 추가 필드 규칙의 의미 검증 한계.** `order-view-item-count`는 `response.addedFields`의 필드 이름 집합만 본다(`Rule.matches`: `set(fields) <= {itemCount}`). 추가된 값이 맞는지는 검증하지 않는다.
+  - **반례**: (e)에서 `items` 2개에 `itemCount: 0`을 넣어도 IMPROVEMENT로 승인됐다.
+  - **원인 구분**: 정규화로 인한 누락(③)과 구분되는, 규칙 승인 조건의 한계다.
+  - **확인 범위**: 실제 클러스터 run이 아니라 이번 합성 Evidence 단위 테스트로만 확인했다.
+  - **다음 연구**: `itemCount == items.size()` 같은 의미 검증 계약의 도입이다. 도입하면 (e)의 기대 판정은 의도적으로 바뀌어야 한다.
+- **⑤ endpoint `"*"` 규칙의 적용 범위.** OrderView는 주문 생성·조회·결제의 성공 응답에 공통으로 쓰이므로, 와일드카드는 의도한 선택일 수 있다. 와일드카드 자체를 확정된 결함으로 보지 않는다.
+  - **매처 동작**: 매처는 endpoint id(`*`면 전부)와 diffKind·필드만 보고 응답 타입은 구분하지 않는다.
+  - **확인 결과**: (f)에서 OrderView가 아닌 `coupon.get` 응답에 `itemCount`만 추가해도 이 규칙이 적용되어 IMPROVEMENT였다.
+  - **한계**: 의도한 OrderView 응답 범위를 넘어 추가 필드를 승인할 수 있다. 현재 규칙의 적용 범위 한계다.
+- **⑥ events 축의 계약 경계.** 현재 `contract.yaml`에서 `events_equal`이 켜진 상태 기준이다(`verdict.py` `events_compare`·규칙 적용부). 꺼지면 아래 검사와 payload 항목 생성이 모두 빠진다.
+  - **직접 계약 위반**: 발행 이벤트의 개수·topic·key·ack 불일치, New의 ack ≠ ok, 소비 이벤트(`event`)가 한쪽에만 있거나 topic·key가 다른 경우다. 규칙으로 해제할 수 없다.
+  - **payload 기존 필드의 삭제·값 변경**: `events_equal` 위반이다. 이 두 diffKind는 `RULE_COVERABLE`에 없고 규칙 로더도 거부하므로, 규칙으로 승인할 수 없다.
+  - **payload 필드 추가**: `events.payloadFieldsAdded`는 규칙 적용이 가능하다. 설명하는 규칙이 없으면 UNCERTAIN이다. 현재 규칙 세트에는 이 유형의 규칙이 없다.
+  - **신규 테스트 범위 밖**: events 축은 이번 신규 테스트에 들어가지 않았다. 위 경계는 코드 확인이고, 단위 테스트로 확인된 것은 기존 `test_ack_failed_is_cv`(ack)뿐이다.
+- **⑦ 최종 통과 조건과 종료 코드.**
+  - **`verdict.py`**: 판정을 끝까지 수행한 경우 종료 코드는 둘 중 하나다.
+    - 1: CONTRACT_VIOLATION pair가 1건 이상이거나, runChecks 중 `ok`가 명시적 `false`인 것이 있을 때. `dbstate` 파일이 없어 `ok: null`이면 실패가 아니다.
+    - 0: 그 외 전부. Undelivered·degraded·bothStacks 세션 플래그·UNCERTAIN만으로는 실패하지 않는다.
+  - **`fault_check.py`**: 3 run 각각에서 아래 중 하나라도 해당하면 1이다.
+    - target 판정이 기대와 불일치
+    - 정상 경로 오탐(baseline과 다른 non-target pair)
+    - 등록된 runCheck 기대 불일치(`--expect-key targets`일 때만 검사)
+    - degraded 또는 Undelivered가 1건 이상
+    - 세 run의 판정 서명이 서로 다름
+  - **pair 집합 차이**: baseline에만 또는 F run에만 있는 pair는 출력만 하고, 그 자체로는 실패로 치지 않는다.
+  - **유실률 임계치 없음**: run 유실률에 대한 별도의 허용 임계치는 정의돼 있지 않다. fault_check은 Undelivered 1건도 실패로 본다.
+  - **입력·실행 오류와 구분**: 인자 오류는 argparse 종료 코드 2다. 그러나 입력 계약 위반(`ValueError`)이나 파일 없음 같은 예외는 잡지 않아 Python 기본 종료 코드 1로 끝난다. 이것은 검사 실패의 1과 같은 값이다. 둘은 출력으로 구분한다(traceback이냐, 판정 표·"기대와 다름"이냐).
+- **⑧ 규칙 세트 전체.** `RuleSet(engine/rules)`가 실제로 로드하는 규칙은 6개다(신규 `test_all_rules_loaded`로 확인, 사본이 원본과 바이트 동일).
+
+  | id | 종류 | verdict | endpoint | diffKind |
+  |---|---|---|---|---|
+  | `order-view-item-count` | 사전 승인 | improvement | `*` | response.addedFields [itemCount] |
+  | `learned-5da05fdb147f` | learned F5 | improvement | order.get | dbRead.countDelta 2 → 1 |
+  | `learned-989c110b103e` | learned F5 | improvement | order.get | callTree.sequenceReplaced findByOrderKey → findWithItemsByOrderKey |
+  | `learned-9a82df6b99b4` | learned F5 | improvement | order.get | dbRead.fingerprintReplaced orders → orders join order_items |
+  | `learned-aa06c259e967` | learned C2 | same | coupon.use | dbRead.countDelta 1 → 2 |
+  | `learned-cfb6811c9f5c` | learned C2 | same | coupon.use | callTree.sequenceReplaced (+ existsByCouponKey) |
+
+  모든 규칙의 scope는 request다. 매칭은 첫 번째로 맞는 규칙 하나(사전 승인 → learned 순)이고, 실행 특성 축·response.body·events.payloadFieldsAdded·외부 응답 hash의 diff에만 적용된다. 신규 테스트가 실제 적용을 확인한 규칙은 4개(사전 승인 1 + F5 3)다. C2 규칙 2개는 이번에 로딩만 확인했고, 적용은 4.5 실제 run(`p45-C2`)의 판정에서 관측한 것이다. 6개 규칙 각각의 모든 조합이나 경계 값을 단위 테스트로 덮었다고 주장하지 않는다.
+
+테스트 실행(2026-11-13): `pytest engine/tests` **49 passed**(신규 10 포함, 실패 0, 스킵 0 — `runs/p33-1..3`이 있어 실제 run 테스트도 실행), `pytest scoping/tests` **88 passed**(실패 0, 스킵 0).
+
 ## 결정 (decision-log)
 
 | 번호 | 내용 |
