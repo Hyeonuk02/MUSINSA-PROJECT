@@ -1,0 +1,20 @@
+# [LEGACY_CHANGES] 빌드 컨텍스트는 저장소 루트(루트 services/evidence-collector를 함께 빌드한다).
+#   docker build -f tracks/prince-mart/app/payment-service/DockerFile -t prince-mart/payment-service:<tag> .
+# 베이스 이미지는 루트 services/와 같은 JDK 17. upstream은 미리 빌드된 target/*.jar를 복사했다.
+# macOS 파일시스템은 대소문자를 구분하지 않아 Dockerfile을 따로 둘 수 없으므로 upstream의 이 파일을 교체한다.
+FROM maven:3.9-eclipse-temurin-17 AS build
+WORKDIR /build
+COPY services/evidence-collector ./evidence-collector
+RUN mvn -q -B -f evidence-collector/pom.xml install -DskipTests
+COPY tracks/prince-mart/app/payment-service/pom.xml app/pom.xml
+RUN mvn -q -B -f app/pom.xml dependency:go-offline
+COPY tracks/prince-mart/app/payment-service/src app/src
+RUN mvn -q -B -f app/pom.xml package -DskipTests && cp app/target/*.jar /build/app.jar
+
+FROM eclipse-temurin:17-jre
+WORKDIR /app
+COPY --from=build /build/app.jar app.jar
+# 런타임 옵션은 upstream 값 유지. -Duser.timezone=UTC는 루트 services/와 같다.
+ENV JAVA_OPTS="-Xmx384M -Xms256M -XX:+UseSerialGC -Duser.timezone=UTC"
+EXPOSE 8086
+ENTRYPOINT ["sh", "-c", "java $JAVA_OPTS -jar app.jar"]
