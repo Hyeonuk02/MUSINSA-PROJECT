@@ -1,0 +1,104 @@
+== v1.1 phase3.3-base..fd839d6
+-- services/:
+M	services/order/pom.xml
+D	services/order/src/main/java/poc/order/PaymentGatewayClient.java
+A	services/order/src/main/kotlin/poc/order/PaymentGatewayClient.kt
+-- 필터로 빠진 파일 수: 28
+   1 .gitignore
+   1 CLAUDE.md
+   1 deploy/k8s/new
+   1 docs
+   1 docs/reports
+   4 docs/reports/logs
+   4 engine
+   2 engine/rules
+   1 engine/rules/learned
+   4 engine/tests
+   7 engine/tests/fixtures/p33-mini
+   1 requirements.txt
+-- 커밋:
+  fd839d6 phase3.5-v1.1: PaymentGatewayClient를 Kotlin으로 | services 파일 3
+  94b577b phase3.4: id 값 마스킹 | services 파일 0
+  19138e4 phase3.4: review + 보고서 | services 파일 0
+  0319e45 phase3.4: normalize·verdict·rules·tests | services 파일 0
+== v1.2 fd839d6..fc6e6e2
+-- services/:
+D	services/order/src/main/java/poc/order/Order.java
+D	services/order/src/main/java/poc/order/OrderItem.java
+D	services/order/src/main/java/poc/order/OrderRepository.java
+A	services/order/src/main/kotlin/poc/order/Order.kt
+A	services/order/src/main/kotlin/poc/order/OrderItem.kt
+A	services/order/src/main/kotlin/poc/order/OrderRepository.kt
+-- 필터로 빠진 파일 수: 21
+   2 deploy/k8s/base
+   1 deploy/k8s/new
+   2 docs
+   1 docs/reports
+  14 docs/reports/logs
+   1 k6
+-- 커밋:
+  fc6e6e2 phase3.5-v1.2: Order·OrderItem 엔티티와 OrderRepository를 Kotlin으로 | services 파일 6
+  71c8f04 phase3.5-v1.1: 결과·규칙·보고서 | services 파일 0
+  47d7191 phase3.5: run.sh preflight — Store에 같은 runId Evidence가 있으면 중단 | services 파일 0
+  d1b283e phase3.5: Metaspace 상한 256m·limits 1Gi (base 공통) | services 파일 0
+  3fe2d58 phase3.5-v1.1: 중단 보고 — Order Metaspace 상한 초과(결정 필요) | services 파일 0
+== v1.3 fc6e6e2..c64618f
+-- services/:
+D	services/order/src/main/java/poc/order/OrderEventPublisher.java
+D	services/order/src/main/java/poc/order/OrderPaid.java
+D	services/order/src/main/java/poc/order/OrderService.java
+A	services/order/src/main/kotlin/poc/order/OrderEventPublisher.kt
+A	services/order/src/main/kotlin/poc/order/OrderPaid.kt
+A	services/order/src/main/kotlin/poc/order/OrderService.kt
+-- 필터로 빠진 파일 수: 7
+   1 deploy/k8s/new
+   1 docs
+   1 docs/reports
+   4 docs/reports/logs
+-- 커밋:
+  c64618f phase3.5-v1.3: OrderService·Outcome·OrderPaid·OrderEventPublisher를 Kotlin으로 | services 파일 6
+  cc4dab9 phase3.5-v1.2: 결과·규칙·보고서 | services 파일 0
+== v1.4 c64618f..120b212
+-- services/:
+D	services/order/src/main/java/poc/order/ClockConfig.java
+D	services/order/src/main/java/poc/order/CouponClient.java
+D	services/order/src/main/java/poc/order/OrderApplication.java
+D	services/order/src/main/java/poc/order/OrderController.java
+D	services/order/src/main/java/poc/order/OrderView.java
+D	services/order/src/main/java/poc/order/requestlog/CachedBodyRequest.java
+D	services/order/src/main/java/poc/order/requestlog/RequestLogFilter.java
+A	services/order/src/main/kotlin/poc/order/ClockConfig.kt
+A	services/order/src/main/kotlin/poc/order/CouponClient.kt
+A	services/order/src/main/kotlin/poc/order/OrderApplication.kt
+A	services/order/src/main/kotlin/poc/order/OrderController.kt
+A	services/order/src/main/kotlin/poc/order/OrderView.kt
+A	services/order/src/main/kotlin/poc/order/requestlog/CachedBodyRequest.kt
+A	services/order/src/main/kotlin/poc/order/requestlog/RequestLogFilter.kt
+-- 필터로 빠진 파일 수: 7
+   1 deploy/k8s/new
+   1 docs
+   1 docs/reports
+   4 docs/reports/logs
+-- 커밋:
+  120b212 phase3.5-v1.4: OrderController·DTO·OrderView·CouponClient·설정·Application을 Kotlin으로 (Order 전면 Kotlin) | services 파일 14
+  21cdc4d phase3.5-v1.3: 결과·규칙·보고서 | services 파일 0
+== F1 phase3.5-v1.4..fault/F1: 1 commit
+M	services/order/src/main/kotlin/poc/order/OrderService.kt
+== F2 phase3.5-v1.4..fault/F2: 1 commit
+M	services/order/src/main/kotlin/poc/order/Order.kt
+== F3 phase3.5-v1.4..fault/F3: 1 commit
+M	services/order/src/main/kotlin/poc/order/OrderEventPublisher.kt
+== F4 phase3.5-v1.4..fault/F4: 1 commit
+M	services/order/src/main/kotlin/poc/order/OrderService.kt
+== F5 phase3.5-v1.4..fault/F5: 1 commit
+M	services/order/src/main/kotlin/poc/order/OrderRepository.kt
+M	services/order/src/main/kotlin/poc/order/OrderService.kt
+== F6 phase3.5-v1.4..fault/F6: 1 commit
+M	services/order/src/main/kotlin/poc/order/OrderView.kt
+== F7 phase3.5-v1.4..fault/F7: 1 commit
+M	services/order/src/main/kotlin/poc/order/PaymentGatewayClient.kt
+== F8 phase3.5-v1.4..fault/F8: 1 commit
+M	services/order/src/main/kotlin/poc/order/OrderRepository.kt
+M	services/order/src/main/kotlin/poc/order/OrderService.kt
+== F9 phase3.5-v1.4..fault/F9: 1 commit
+M	services/order/src/main/kotlin/poc/order/OrderService.kt

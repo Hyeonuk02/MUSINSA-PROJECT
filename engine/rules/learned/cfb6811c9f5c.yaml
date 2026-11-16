@@ -1,0 +1,27 @@
+id: learned-cfb6811c9f5c
+scope: request
+verdict: same
+reason: 기능적으로 동등한 실행 방식 변경(개선 아님) — change/C2(1cba45e) CouponService.use 앞 existsByCouponKey
+  존재 확인, SELECT 1 → 2. 응답 상태·본문, 쓰기 집합, 최종 DB 상태 불변. 사람이 검토해 현재 계약에서 허용되는 차이로 승인
+provenance:
+  author: Hyeonuk02
+  date: '2026-11-02'
+  runId: p45-C2-1
+  split: learn
+  sessions:
+  - S004
+  - S006
+  - S008
+  uid: cfb6811c9f5c
+match:
+  endpoint: coupon.use
+  diffKind: callTree.sequenceReplaced
+  from:
+  - - poc.coupon.CouponController.use
+    - poc.coupon.CouponService.use
+    - poc.coupon.CouponRepository.findByCouponKey
+  to:
+  - - poc.coupon.CouponController.use
+    - poc.coupon.CouponService.use
+    - poc.coupon.CouponRepository.existsByCouponKey
+    - poc.coupon.CouponRepository.findByCouponKey

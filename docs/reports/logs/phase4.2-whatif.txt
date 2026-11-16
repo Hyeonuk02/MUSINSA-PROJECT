@@ -1,0 +1,60 @@
+== 현재(0e8020b): 모든 노드에서 모든 상위 타입
+  F1: 9세션 37요청 전역=False 일치
+  F2: 11세션 48요청 전역=False 불일치 ['impactedRequests', 'reductionRequests', 'reductionSessions', 'selectedRequests', 'selectedSessions', 'unobserved']
+  F3: 7세션 30요청 전역=False 일치
+  F4: 9세션 37요청 전역=False 일치
+  F5: 9세션 37요청 전역=False 일치
+  F6: 9세션 37요청 전역=False 일치
+  F7: 7세션 30요청 전역=False 일치
+  F8: 9세션 37요청 전역=False 일치
+  F9: 9세션 37요청 전역=False 일치
+  v1.1: 11세션 48요청 전역=True 일치
+  v1.2: 11세션 48요청 전역=False 불일치 ['impactedRequests', 'reductionRequests', 'reductionSessions', 'selectedRequests', 'selectedSessions', 'unobserved']
+  v1.3: 9세션 37요청 전역=False 일치
+  v1.4: 11세션 48요청 전역=True 일치
+  E5(OrderItem): (11, 48, False)
+== A: 프로젝트 선언 상위 타입만
+  F1: 9세션 37요청 전역=False 일치
+  F2: 9세션 37요청 전역=False 일치
+  F3: 7세션 30요청 전역=False 일치
+  F4: 9세션 37요청 전역=False 일치
+  F5: 9세션 37요청 전역=False 일치
+  F6: 9세션 37요청 전역=False 일치
+  F7: 7세션 30요청 전역=False 일치
+  F8: 9세션 37요청 전역=False 일치
+  F9: 9세션 37요청 전역=False 일치
+  v1.1: 11세션 48요청 전역=True 일치
+  v1.2: 9세션 37요청 전역=False 일치
+  v1.3: 9세션 37요청 전역=False 일치
+  v1.4: 11세션 48요청 전역=True 일치
+  E5(OrderItem): (9, 37, False)
+== B: 상위 타입 확장은 변경 클래스에서만
+  F1: 9세션 37요청 전역=False 일치
+  F2: 9세션 37요청 전역=False 일치
+  F3: 7세션 30요청 전역=False 일치
+  F4: 9세션 37요청 전역=False 일치
+  F5: 9세션 37요청 전역=False 일치
+  F6: 9세션 37요청 전역=False 일치
+  F7: 7세션 30요청 전역=False 일치
+  F8: 9세션 37요청 전역=False 일치
+  F9: 9세션 37요청 전역=False 일치
+  v1.1: 11세션 48요청 전역=True 일치
+  v1.2: 9세션 37요청 전역=False 일치
+  v1.3: 9세션 37요청 전역=False 일치
+  v1.4: 11세션 48요청 전역=True 일치
+  E5(OrderItem): (9, 37, False)
+== C: 관측 클래스에서 탐색 정지
+  F1: 9세션 37요청 전역=False 일치
+  F2: 9세션 37요청 전역=False 불일치 ['unobserved']
+  F3: 7세션 30요청 전역=False 일치
+  F4: 9세션 37요청 전역=False 일치
+  F5: 9세션 37요청 전역=False 일치
+  F6: 9세션 37요청 전역=False 불일치 ['unobserved']
+  F7: 7세션 30요청 전역=False 일치
+  F8: 9세션 37요청 전역=False 일치
+  F9: 9세션 37요청 전역=False 일치
+  v1.1: 11세션 48요청 전역=True 일치
+  v1.2: 9세션 37요청 전역=False 불일치 ['unobserved']
+  v1.3: 9세션 37요청 전역=False 불일치 ['unobserved']
+  v1.4: 11세션 48요청 전역=True 불일치 ['unobserved']
+  E5(OrderItem): (9, 37, False)

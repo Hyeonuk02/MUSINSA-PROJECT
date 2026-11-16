@@ -1,0 +1,10 @@
+p36-base-1  sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e
+p36-base-2  sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e
+p36-base-3  sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e
+scoping/map.json: requests 48, endpoints 8, classes 10
+compare p33-1 (corpus-v2): 차이 세션 {'S011': ['R000047', 'R000048']}
+compare p33-2 (corpus-v2): 차이 세션 {'S011': ['R000047', 'R000048']}
+compare p33-3 (corpus-v2): 차이 세션 {'S011': ['R000047', 'R000048']}
+compare p35-base-1 (corpus-v2): 차이 세션 {'S011': ['R000047', 'R000048']}
+compare p35-base-2 (corpus-v2): 차이 세션 {'S011': ['R000047', 'R000048']}
+compare p35-base-3 (corpus-v2): 차이 세션 {'S011': ['R000047', 'R000048']}

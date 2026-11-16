@@ -1,0 +1,1548 @@
+{
+  "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+  "builtFrom": [
+    "p36-base-1",
+    "p36-base-2",
+    "p36-base-3"
+  ],
+  "classes": {
+    "poc.coupon.CouponController": {
+      "endpoints": [
+        "coupon.create",
+        "coupon.get",
+        "coupon.use",
+        "order.create"
+      ],
+      "requests": [
+        "R000015",
+        "R000016",
+        "R000017",
+        "R000018",
+        "R000019",
+        "R000020",
+        "R000021",
+        "R000022",
+        "R000023",
+        "R000024",
+        "R000025",
+        "R000026",
+        "R000027",
+        "R000031",
+        "R000032",
+        "R000035",
+        "R000036",
+        "R000037",
+        "R000039",
+        "R000043",
+        "R000044"
+      ]
+    },
+    "poc.coupon.CouponRepository": {
+      "endpoints": [
+        "consume.order.paid",
+        "coupon.create",
+        "coupon.get",
+        "coupon.use",
+        "order.create",
+        "order.pay"
+      ],
+      "requests": [
+        "R000015",
+        "R000016",
+        "R000017",
+        "R000018",
+        "R000019",
+        "R000020",
+        "R000021",
+        "R000022",
+        "R000023",
+        "R000024",
+        "R000025",
+        "R000026",
+        "R000027",
+        "R000029",
+        "R000031",
+        "R000032",
+        "R000033",
+        "R000035",
+        "R000036",
+        "R000037",
+        "R000039",
+        "R000043",
+        "R000044",
+        "R000045"
+      ]
+    },
+    "poc.coupon.CouponService": {
+      "endpoints": [
+        "consume.order.paid",
+        "coupon.create",
+        "coupon.get",
+        "coupon.use",
+        "order.create",
+        "order.pay"
+      ],
+      "requests": [
+        "R000015",
+        "R000016",
+        "R000017",
+        "R000018",
+        "R000019",
+        "R000020",
+        "R000021",
+        "R000022",
+        "R000023",
+        "R000024",
+        "R000025",
+        "R000026",
+        "R000027",
+        "R000029",
+        "R000031",
+        "R000032",
+        "R000033",
+        "R000035",
+        "R000036",
+        "R000037",
+        "R000039",
+        "R000043",
+        "R000044",
+        "R000045"
+      ]
+    },
+    "poc.coupon.OrderPaidListener": {
+      "endpoints": [
+        "consume.order.paid",
+        "order.pay"
+      ],
+      "requests": [
+        "R000003",
+        "R000007",
+        "R000012",
+        "R000029",
+        "R000033",
+        "R000041",
+        "R000045"
+      ]
+    },
+    "poc.order.CouponClient": {
+      "endpoints": [
+        "order.create"
+      ],
+      "requests": [
+        "R000027",
+        "R000032",
+        "R000036",
+        "R000037",
+        "R000044"
+      ]
+    },
+    "poc.order.OrderController": {
+      "endpoints": [
+        "order.cancel",
+        "order.create",
+        "order.get",
+        "order.pay"
+      ],
+      "requests": [
+        "R000001",
+        "R000002",
+        "R000003",
+        "R000004",
+        "R000005",
+        "R000006",
+        "R000007",
+        "R000008",
+        "R000009",
+        "R000010",
+        "R000011",
+        "R000012",
+        "R000013",
+        "R000014",
+        "R000027",
+        "R000028",
+        "R000029",
+        "R000030",
+        "R000032",
+        "R000033",
+        "R000034",
+        "R000036",
+        "R000037",
+        "R000038",
+        "R000040",
+        "R000041",
+        "R000042",
+        "R000044",
+        "R000045",
+        "R000046",
+        "R000047",
+        "R000048"
+      ]
+    },
+    "poc.order.OrderEventPublisher": {
+      "endpoints": [
+        "order.pay"
+      ],
+      "requests": [
+        "R000003",
+        "R000007",
+        "R000012",
+        "R000029",
+        "R000033",
+        "R000041",
+        "R000045"
+      ]
+    },
+    "poc.order.OrderRepository": {
+      "endpoints": [
+        "order.cancel",
+        "order.create",
+        "order.get",
+        "order.pay"
+      ],
+      "requests": [
+        "R000001",
+        "R000002",
+        "R000003",
+        "R000004",
+        "R000005",
+        "R000006",
+        "R000007",
+        "R000008",
+        "R000009",
+        "R000010",
+        "R000011",
+        "R000012",
+        "R000013",
+        "R000014",
+        "R000027",
+        "R000028",
+        "R000029",
+        "R000030",
+        "R000032",
+        "R000033",
+        "R000034",
+        "R000036",
+        "R000037",
+        "R000038",
+        "R000040",
+        "R000041",
+        "R000042",
+        "R000044",
+        "R000045",
+        "R000046",
+        "R000047",
+        "R000048"
+      ]
+    },
+    "poc.order.OrderService": {
+      "endpoints": [
+        "order.cancel",
+        "order.create",
+        "order.get",
+        "order.pay"
+      ],
+      "requests": [
+        "R000001",
+        "R000002",
+        "R000003",
+        "R000004",
+        "R000005",
+        "R000006",
+        "R000007",
+        "R000008",
+        "R000009",
+        "R000010",
+        "R000011",
+        "R000012",
+        "R000013",
+        "R000014",
+        "R000027",
+        "R000028",
+        "R000029",
+        "R000030",
+        "R000032",
+        "R000033",
+        "R000034",
+        "R000036",
+        "R000037",
+        "R000038",
+        "R000040",
+        "R000041",
+        "R000042",
+        "R000044",
+        "R000045",
+        "R000046",
+        "R000047",
+        "R000048"
+      ]
+    },
+    "poc.order.PaymentGatewayClient": {
+      "endpoints": [
+        "order.pay"
+      ],
+      "requests": [
+        "R000003",
+        "R000007",
+        "R000012",
+        "R000029",
+        "R000033",
+        "R000041",
+        "R000045"
+      ]
+    }
+  },
+  "corpus": {
+    "sha256": "64e8450d7fd580b4146cb24719208cfc811da8731cd31d783313e4106cf8dab5",
+    "version": "corpus-v2.1"
+  },
+  "coverage": {
+    "endpoints": {
+      "missing": [],
+      "observed": [
+        "consume.order.paid",
+        "coupon.create",
+        "coupon.get",
+        "coupon.use",
+        "order.cancel",
+        "order.create",
+        "order.get",
+        "order.pay"
+      ],
+      "total": 8
+    },
+    "sources": {
+      "phase3.3-base": {
+        "beans": 11,
+        "beansObserved": 10,
+        "nonBeans": [
+          {
+            "fqcn": "poc.coupon.ClockConfig",
+            "kind": "config"
+          },
+          {
+            "fqcn": "poc.coupon.Coupon",
+            "kind": "entity"
+          },
+          {
+            "fqcn": "poc.coupon.CouponApplication",
+            "kind": "main"
+          },
+          {
+            "fqcn": "poc.coupon.CouponView",
+            "kind": "plain"
+          },
+          {
+            "fqcn": "poc.coupon.KafkaConfig",
+            "kind": "config"
+          },
+          {
+            "fqcn": "poc.order.ClockConfig",
+            "kind": "config"
+          },
+          {
+            "fqcn": "poc.order.Order",
+            "kind": "entity"
+          },
+          {
+            "fqcn": "poc.order.OrderApplication",
+            "kind": "main"
+          },
+          {
+            "fqcn": "poc.order.OrderItem",
+            "kind": "entity"
+          },
+          {
+            "fqcn": "poc.order.OrderPaid",
+            "kind": "plain"
+          },
+          {
+            "fqcn": "poc.order.OrderView",
+            "kind": "plain"
+          },
+          {
+            "fqcn": "poc.order.requestlog.CachedBodyRequest",
+            "kind": "plain"
+          }
+        ],
+        "observedNotInSource": [],
+        "unobservedBeans": [
+          {
+            "beanKinds": [
+              "Component"
+            ],
+            "fqcn": "poc.order.requestlog.RequestLogFilter",
+            "reason": "AOP 포인트컷 제외 — !within(jakarta.servlet.Filter+) (EvidenceAutoConfiguration.callTreeExpression)"
+          }
+        ]
+      },
+      "phase3.5-v1.4": {
+        "beans": 11,
+        "beansObserved": 10,
+        "nonBeans": [
+          {
+            "fqcn": "poc.coupon.ClockConfig",
+            "kind": "config"
+          },
+          {
+            "fqcn": "poc.coupon.Coupon",
+            "kind": "entity"
+          },
+          {
+            "fqcn": "poc.coupon.CouponApplication",
+            "kind": "main"
+          },
+          {
+            "fqcn": "poc.coupon.CouponView",
+            "kind": "plain"
+          },
+          {
+            "fqcn": "poc.coupon.KafkaConfig",
+            "kind": "config"
+          },
+          {
+            "fqcn": "poc.order.ClockConfig",
+            "kind": "config"
+          },
+          {
+            "fqcn": "poc.order.Order",
+            "kind": "entity"
+          },
+          {
+            "fqcn": "poc.order.OrderApplication",
+            "kind": "main"
+          },
+          {
+            "fqcn": "poc.order.OrderItem",
+            "kind": "entity"
+          },
+          {
+            "fqcn": "poc.order.OrderPaid",
+            "kind": "plain"
+          },
+          {
+            "fqcn": "poc.order.OrderView",
+            "kind": "plain"
+          },
+          {
+            "fqcn": "poc.order.requestlog.CachedBodyRequest",
+            "kind": "plain"
+          }
+        ],
+        "observedNotInSource": [],
+        "unobservedBeans": [
+          {
+            "beanKinds": [
+              "Component"
+            ],
+            "fqcn": "poc.order.requestlog.RequestLogFilter",
+            "reason": "AOP 포인트컷 제외 — !within(jakarta.servlet.Filter+) (EvidenceAutoConfiguration.callTreeExpression)"
+          }
+        ]
+      }
+    }
+  },
+  "endpoints": {
+    "consume.order.paid": {
+      "classes": [
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.coupon.OrderPaidListener"
+      ],
+      "hopRequests": [
+        "R000003",
+        "R000007",
+        "R000012",
+        "R000029",
+        "R000033",
+        "R000041",
+        "R000045"
+      ],
+      "requests": [],
+      "sessions": [
+        "S001",
+        "S002",
+        "S003",
+        "S006",
+        "S007",
+        "S009",
+        "S010"
+      ]
+    },
+    "coupon.create": {
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "hopRequests": [],
+      "requests": [
+        "R000015",
+        "R000021",
+        "R000026",
+        "R000031",
+        "R000035",
+        "R000043"
+      ],
+      "sessions": [
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S010"
+      ]
+    },
+    "coupon.get": {
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "hopRequests": [],
+      "requests": [
+        "R000016",
+        "R000018",
+        "R000022",
+        "R000023",
+        "R000025",
+        "R000039"
+      ],
+      "sessions": [
+        "S004",
+        "S005",
+        "S008"
+      ]
+    },
+    "coupon.use": {
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "hopRequests": [
+        "R000027",
+        "R000032",
+        "R000036",
+        "R000037",
+        "R000044"
+      ],
+      "requests": [
+        "R000017",
+        "R000019",
+        "R000020",
+        "R000024"
+      ],
+      "sessions": [
+        "S004",
+        "S005",
+        "S006",
+        "S007",
+        "S008",
+        "S010"
+      ]
+    },
+    "order.cancel": {
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "hopRequests": [],
+      "requests": [
+        "R000013"
+      ],
+      "sessions": [
+        "S003"
+      ]
+    },
+    "order.create": {
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.order.CouponClient",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "hopRequests": [],
+      "requests": [
+        "R000001",
+        "R000005",
+        "R000010",
+        "R000027",
+        "R000032",
+        "R000036",
+        "R000037",
+        "R000040",
+        "R000044",
+        "R000047"
+      ],
+      "sessions": [
+        "S001",
+        "S002",
+        "S003",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011"
+      ]
+    },
+    "order.get": {
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "hopRequests": [],
+      "requests": [
+        "R000002",
+        "R000004",
+        "R000006",
+        "R000009",
+        "R000011",
+        "R000014",
+        "R000028",
+        "R000030",
+        "R000034",
+        "R000038",
+        "R000042",
+        "R000046",
+        "R000048"
+      ],
+      "sessions": [
+        "S001",
+        "S002",
+        "S003",
+        "S006",
+        "S007",
+        "S008",
+        "S009",
+        "S010",
+        "S011"
+      ]
+    },
+    "order.pay": {
+      "classes": [
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "hopRequests": [],
+      "requests": [
+        "R000003",
+        "R000007",
+        "R000008",
+        "R000012",
+        "R000029",
+        "R000033",
+        "R000041",
+        "R000045"
+      ],
+      "sessions": [
+        "S001",
+        "S002",
+        "S003",
+        "S006",
+        "S007",
+        "S009",
+        "S010"
+      ]
+    }
+  },
+  "requests": {
+    "R000001": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S001"
+    },
+    "R000002": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S001"
+    },
+    "R000003": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderEventPublisher",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService",
+          "poc.order.PaymentGatewayClient"
+        ],
+        "0.e1": [
+          "poc.coupon.OrderPaidListener"
+        ]
+      },
+      "classes": [
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "endpoint": "order.pay",
+      "session": "S001"
+    },
+    "R000004": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S001"
+    },
+    "R000005": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S002"
+    },
+    "R000006": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S002"
+    },
+    "R000007": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderEventPublisher",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService",
+          "poc.order.PaymentGatewayClient"
+        ],
+        "0.e1": [
+          "poc.coupon.OrderPaidListener"
+        ]
+      },
+      "classes": [
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "endpoint": "order.pay",
+      "session": "S002"
+    },
+    "R000008": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.pay",
+      "session": "S002"
+    },
+    "R000009": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S002"
+    },
+    "R000010": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S003"
+    },
+    "R000011": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S003"
+    },
+    "R000012": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderEventPublisher",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService",
+          "poc.order.PaymentGatewayClient"
+        ],
+        "0.e1": [
+          "poc.coupon.OrderPaidListener"
+        ]
+      },
+      "classes": [
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "endpoint": "order.pay",
+      "session": "S003"
+    },
+    "R000013": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.cancel",
+      "session": "S003"
+    },
+    "R000014": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S003"
+    },
+    "R000015": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.create",
+      "session": "S004"
+    },
+    "R000016": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.get",
+      "session": "S004"
+    },
+    "R000017": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.use",
+      "session": "S004"
+    },
+    "R000018": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.get",
+      "session": "S004"
+    },
+    "R000019": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.use",
+      "session": "S004"
+    },
+    "R000020": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.use",
+      "session": "S004"
+    },
+    "R000021": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.create",
+      "session": "S005"
+    },
+    "R000022": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.get",
+      "session": "S005"
+    },
+    "R000023": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.get",
+      "session": "S005"
+    },
+    "R000024": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.use",
+      "session": "S005"
+    },
+    "R000025": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.get",
+      "session": "S005"
+    },
+    "R000026": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.create",
+      "session": "S006"
+    },
+    "R000027": {
+      "byHop": {
+        "0": [
+          "poc.order.CouponClient",
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ],
+        "0.h1": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.order.CouponClient",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S006"
+    },
+    "R000028": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S006"
+    },
+    "R000029": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderEventPublisher",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService",
+          "poc.order.PaymentGatewayClient"
+        ],
+        "0.e1": [
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService",
+          "poc.coupon.OrderPaidListener"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "endpoint": "order.pay",
+      "session": "S006"
+    },
+    "R000030": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S006"
+    },
+    "R000031": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.create",
+      "session": "S007"
+    },
+    "R000032": {
+      "byHop": {
+        "0": [
+          "poc.order.CouponClient",
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ],
+        "0.h1": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.order.CouponClient",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S007"
+    },
+    "R000033": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderEventPublisher",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService",
+          "poc.order.PaymentGatewayClient"
+        ],
+        "0.e1": [
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService",
+          "poc.coupon.OrderPaidListener"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "endpoint": "order.pay",
+      "session": "S007"
+    },
+    "R000034": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S007"
+    },
+    "R000035": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.create",
+      "session": "S008"
+    },
+    "R000036": {
+      "byHop": {
+        "0": [
+          "poc.order.CouponClient",
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ],
+        "0.h1": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.order.CouponClient",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S008"
+    },
+    "R000037": {
+      "byHop": {
+        "0": [
+          "poc.order.CouponClient",
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ],
+        "0.h1": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.order.CouponClient",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S008"
+    },
+    "R000038": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S008"
+    },
+    "R000039": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.get",
+      "session": "S008"
+    },
+    "R000040": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S009"
+    },
+    "R000041": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderEventPublisher",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService",
+          "poc.order.PaymentGatewayClient"
+        ],
+        "0.e1": [
+          "poc.coupon.OrderPaidListener"
+        ]
+      },
+      "classes": [
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "endpoint": "order.pay",
+      "session": "S009"
+    },
+    "R000042": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S009"
+    },
+    "R000043": {
+      "byHop": {
+        "0": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService"
+      ],
+      "endpoint": "coupon.create",
+      "session": "S010"
+    },
+    "R000044": {
+      "byHop": {
+        "0": [
+          "poc.order.CouponClient",
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ],
+        "0.h1": [
+          "poc.coupon.CouponController",
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponController",
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.order.CouponClient",
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S010"
+    },
+    "R000045": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderEventPublisher",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService",
+          "poc.order.PaymentGatewayClient"
+        ],
+        "0.e1": [
+          "poc.coupon.CouponRepository",
+          "poc.coupon.CouponService",
+          "poc.coupon.OrderPaidListener"
+        ]
+      },
+      "classes": [
+        "poc.coupon.CouponRepository",
+        "poc.coupon.CouponService",
+        "poc.coupon.OrderPaidListener",
+        "poc.order.OrderController",
+        "poc.order.OrderEventPublisher",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService",
+        "poc.order.PaymentGatewayClient"
+      ],
+      "endpoint": "order.pay",
+      "session": "S010"
+    },
+    "R000046": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S010"
+    },
+    "R000047": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.create",
+      "session": "S011"
+    },
+    "R000048": {
+      "byHop": {
+        "0": [
+          "poc.order.OrderController",
+          "poc.order.OrderRepository",
+          "poc.order.OrderService"
+        ]
+      },
+      "classes": [
+        "poc.order.OrderController",
+        "poc.order.OrderRepository",
+        "poc.order.OrderService"
+      ],
+      "endpoint": "order.get",
+      "session": "S011"
+    }
+  }
+}

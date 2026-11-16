@@ -1,0 +1,19 @@
+[13:55:43] ===== mode on
+deployment "order" successfully rolled out
+deployment "coupon" successfully rolled out
+[13:56:21] 웜업 재생(버림)
+[13:56:49] 측정 p49-on-1
+[13:57:20] 측정 p49-on-2
+[13:57:51] 측정 p49-on-3
+[13:58:03] ===== mode off
+deployment "order" successfully rolled out
+deployment "coupon" successfully rolled out
+[13:58:41] 웜업 재생(버림)
+[13:59:10] 측정 p49-off-1
+[13:59:43] 측정 p49-off-2
+[14:00:15] 측정 p49-off-3
+[14:00:27] done
+[14:00:27] restore: legacy overlay
+deployment "order" successfully rolled out
+deployment "coupon" successfully rolled out
+exit 0

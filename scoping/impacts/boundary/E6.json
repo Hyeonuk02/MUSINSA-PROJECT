@@ -1,0 +1,264 @@
+{
+  "assumedChanged": [],
+  "base": "phase3.5-v1.4",
+  "baseCommit": "120b2126381f6f59a3dfc6940b522b6844482f6e",
+  "changedClasses": [
+    "poc.order.PaymentGatewayClient"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.order.PaymentGatewayClient"
+      ],
+      "kind": "class",
+      "path": "services/order/src/main/kotlin/poc/order/PaymentGatewayClient.kt",
+      "status": "D"
+    }
+  ],
+  "globalReasons": [
+    "deleted:poc.order.PaymentGatewayClient"
+  ],
+  "globalTriggered": true,
+  "head": "scope/E6",
+  "headCommit": "670e4365a4a7d0718a1ff43b5c9c8f1fa727d104",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "coupon.create",
+    "coupon.get",
+    "coupon.use",
+    "order.cancel",
+    "order.create",
+    "order.get",
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000001": [
+      "global"
+    ],
+    "R000002": [
+      "global"
+    ],
+    "R000003": [
+      "global",
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000004": [
+      "global"
+    ],
+    "R000005": [
+      "global"
+    ],
+    "R000006": [
+      "global"
+    ],
+    "R000007": [
+      "global",
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000008": [
+      "global"
+    ],
+    "R000009": [
+      "global"
+    ],
+    "R000010": [
+      "global"
+    ],
+    "R000011": [
+      "global"
+    ],
+    "R000012": [
+      "global",
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000013": [
+      "global"
+    ],
+    "R000014": [
+      "global"
+    ],
+    "R000015": [
+      "global"
+    ],
+    "R000016": [
+      "global"
+    ],
+    "R000017": [
+      "global"
+    ],
+    "R000018": [
+      "global"
+    ],
+    "R000019": [
+      "global"
+    ],
+    "R000020": [
+      "global"
+    ],
+    "R000021": [
+      "global"
+    ],
+    "R000022": [
+      "global"
+    ],
+    "R000023": [
+      "global"
+    ],
+    "R000024": [
+      "global"
+    ],
+    "R000025": [
+      "global"
+    ],
+    "R000026": [
+      "global"
+    ],
+    "R000027": [
+      "global"
+    ],
+    "R000028": [
+      "global"
+    ],
+    "R000029": [
+      "global",
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000030": [
+      "global"
+    ],
+    "R000031": [
+      "global"
+    ],
+    "R000032": [
+      "global"
+    ],
+    "R000033": [
+      "global",
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000034": [
+      "global"
+    ],
+    "R000035": [
+      "global"
+    ],
+    "R000036": [
+      "global"
+    ],
+    "R000037": [
+      "global"
+    ],
+    "R000038": [
+      "global"
+    ],
+    "R000039": [
+      "global"
+    ],
+    "R000040": [
+      "global"
+    ],
+    "R000041": [
+      "global",
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000042": [
+      "global"
+    ],
+    "R000043": [
+      "global"
+    ],
+    "R000044": [
+      "global"
+    ],
+    "R000045": [
+      "global",
+      "observed:poc.order.PaymentGatewayClient"
+    ],
+    "R000046": [
+      "global"
+    ],
+    "R000047": [
+      "global"
+    ],
+    "R000048": [
+      "global"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [
+    "poc.order.PaymentGatewayClient"
+  ],
+  "pathFilter": null,
+  "reductionRequests": 0.0,
+  "reductionSessions": 0.0,
+  "selectedRequests": [
+    "R000001",
+    "R000002",
+    "R000003",
+    "R000004",
+    "R000005",
+    "R000006",
+    "R000007",
+    "R000008",
+    "R000009",
+    "R000010",
+    "R000011",
+    "R000012",
+    "R000013",
+    "R000014",
+    "R000015",
+    "R000016",
+    "R000017",
+    "R000018",
+    "R000019",
+    "R000020",
+    "R000021",
+    "R000022",
+    "R000023",
+    "R000024",
+    "R000025",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000035",
+    "R000036",
+    "R000037",
+    "R000038",
+    "R000039",
+    "R000040",
+    "R000041",
+    "R000042",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046",
+    "R000047",
+    "R000048"
+  ],
+  "selectedSessions": [
+    "S001",
+    "S002",
+    "S003",
+    "S004",
+    "S005",
+    "S006",
+    "S007",
+    "S008",
+    "S009",
+    "S010",
+    "S011"
+  ],
+  "toolVersion": "impact-v1.1",
+  "unobserved": [],
+  "warnings": []
+}

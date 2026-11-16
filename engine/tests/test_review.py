@@ -43,3 +43,15 @@ def test_eval_only_uid_cannot_be_labeled(run, rules, capsys):
     assert review.main(["label", "--run", str(run), "--rules", str(rules), "--uid", uid,
                         "--as", "same", "--reason", "x"]) == 2
     assert not list((rules / "learned").glob("*.yaml"))
+
+
+def test_label_response_hash_changed(run, rules):
+    """engine-v1.3: responseHashChanged도 learn에서 라벨 가능(제안 matcher host·path)."""
+    tamper(run, "R000027", "0", lambda r, _: r["externalCalls"][0].update(responseBodyHash="sha256:" + "0" * 64))
+    p = pair(judge_run(run, rules, "C"), "R000027")
+    uid = next(u["uid"] for u in p["uncertain"] if u["diffKind"] == "externalCalls.responseHashChanged")
+    assert review.main(["label", "--run", str(run), "--rules", str(rules), "--uid", uid,
+                        "--as", "same", "--reason", "Coupon 응답 표현 변경(내용 동일)"]) == 0
+    m = yaml.safe_load((rules / "learned" / f"{uid}.yaml").read_text(encoding="utf-8"))["match"]
+    assert m["host"] == "coupon" and m["path"] == r"/api/coupons/ck\-R000026/use"
+    assert pair(judge_run(run, rules, "C"), "R000027")["verdict"] == SAME

@@ -27,6 +27,8 @@ DIFF_KINDS = {
     "callTree.sequenceReplaced": {"from", "to"},
     "transactions.nameChanged": {"from", "to"},
     "events.payloadFieldsAdded": {"fields"},
+    # engine-v1.3(phase4.0): 외부 호출 응답 hash 변화 — 바뀐 호출의 host·path가 모두 정규식에 맞으면
+    "externalCalls.responseHashChanged": {"host", "path"},
 }
 
 
@@ -79,6 +81,11 @@ class Rule:
             return m.get("from") == d["from"] and m.get("to") == d["to"]
         if kind == "dbRead.fingerprintReplaced":
             return (_all_match(d["from"], m.get("from", [])) and _all_match(d["to"], m.get("to", [])))
+        if kind == "externalCalls.responseHashChanged":
+            changed = d.get("changed") or []
+            return bool(changed) and all(
+                re.fullmatch(str(m.get("host", ".*")), c["host"]) is not None
+                and re.fullmatch(str(m.get("path", ".*")), c["path"]) is not None for c in changed)
         if kind in ("callTree.sequenceReplaced", "transactions.nameChanged"):
             return m.get("from") == d["from"] and m.get("to") == d["to"]
         return False

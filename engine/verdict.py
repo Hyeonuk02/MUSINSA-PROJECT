@@ -28,10 +28,10 @@ import normalize as nz
 from common import ROOT, STACKS, contract_violations, key_of, load_run, load_validator
 from ruleset import RuleSet
 
-ENGINE_VERSION = "engine-v1.2 (phase3.6: 세션 검사 귀속 규칙)"
+ENGINE_VERSION = "engine-v1.3 (phase4.0: externalCalls.responseHashChanged matcher)"
 RULE_COVERABLE = {"response.addedFields", "response.removedFields", "response.valueChanged", "events.payloadFieldsAdded",
                   "dbRead.countDelta", "dbRead.fingerprintReplaced", "callTree.sequenceReplaced",
-                  "transactions.nameChanged"}
+                  "transactions.nameChanged", "externalCalls.responseHashChanged"}
 VOLATILE = {"timing", "capturedAt", "runId", "version", "stack"}
 
 
@@ -103,8 +103,13 @@ def execution_items(endpoint: str, L: dict, N: dict) -> list[dict]:
         out.append(item(endpoint, "transactions.names", "transactions.nameChanged",
                         {"from": L["transactions.names"], "to": N["transactions.names"]}))
     if L["externalCalls.responseHash"] != N["externalCalls.responseHash"]:
+        # engine-v1.3: 응답 hash가 달라진 호출의 (host, path)를 detail에 더해 규칙으로 설명할 수 있게(matcher host·path)
+        lh, nh = L["externalCalls.responseHash"], N["externalCalls.responseHash"]
+        lc, nc = L["externalCalls"], N["externalCalls"]
+        changed = sorted({(c["host"], c["path"]) for i, c in enumerate(nc) if i >= len(lh) or lh[i] != nh[i]}
+                         | {(c["host"], c["path"]) for i, c in enumerate(lc) if i >= len(nh) or lh[i] != nh[i]})
         out.append(item(endpoint, "externalCalls.responseHash", "externalCalls.responseHashChanged",
-                        {"from": L["externalCalls.responseHash"], "to": N["externalCalls.responseHash"]}))
+                        {"from": lh, "to": nh, "changed": [{"host": h, "path": pth} for h, pth in changed]}))
     return out
 
 

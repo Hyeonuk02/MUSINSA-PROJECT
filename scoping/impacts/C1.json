@@ -1,0 +1,104 @@
+{
+  "assumedChanged": [],
+  "base": "phase3.3-base",
+  "baseCommit": "98c9356f20d29335ff68dd99bc3ed57be107d2cf",
+  "changedClasses": [
+    "poc.coupon.OrderPaidListener"
+  ],
+  "changedFiles": [
+    {
+      "fqcns": [
+        "poc.coupon.OrderPaidListener"
+      ],
+      "kind": "class",
+      "path": "services/coupon/src/main/java/poc/coupon/OrderPaidListener.java",
+      "status": "M"
+    }
+  ],
+  "globalReasons": [],
+  "globalTriggered": false,
+  "head": "change/C1",
+  "headCommit": "bc4edbee5d99b8c6af02ca3d813ab1e23efa89a4",
+  "ignoreKind": [],
+  "impactedEndpoints": [
+    "order.pay"
+  ],
+  "impactedRequests": {
+    "R000003": [
+      "observed:poc.coupon.OrderPaidListener"
+    ],
+    "R000007": [
+      "observed:poc.coupon.OrderPaidListener"
+    ],
+    "R000012": [
+      "observed:poc.coupon.OrderPaidListener"
+    ],
+    "R000029": [
+      "observed:poc.coupon.OrderPaidListener"
+    ],
+    "R000033": [
+      "observed:poc.coupon.OrderPaidListener"
+    ],
+    "R000041": [
+      "observed:poc.coupon.OrderPaidListener"
+    ],
+    "R000045": [
+      "observed:poc.coupon.OrderPaidListener"
+    ]
+  },
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [
+    "poc.coupon.OrderPaidListener"
+  ],
+  "pathFilter": null,
+  "reductionRequests": 0.375,
+  "reductionSessions": 0.3636,
+  "selectedRequests": [
+    "R000001",
+    "R000002",
+    "R000003",
+    "R000004",
+    "R000005",
+    "R000006",
+    "R000007",
+    "R000008",
+    "R000009",
+    "R000010",
+    "R000011",
+    "R000012",
+    "R000013",
+    "R000014",
+    "R000026",
+    "R000027",
+    "R000028",
+    "R000029",
+    "R000030",
+    "R000031",
+    "R000032",
+    "R000033",
+    "R000034",
+    "R000040",
+    "R000041",
+    "R000042",
+    "R000043",
+    "R000044",
+    "R000045",
+    "R000046"
+  ],
+  "selectedSessions": [
+    "S001",
+    "S002",
+    "S003",
+    "S006",
+    "S007",
+    "S009",
+    "S010"
+  ],
+  "toolVersion": "impact-v1.1",
+  "unobserved": [],
+  "warnings": []
+}

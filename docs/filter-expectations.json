@@ -1,0 +1,165 @@
+{
+  "_doc": "Phase 4.4 Filter·Tag run 기대 사전 등록 — run 전 커밋. verdicts·dbstateEqual은 전체 재생(p36-<변형>)을 선택 세션으로 제한한 값이다. Filter 끝난 기준: 재생 pair 판정 == 전체 재생 같은 pair(100%), 세션 검사 동일. Tag 끝난 기준: 판정·재생 수 전체 재생과 동일, F0(R000047/0)를 뺀 비-SAME pair가 모두 inScope. 결과를 보고 고치지 않는다.",
+  "cases": {
+    "C1-filter": {
+      "couponImage": "coupon-app:phase4-C1",
+      "dbstateEqual": false,
+      "degraded": 0,
+      "fullRunBase": "p45-C1",
+      "image": "order-app:phase3.5-v1.4",
+      "impact": "scoping/impacts/C1.json",
+      "iterations": 3,
+      "mode": "filter",
+      "replayedRequests": 30,
+      "runBase": "p45-C1-f",
+      "sessions": 7,
+      "undelivered": 0,
+      "variant": "C1",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 3,
+        "SAME": 37
+      },
+      "vus": 3
+    },
+    "C2-filter": {
+      "couponImage": "coupon-app:phase4-C2",
+      "dbstateEqual": true,
+      "degraded": 0,
+      "fullRunBase": "p45-C2",
+      "image": "order-app:phase3.5-v1.4",
+      "impact": "scoping/impacts/C2.json",
+      "iterations": 3,
+      "mode": "filter",
+      "note": "same 규칙 적용 후 37 pair 전부 SAME, 그중 9 pair는 appliedRules가 남는다. S011을 재생하지 않아 F0 없음",
+      "replayedRequests": 29,
+      "runBase": "p45-C2-f",
+      "sessions": 6,
+      "undelivered": 0,
+      "variant": "C2",
+      "verdicts": {
+        "SAME": 37
+      },
+      "vus": 3
+    },
+    "F3-filter": {
+      "dbstateEqual": true,
+      "degraded": 0,
+      "fullRunBase": "p36-F3",
+      "image": "order-app:phase3.6-F3",
+      "impact": "scoping/impacts/F3.json",
+      "iterations": 3,
+      "mode": "filter",
+      "replayedRequests": 30,
+      "runBase": "p44-F3-f",
+      "sessions": 7,
+      "undelivered": 0,
+      "variant": "F3",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 7,
+        "SAME": 33
+      },
+      "vus": 3
+    },
+    "F3-mirror": {
+      "dbstateEqual": false,
+      "degraded": 0,
+      "fullRunBase": "p36-F3",
+      "image": "order-app:phase3.6-F3",
+      "impact": "scoping/impacts/F3.json",
+      "iterations": 1,
+      "mode": "mirror",
+      "note": "Legacy 48요청 전체, New는 선택 7세션 30요청만. 판정은 pair가 있는 40건이 F3-filter와 같아야 한다. Undelivered(new)는 미러하지 않은 18요청 그대로이고 전달 실패가 아니다. New가 부분 상태라 run 범위 dbstate는 불일치가 기대다(판정 근거 아님). verify_sameness는 Undelivered로 FAIL을 내는 것이 기대다(엔진 고정)",
+      "replayedRequests": 48,
+      "runBase": "p48-F3-m",
+      "sessions": 7,
+      "undelivered": 18,
+      "unmirroredRequests": [
+        "R000015",
+        "R000016",
+        "R000017",
+        "R000018",
+        "R000019",
+        "R000020",
+        "R000021",
+        "R000022",
+        "R000023",
+        "R000024",
+        "R000025",
+        "R000035",
+        "R000036",
+        "R000037",
+        "R000038",
+        "R000039",
+        "R000047",
+        "R000048"
+      ],
+      "variant": "F3",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 7,
+        "SAME": 33
+      },
+      "vus": 3
+    },
+    "F3-tag": {
+      "dbstateEqual": true,
+      "degraded": 0,
+      "fullRunBase": "p36-F3",
+      "image": "order-app:phase3.6-F3",
+      "impact": "scoping/impacts/F3.json",
+      "iterations": 1,
+      "mode": "tag",
+      "note": "F3의 선택 세션에 S011이 없어 F0는 범위 밖(tier 3)이다. 끝난 기준은 Recall 정의대로 F0를 뺀다",
+      "replayedRequests": 48,
+      "runBase": "p44-F3-t",
+      "sessions": 11,
+      "undelivered": 0,
+      "variant": "F3",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 8,
+        "SAME": 52
+      },
+      "vus": 3
+    },
+    "F8-tag": {
+      "dbstateEqual": true,
+      "degraded": 0,
+      "fullRunBase": "p36-F8",
+      "image": "order-app:phase3.6-F8",
+      "impact": "scoping/impacts/F8.json",
+      "iterations": 1,
+      "mode": "tag",
+      "replayedRequests": 48,
+      "runBase": "p44-F8-t",
+      "sessions": 11,
+      "undelivered": 0,
+      "variant": "F8",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 1,
+        "SAME": 49,
+        "UNCERTAIN": 10
+      },
+      "vus": 3
+    },
+    "F9-filter": {
+      "dbstateEqual": true,
+      "degraded": 0,
+      "fullRunBase": "p36-F9",
+      "image": "order-app:phase3.6-F9",
+      "impact": "scoping/impacts/F9.json",
+      "iterations": 3,
+      "mode": "filter",
+      "replayedRequests": 37,
+      "runBase": "p44-F9-f",
+      "sessions": 9,
+      "undelivered": 0,
+      "variant": "F9",
+      "verdicts": {
+        "CONTRACT_VIOLATION": 5,
+        "SAME": 44
+      },
+      "vus": 3
+    }
+  },
+  "impactTool": "impact-v1.1",
+  "version": "filter-expectations-v3"
+}

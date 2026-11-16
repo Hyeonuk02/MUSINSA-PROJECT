@@ -1,0 +1,82 @@
+============================= test session starts ==============================
+platform darwin -- Python 3.14.0, pytest-8.4.2, pluggy-1.6.0 -- .venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/hyeonuk/workspace/MUSINSA-PROJECT
+plugins: anyio-4.15.1
+collecting ... collected 37 items
+
+engine/tests/test_engine.py::test_fixture_all_same_all_arms PASSED       [  2%]
+engine/tests/test_engine.py::test_real_runs_all_same[p33-1] PASSED       [  5%]
+engine/tests/test_engine.py::test_real_runs_all_same[p33-2] PASSED       [  8%]
+engine/tests/test_engine.py::test_real_runs_all_same[p33-3] PASSED       [ 10%]
+engine/tests/test_engine.py::test_output_deterministic PASSED            [ 13%]
+engine/tests/test_engine.py::test_response_field_added_is_uncertain PASSED [ 16%]
+engine/tests/test_engine.py::test_amount_change_is_cv PASSED             [ 18%]
+engine/tests/test_engine.py::test_insert_removed_is_cv_write_set PASSED  [ 21%]
+engine/tests/test_engine.py::test_gateway_charged_twice_is_cv_session_rule PASSED [ 24%]
+engine/tests/test_engine.py::test_publish_before_commit_begin_is_cv PASSED [ 27%]
+engine/tests/test_engine.py::test_duplicate_child_hop_is_cv_hop_set PASSED [ 29%]
+engine/tests/test_engine.py::test_select_added_uncertain_when_undeclared PASSED [ 32%]
+engine/tests/test_engine.py::test_select_added_cv_when_max_selects_declared PASSED [ 35%]
+engine/tests/test_engine.py::test_ack_failed_is_cv PASSED                [ 37%]
+engine/tests/test_engine.py::test_consume_outcome_failed_is_cv PASSED    [ 40%]
+engine/tests/test_engine.py::test_call_tree_only_is_uncertain PASSED     [ 43%]
+engine/tests/test_engine.py::test_transaction_name_only_is_uncertain PASSED [ 45%]
+engine/tests/test_engine.py::test_proxy_and_kotlin_names_normalized PASSED [ 48%]
+engine/tests/test_engine.py::test_rule_with_instance_key_rejected[sessionId] PASSED [ 51%]
+engine/tests/test_engine.py::test_rule_with_instance_key_rejected[replayRequestId] PASSED [ 54%]
+engine/tests/test_engine.py::test_rule_with_instance_key_rejected[runId] PASSED [ 56%]
+engine/tests/test_engine.py::test_status_mismatch_never_explained_by_rule PASSED [ 59%]
+engine/tests/test_engine.py::test_settle_without_use_is_cv_session_rule PASSED [ 62%]
+engine/tests/test_engine.py::test_id_value_masked_but_key_compared PASSED [ 64%]
+engine/tests/test_engine.py::test_contract_file_option PASSED            [ 67%]
+engine/tests/test_engine.py::test_session_violations_empty_on_fixture PASSED [ 70%]
+engine/tests/test_engine.py::test_gateway_sum_differs_only_differing_pair_cv PASSED [ 72%]
+engine/tests/test_engine.py::test_gateway_both_stacks_over_limit_flag_only PASSED [ 75%]
+engine/tests/test_engine.py::test_coupon_transition_new_only_attributed PASSED [ 78%]
+engine/tests/test_engine.py::test_coupon_transition_both_stacks_flag_only PASSED [ 81%]
+engine/tests/test_engine.py::test_response_hash_changed_is_uncertain_with_host_path PASSED [ 83%]
+engine/tests/test_engine.py::test_response_hash_changed_rule_matches_host_path PASSED [ 86%]
+engine/tests/test_engine.py::test_response_hash_changed_rule_wrong_path_no_match PASSED [ 89%]
+engine/tests/test_review.py::test_response_field_added_uncertain_then_label_improvement PASSED [ 91%]
+engine/tests/test_review.py::test_learn_label_clears_eval_uncertain PASSED [ 94%]
+engine/tests/test_review.py::test_eval_only_uid_cannot_be_labeled PASSED [ 97%]
+engine/tests/test_review.py::test_label_response_hash_changed PASSED     [100%]
+
+============================== 37 passed in 1.81s ==============================
+============================= test session starts ==============================
+platform darwin -- Python 3.14.0, pytest-8.4.2, pluggy-1.6.0 -- .venv/bin/python
+cachedir: .pytest_cache
+rootdir: /Users/hyeonuk/workspace/MUSINSA-PROJECT
+plugins: anyio-4.15.1
+collecting ... collected 27 items
+
+scoping/tests/test_common.py::test_clean_class_same_rules_as_engine[poc.order.OrderService$$SpringCGLIB$$0-poc.order.OrderService] PASSED [  3%]
+scoping/tests/test_common.py::test_clean_class_same_rules_as_engine[poc.order.OrderApplicationKt-poc.order.OrderApplication] PASSED [  7%]
+scoping/tests/test_common.py::test_clean_class_same_rules_as_engine[poc.order.OrderService$lambda$1-poc.order.OrderService] PASSED [ 11%]
+scoping/tests/test_common.py::test_clean_class_same_rules_as_engine[poc.order.Repo$DefaultImpls-poc.order.Repo] PASSED [ 14%]
+scoping/tests/test_common.py::test_clean_class_same_rules_as_engine[poc.order.Kt-poc.order.Kt] PASSED [ 18%]
+scoping/tests/test_common.py::test_clean_class_same_rules_as_engine[poc.order.OrderController-poc.order.OrderController] PASSED [ 22%]
+scoping/tests/test_common.py::test_match_class_uses_outer_class PASSED   [ 25%]
+scoping/tests/test_common.py::test_fixture_shape PASSED                  [ 29%]
+scoping/tests/test_common.py::test_endpoints_match_engine_recorded_endpoints PASSED [ 33%]
+scoping/tests/test_common.py::test_corpus_index_covers_fixture_requests PASSED [ 37%]
+scoping/tests/test_common.py::test_callTree_classes_sorted_unique PASSED [ 40%]
+scoping/tests/test_common.py::test_classify_path[services/order/src/main/kotlin/poc/order/OrderService.kt-class] PASSED [ 44%]
+scoping/tests/test_common.py::test_classify_path[services/coupon/src/main/java/poc/coupon/OrderPaidListener.java-class] PASSED [ 48%]
+scoping/tests/test_common.py::test_classify_path[services/order/src/main/resources/application.yml-resource] PASSED [ 51%]
+scoping/tests/test_common.py::test_classify_path[services/order/pom.xml-build] PASSED [ 55%]
+scoping/tests/test_common.py::test_classify_path[services/order/Dockerfile-build] PASSED [ 59%]
+scoping/tests/test_common.py::test_classify_path[deploy/k8s/base/order.yaml-deploy] PASSED [ 62%]
+scoping/tests/test_common.py::test_classify_path[services/evidence-collector/src/main/java/poc/evidence/EvidenceFilter.java-verify] PASSED [ 66%]
+scoping/tests/test_common.py::test_classify_path[engine/verdict.py-verify] PASSED [ 70%]
+scoping/tests/test_common.py::test_classify_path[corpus/corpus-v2.1.json-verify] PASSED [ 74%]
+scoping/tests/test_common.py::test_classify_path[scoping/map.py-verify] PASSED [ 77%]
+scoping/tests/test_common.py::test_classify_path[docs/phase4-plan.md-docs] PASSED [ 81%]
+scoping/tests/test_common.py::test_classify_path[README.md-docs] PASSED  [ 85%]
+scoping/tests/test_common.py::test_classify_path[services/order/src/test/kotlin/poc/order/FooTest.kt-test] PASSED [ 88%]
+scoping/tests/test_common.py::test_classify_path[.gitignore-build] PASSED [ 92%]
+scoping/tests/test_common.py::test_name_status_ladder_and_fault_shapes PASSED [ 96%]
+scoping/tests/test_common.py::test_skeleton_clis_exit_2 PASSED           [100%]
+
+============================== 27 passed in 0.06s ==============================

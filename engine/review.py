@@ -8,7 +8,7 @@
          provenance(author·date·runId·split=learn·sessions)는 자동. match는 제안 템플릿, 또는 --match-file로 사람이 좁힌 것.
          eval 세션에만 있는 uid는 거부한다(평가 데이터로 규칙을 만들지 않는다 — 3.6 학습/평가 분리).
 
-규칙이 덮을 수 있는 diffKind만 label할 수 있다(ruleset.DIFF_KINDS). 그 외(externalCalls.responseHashChanged 등)는
+규칙이 덮을 수 있는 diffKind만 label할 수 있다(ruleset.DIFF_KINDS — engine-v1.3부터 externalCalls.responseHashChanged{host, path} 포함). 그 외(events payload 값 변경·삭제 등)는
 규칙이 아니라 계약(contract.yaml)·코드 판단이 필요하다는 뜻이라 거부한다.
 
 사용: .venv/bin/python engine/review.py list  --run runs/<runId> --split learn [--rules engine/rules]
@@ -55,6 +55,10 @@ def template(entry: dict) -> dict | None:
         m["fields"] = list(d["fields"])
     elif kind == "response.valueChanged":
         m |= {"path": d["path"], "from": re.escape(_s(d["from"])), "to": re.escape(_s(d["to"]))}
+    elif kind == "externalCalls.responseHashChanged":
+        hosts = sorted({c["host"] for c in d.get("changed", [])})
+        paths = sorted({c["path"] for c in d.get("changed", [])})
+        m |= {"host": "|".join(re.escape(h) for h in hosts), "path": "|".join(re.escape(x) for x in paths)}
     elif kind == "dbRead.fingerprintReplaced":
         m |= {"from": [re.escape(x) for x in d["from"]], "to": [re.escape(x) for x in d["to"]]}
     else:  # countDelta, callTree.sequenceReplaced, transactions.nameChanged

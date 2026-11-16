@@ -1,0 +1,8 @@
+== C1 bc4edbe: 1 commit
+M	services/coupon/src/main/java/poc/coupon/OrderPaidListener.java
+-            couponService.settle(event.couponKey(), event.orderKey());
+== C2 1cba45e: 1 commit
+M	services/coupon/src/main/java/poc/coupon/CouponService.java
++        if (!couponRepository.existsByCouponKey(couponKey)) {
++            return Outcome.of(Kind.NOT_FOUND);
++        }

@@ -94,3 +94,94 @@
 - 근거: `docs/reports/phase3.4.md` 6절
 - 왜 중요: 동시성이 있으면 결정론적 재생에서도 auto id는 같지 않다. 값만 가리고 키 유무는 비교해야(engine-v1.1) id 누락 결함은 여전히 잡힌다
 - 후속: Normalization v1(3.4), engine-v1.1 id 값 마스킹(3.5)
+
+### O14. 사다리 커밋의 diff에는 서비스 코드 말고도 overlay 이미지 태그(deploy)가 들어 있고, Java → Kotlin 이동은 rename으로 안 잡힌다
+- 날짜·단계: 2026-10-14, 4.0
+- 봤다: `git diff -M --name-status <v1.x>~1..<v1.x>`가 네 단계 모두 `M deploy/k8s/new/kustomization.yaml`(new order 이미지 태그) + 서비스 파일 `D *.java` / `A *.kt`(같은 FQCN). 계획 1절의 범위 `phase3.3-base..phase3.5-v1.x`는 그 사이의 엔진·문서·run.sh·base 매니페스트 커밋까지 포함한다. 결함 브랜치(`phase3.5-v1.4..fault/F<n>`)는 서비스 코드 1~2 파일만
+- 근거: `docs/reports/logs/phase4.0-inputs.txt`, `scoping/tests/test_common.py::test_name_status_ladder_and_fault_shapes`
+- 왜 중요: D24를 글자 그대로 적용하면 deploy 변경 → 전역, 클래스 삭제(D) → 전역이라 사다리 4단계가 모두 전역이 된다(계획 4.2 기대: v1.2·v1.3은 order.* 9세션). 실험을 위해 한 커밋에 배포 설정을 함께 바꾼 것이 스코핑 결과를 바꾼다 — 실제 레포에서도 "코드 + 배포 매니페스트" 동시 커밋은 흔하다
+- 후속: 4.0 보고서 0절(사다리 diff 범위), 구현 시 확정(같은 FQCN D+A = 수정)
+
+### O15. `order.pay`인데 결제·발행·소비가 없는 요청이 있다 — 중복 결제 R000008
+- 날짜·단계: 2026-11-02, 4.1
+- 봤다: `order.pay` 8건 중 7건만 `PaymentGatewayClient`·`OrderEventPublisher`·`OrderPaidListener`를 실행한다. R000008(S002, 같은 Idempotency-Key 재요청)은 `OrderController`·`OrderService`·`OrderRepository`만
+- 근거: `docs/reports/logs/phase4.1-plan-compare.txt` A·C절, `scoping/map.json`
+- 왜 중요: 요청 단위 맵은 같은 엔드포인트 안의 실행 경로 차이까지 구분한다. 계획의 "모든 `order.pay` 요청" 표현은 엔드포인트 단위 사고가 남은 것이다. S002가 첫 결제 R000007로 선택되므로 세션·재생 수는 그대로다(7세션·30요청)
+- 한계(추가): Legacy 레코드로만 만든 맵은 Legacy가 실행하지 않고 New만 실행하는 경로(F1의 R000008 게이트웨이 재호출)를 볼 수 없다. 이번에는 변경 클래스 `OrderService`가 R000008에서도 관측됐고 같은 세션의 R000007이 선택돼 빠지지 않았지만, 변경이 결제 경로 클래스에만 있었다면 요청 단위 영향에서는 빠졌을 것이다. 세션 단위 선택이 이 한계를 덮는다는 근거로 기록한다
+- 후속: 4.1 보고서 D-4.1a
+- 결정: D-4.1a (A) — 4.2 영향 요청은 첫 결제 7건(R000008 제외), 세션·재생 수 기대 유지
+- 실측 근거: O19의 F7 R000042 — 세션 단위 선택이 요청 단위 영향의 한계를 덮은 사례
+
+### O16. 세션 단위 선택이 홉 합산의 효과를 가린다 — 쿠폰 세션은 진입 홉 `coupon.create`로도 잡힌다
+- 날짜·단계: 2026-11-02, 4.1
+- 봤다: 자식 홉 합산이 없는 맵에서도 `CouponService`는 S006·S007·S008·S010의 진입 홉(`coupon.create` 4건, S008은 `coupon.get`도)에서 실행되므로 선택이 6세션·29요청으로 합산 맵과 같다. 영향 요청 수만 다르다(합산 24 / 합산 없음 16). 계획의 예측은 S004·S005 2세션
+- 근거: `docs/reports/logs/phase4.1-plan-compare.txt` D절
+- 왜 중요: 쿠폰을 쓰는 세션은 먼저 쿠폰을 발급하므로 Order 쪽 `0.h1` pair가 같은 세션에 함께 들어온다. 이 corpus에서 홉 합산의 효과는 세션 선택 지표로는 C1(Kafka 홉 전용 클래스)에서만 드러난다
+- 후속: 4.1 보고서 D-4.1b
+
+### O17. 단순 이름 토큰이 다른 타입을 참조로 잡는다 — Spring `@Order`, Coupon의 중첩 `OrderPaid`
+- 날짜·단계: 2026-11-02, 4.1
+- 봤다: `RequestLogFilter`의 `@Order(Ordered.HIGHEST_PRECEDENCE)`(`org.springframework.core.annotation.Order` import)가 `poc.order.Order`의 토큰 참조로 잡힌다. `RequestLogFilter`는 미관측이고 참조자가 없다. `OrderPaidListener`의 중첩 record `OrderPaid`도 `poc.order.OrderPaid`의 토큰 참조로 잡힌다(이 가지는 관측 클래스라 세션 수 영향 없음)
+- 근거: `docs/reports/logs/phase4.1-plan-compare.txt` E절 — 사다리 v1.2·v1.3 head와 `phase3.5-v1.4`에서 동일
+- 왜 중요: D24 문구 그대로면 `Order` 폐포에 미해결 가지가 생겨 v1.2·F2·E5가 전역이 된다(계획은 order.* 9세션). 텍스트 폐포의 오탐이 Filter 이득을 없애는 실례다. 안전한 쪽의 실패라 Recall은 잃지 않는다
+- 후속: 4.1 보고서 D-4.1c. 폐포 계산 자체는 4.2
+
+### O18. 프레임워크 상위 타입 공유가 무관한 서비스를 폐포로 잇는다 — `JpaRepository`
+- 날짜·단계: 2026-11-02, 4.2
+- 봤다: `Order` 폐포가 `OrderRepository` ← `CouponRepository`(둘 다 `JpaRepository` 상속) ← `CouponService`로 이어져 v1.2·F2가 전역 없이 11세션·48요청이 됐다. 사전 등록은 9세션·37요청. 13 변형 중 이 2건만 불일치
+- 근거: `docs/reports/logs/phase4.2-scope-check.txt`, `scoping/impacts/{v1.2,F2}.json`, 선택지 계산 `docs/reports/logs/phase4.2-whatif.txt`
+- 왜 중요: "상위 타입 이름도 참조로 본다"는 규칙이 프레임워크 타입에서는 관계의 증거가 아니다. 서비스 하나 안에서만 쓰면 드러나지 않고, 서비스 둘 이상이 같은 프레임워크 타입을 쓰면서 나타났다. O17(이름 충돌)을 고친 뒤에야 보였다 — 전역이 그 아래 층의 오탐을 가리고 있었다. 기대를 손으로 도출할 때도 이 간선을 놓쳤다
+- 결정: D-4.2a (A) — 상위 타입 확장은 프로젝트 소스에 선언된 타입만(impact-v1.1, D24 보완 3, 결과를 본 뒤 변경·사전 등록 아님)
+- 한계: extends/implements 절에서만 이름이 나오는 파일은 그 타입의 소비자가 아니라 형제다. (A)는 이 경우를 프레임워크 타입에 한해 막은 것이고, 프로젝트에 선언된 공통 상위 타입(`BaseRepository` 같은)에서는 같은 오탐이 다시 생긴다(`test_known_limit_siblings_of_project_declared_supertype_stay_connected`로 고정). 프레임워크 타입으로 주입받는 참조자의 누락은 그대로 한계로 둔다 — 타입 모호 검사가 막아준다고 가정하지 않는다
+- 후속: 4.2 보고서 D-4.2a
+
+### O19. 변경 클래스를 실행하지 않은 요청에도 결함이 나타난다 — 세션 안 상태 전파(F7 R000042)
+- 날짜·단계: 2026-11-02, 4.3
+- 봤다: F7(`PaymentGatewayClient`)의 target 2개 중 R000042(S009 `order.get`)는 그 클래스를 실행하지 않는다. 앞 요청 R000041의 결제 실패가 주문 상태로 남아 조회 응답이 달라졌다(CV). 영향 요청 입도 Tag 포함률 1/2, 세션 입도 2/2. 나머지 결함 8개는 두 입도 모두 1.0
+- 근거: `docs/phase4-metrics.json` F7 `tag`, `docs/reports/logs/phase4.3-metrics.txt`, `runs/p36-F7-1/verdict.json`
+- 왜 중요: 클래스 커버리지 기반 영향은 "변경 코드를 실행한 요청"만 찾고, 상태로 전파된 차이는 찾지 못한다. 세션을 선택 단위로 둔 D23의 근거가 추측이 아니라 실측이 됐다. 요청 단위 Filter였다면 F7 탐지 유지가 1/2다. 세션 경계를 넘는 상태 전파가 있으면 세션 선택도 놓친다는 뜻이기도 하다 — 세션 독립성은 4.4 Filter run에서 확인한다
+- 연결: O15의 "세션 단위 선택이 덮는다"의 실측 근거
+- 결정: D-4.3a (A) — `tags.json`의 inScope는 세션 입도, `impactedRequest`와 3단 리뷰 순서를 함께 둔다
+- 후속: 4.3 보고서 D-4.3a
+
+### O20. 메시 전체 인증서가 한꺼번에 만료된다 — preflight가 잡지만 복구 범위는 문서보다 넓다
+- 날짜·단계: 2026-11-02, 4.4
+- 봤다: 4.4 시작 시 ingressgateway·order·coupon·kafka·도구 pod의 인증서가 모두 `VALID CERT false`(NOT AFTER 07:42~08:30Z, 확인 시각 11:36Z). 사이드카 로그에 `CERTIFICATE_VERIFY_FAILED`, istiod는 정상이고 agent 로그에 갱신 기록이 없다
+- 근거: `istioctl proxy-config secret`, 재시작 뒤 NOT AFTER 2026-11-03T11:37Z. 이전 관찰 `docs/isolation-proof.md` "관찰 1"
+- 왜 중요: 기록된 복구 절차(`phase2-plan` 2.6)는 ingressgateway·order만 적었지만 Phase 3 이후 메시 구성원이 늘어 sidecar Deployment 12개와 도구 pod 2개가 모두 대상이다. 그대로 두면 run이 시작되지 않는다(fail-closed는 의도대로 동작). 호스트 sleep 후 원인이라는 것은 추정이다
+- 후속: 장기 run이나 4.5 전에는 preflight 실패 시 전체 재시작. 자동 복구는 넣지 않는다
+
+### O21. 해상도·홉 합산의 효과는 Coupon 변경에서만 나타나고, HTTP 홉 합산은 Tag에서만 보인다
+- 날짜·단계: 2026-11-02, 4.5
+- 봤다: 13 변형에서는 ablation 2종의 선택이 정본과 같았는데, C2는 엔드포인트 합집합이면 39.6% → 0%(11세션), C1은 홉 합산이 없으면 37.5% → 0%(미관측 → 전역)다. C2는 홉 합산이 없어도 6세션·Recall 1.0이고 요청 입도 Tag 포함만 9 → 4로 떨어진다(`0.h1` 5 pair)
+- 근거: `docs/phase4-metrics.json` C1·C2 `ablation`, `docs/reports/logs/phase4.5-metrics.txt`
+- 왜 중요: 스코핑 이득은 맵 해상도와 변경 위치의 곱이다. O16의 예상이 실측으로 확인됐다 — 세션 단위 재생은 HTTP 홉 합산 부재를 가리지만 "왜 이 pair를 봐야 하는가"라는 리뷰 근거에서는 차이가 난다. Kafka 소비 홉 전용 클래스는 합산이 없으면 fail-closed로 이득을 전부 잃는다
+- 후속: 4.7 지표·보고
+
+### O22. learn 규칙이 호출 경로를 넘어 재사용된다 — 직접 `coupon.use`와 Order가 부른 `0.h1`이 같은 uid
+- 날짜·단계: 2026-11-02, 4.5(4.6에서 기록)
+- 봤다: C2의 Uncertain 9 pair는 직접 호출(hop `0`, R000017·R000019·R000020·R000024)과 Order 주문 생성이 부른 HTTP 홉(`0.h1`, R000027·R000032·R000036·R000037·R000044)으로 경로가 다르지만 uid가 같다(`aa06c259e967`, `cfb6811c9f5c`). uid가 엔드포인트·축·diffKind·상세로만 만들어지고 hopPath·호출 서비스가 들어가지 않기 때문이다. learn(S004·S006·S008)의 규칙이 eval의 hop `0` 1건과 Order가 부른 `0.h1` 2건(R000032·R000044)에 적용돼 eval Uncertain 3 → 0
+- 근거: `docs/phase4-metrics.json` C2 `review`, `engine/rules/learned/{aa06c259e967,cfb6811c9f5c}.yaml`, `runs/p45-C2-1/verdict.json`
+- 왜 중요: 사람이 한 번 본 판단이 서비스 경계 너머 호출 경로에도 재사용된다 — 같은 유형의 리뷰를 경로마다 반복하지 않는다. 반대로 규칙은 호출 경로를 구분하지 못한다. 이번 learn에는 `0.h1`도 들어 있어 "직접 호출만 보고 만든 규칙이 Order 경로에 적용된" 사례는 아니고, 그런 경우에도 같은 uid로 적용될 것이다. 경로별로 의미가 다른 변경이면 과적용 위험이 된다
+- 후속: 4.7 Rule 재사용 항목
+
+### O23. 선택 미러는 Legacy를 그대로 두는 대신 run 범위 상태 비교를 잃는다
+- 날짜·단계: 2026-11-02, 4.8
+- 봤다: F3 선택 미러에서 pair 판정은 Filter와 같았지만(40/40) `dbstate_equal`이 위반이다. Legacy는 전체 48요청, New는 30요청이라 최종 상태가 애초에 다르다(coupons 6 / 3, orders 8 / 7). Undelivered(new) 18도 미러 범위 때문이고, verify_sameness는 이 18건으로 FAIL을 낸다
+- 근거: `docs/reports/logs/phase4.8-run.txt`, `docs/filter-expectations.json` `F3-mirror`
+- 왜 중요: Filter는 양쪽을 같은 부분집합으로 재생해 dbstate를 비교할 수 있지만 선택 미러는 그렇지 않다. run 범위 dbstate로만 잡히는 결함이 있으면 선택 미러는 놓친다. 운영처럼 Legacy를 줄일 수 없는 환경의 절충이지 Filter의 대체가 아니다
+- 후속: 선택 미러를 쓰려면 세션 범위 상태 비교가 필요하다 — 다음 연구
+
+### O24. 저부하 VU=1에서 Evidence 오버헤드는 반복 간 소음과 구분되지 않는다
+- 날짜·단계: 2026-11-02, 4.9
+- 봤다: 3 run 중앙값은 on p50 13.96ms / off 11.41ms, p95 44.64 / 32.35ms지만 각 모드의 첫 회끼리는 off가 더 느렸고(15.54 / 14.63ms), 메모리는 off의 coupon이 더 컸다. Evidence 건당 약 1.9KB, run당 약 121KB
+- 근거: `docs/phase4-overhead.json`, `docs/reports/logs/phase4.9-overhead.txt`
+- 왜 중요: "오버헤드 수 ms"라고 단정할 수 없다. run당 48요청은 p95에 부족하고, 측정 순서를 고정했다. 판정과 무관한 참고값이며 운영 부하 추정이 아니다
+- 후속: 수치가 필요하면 고정 순서가 아닌 교차 설계와 표본 확대가 필요하다
+
+### O25. 실행 중 저장소 안에 로그를 쓰면 run-meta가 dirty로 찍힌다
+- 날짜·단계: 2026-11-12, 4.8 추가 A/A
+- 봤다: `k6/run.sh` 출력을 `docs/reports/logs/`로 리다이렉트한 `p48-aa-1..3`의 run-meta가 `git.dirty: true`였다. 코드 변경은 없고 미추적 로그 파일 하나가 원인이다. run.sh는 `git status --porcelain`이 비어 있지 않으면 dirty로 본다
+- 근거: `runs/p48-aa-{1,2,3}/run-meta.json`, 재실행 `runs/p48-aa2-{1,2,3}/run-meta.json`(dirty false), `docs/reports/phase4.8.md` 6.1
+- 왜 중요: dirty 표시는 run이 커밋된 코드로 돌았다는 근거다. 실행 절차 때문에 꺼지면 게이트를 못 맞추고, 반대로 무시하는 습관이 생기면 실제 코드 변경도 놓친다
+- 후속: 실행 로그는 저장소 밖에 쓰고 run 뒤에 옮긴다. run.sh 판정 기준은 바꾸지 않았다

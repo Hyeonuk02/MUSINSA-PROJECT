@@ -1,0 +1,37 @@
+{
+  "assumedChanged": [],
+  "base": "phase3.5-v1.4",
+  "baseCommit": "120b2126381f6f59a3dfc6940b522b6844482f6e",
+  "changedClasses": [],
+  "changedFiles": [
+    {
+      "fqcns": [],
+      "kind": "verify",
+      "path": "services/evidence-collector/src/main/java/poc/evidence/EvidenceAutoConfiguration.java",
+      "status": "M"
+    }
+  ],
+  "globalReasons": [],
+  "globalTriggered": false,
+  "head": "scope/E4",
+  "headCommit": "d3ad2e2350f40fa823cb6af679856928e7618576",
+  "ignoreKind": [],
+  "impactedEndpoints": [],
+  "impactedRequests": {},
+  "mapRef": {
+    "bodySha256": "sha256:2c968eee26ce569aa504a1c415ba775e2af73d7b73300a6fe5b0eec89ae6668e",
+    "path": "scoping/map.json"
+  },
+  "nameResolution": "language",
+  "observed": [],
+  "pathFilter": null,
+  "reductionRequests": 1.0,
+  "reductionSessions": 1.0,
+  "selectedRequests": [],
+  "selectedSessions": [],
+  "toolVersion": "impact-v1.1",
+  "unobserved": [],
+  "warnings": [
+    "검증 레이어 변경 — A/A 게이트 필요"
+  ]
+}
