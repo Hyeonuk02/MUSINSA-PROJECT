@@ -8,6 +8,7 @@ Phase 1 결정(hyeonuk-dev 브랜치 `docs/decision-log.md`의 D1~D8)을 따른�
 Legacy 코드 변경 내역 자체는 [`legacy/prince-mart/LEGACY_CHANGES.md`](../legacy/prince-mart/LEGACY_CHANGES.md)에 있다.
 본문의 D3·D4·D5·D8은 hyeonuk-dev `docs/decision-log.md`의 항목을 가리킨다.
 
+> 기준선 갱신: 2026-11-02 corpus v1.1(14세션, 38요청)과 norm-v1.2로 A/A를 다시 실행했다. 결함 비교의 기준선은 `aa-004`다. 아래 1~8절은 최초 기준선 `aa-001`(corpus v1) 결과이고, 갱신 결과는 [12절](#12-기준선-갱신-corpus-v11-norm-v12)에 있다.
 ---
 
 ### L1. Prince Mart를 VU=1, business key 없이 돌린다
@@ -475,3 +476,42 @@ S13은 멱등성 결함(팀원 F1에 대응) 주입 자리, S12는 L5의 동점 
 - 결과를 본 뒤 기대 파일을 고치면 탐지율의 근거가 흐려진다. 고친 사실과 이유를 따로 남기면 두 기준으로 모두 볼 수 있다(팀원 F1·F4의 사후 기록과 같은 태도).
 - auto-increment 밀림은 같은 의미의 값이 처리 건수 차이로 달라 보이는 것이다. 마스킹하지 않으면 앞선 요청 하나의 차이가 뒤 요청 전부로 번진다.
   A/A에서는 ID가 같아야 하므로(결정성 확인) 끈 채로 둔다.
+
+## 12. 기준선 갱신 (corpus v1.1, norm-v1.2)
+
+설계 근거: [legacy-decision-log.md](legacy-decision-log.md) L15, L17~L20
+
+### 입력과 조건 변경
+
+| 항목 | aa-001 (1~8절) | 갱신 |
+|---|---|---|
+| corpus | v1: 독립 세션 11개, 요청 28건 | v1.1: 세션 14개, 요청 38건. 세션마다 `flow`·`split`(learn 4, eval 10) |
+| 추가 세션 | | S12 사용자당 주문 2건(history·my-orders, 시각 동점), S13 같은 결제 재확정, S14 쿠폰 API 직접 호출 |
+| 스택당 앱 Evidence | 89 (외부 호출 묶음 포함) | 80 (앱 Evidence 기준) |
+| 완료 대기 | corpus의 고정 기대 건수 | 스택별 폐포(closure): 진입 Evidence와 선언된 내부 호출·이벤트 수만큼 하위 Evidence 도착 + 두 스택 consumer lag 0 (L17) |
+| 정규화 | norm-v1.1 | norm-v1.2: `version`을 식별 필드로 추가 (L19) |
+
+v1 결과(aa-001)는 보존했고, `run.py --corpus`로 v1을 다시 실행할 수 있다.
+
+### 결과
+
+| run | 조건 | 결과 |
+|---|---|---|
+| `aa-002` ×3 | corpus v1.1, norm-v1.1 | 38/38, 짝 맞춤 75/75, B1 0, 테이블·처리 순서 일치, 환경 drift 0, B1~B6 재현 |
+| `aa-003` ×1 | 재빌드한 legacy 이미지, 폐포 대기 | 38/38, barrier ok, legacy 80/80 일치, settle 최대 224ms(aa-002 217ms), B1 0 |
+| `aa-004` ×3 | norm-v1.2 | B1 0, DB 테이블 일치. **결함 비교의 기준선** |
+
+- aa-003 결과를 offline으로 확인했다. aa-002-1의 38개 요청이 모두 폐포 완료로 판정됐고, consume 하나를 빼면 미완료로 판정된다.
+- norm-v1.2로 바꾼 이유: `version`(`prince-mart-legacy` / `prince-mart-PF<n>`)은 `stack`과 같은 식별 값이다. A/A에서는 양쪽 값이 같아 드러나지 않았는데, PF1 첫 run에서 pair 111개 전부가 차이로 잡혔다. 정규화 해시가 유효성 해시에 포함되므로 같은 정규화로 기준선을 다시 만들었다. 기대 판정(L18)은 바꾸지 않았다.
+
+### 결함 실현 확인 (기준선 aa-004, 각 ×3)
+
+결함 9개(PF1~5, PF7~10)의 기대 판정은 결함 run 전에 `baseline/faults/fault-expectations.json`에 커밋했다(L18).
+
+- 7개는 기대한 pair에서만 차이가 실현됐다.
+- PF2, PF10은 기대 목록 밖의 차이가 1건씩 나왔고, 세 run에서 같았다.
+  - PF2 R24 `wiremock.external.1`: 취소 감사 로그에 실린 주문 상태. 사전 등록 때 빠뜨렸다.
+  - PF10 R28 `wiremock.external.1`: 감사 로그의 `usageId` 1 → 5. 앞선 coupon_usage 4건 때문에 auto-increment가 밀렸다.
+- 사전 등록 파일은 고치지 않고 `fault-expectations-amendments.json`에 사후 보정으로 남겼다. 지표는 원래 기대와 보정한 기대 두 기준으로 모두 보고한다(L20).
+
+결함별 상세는 [`baseline/faults/fault-catalog.md`](../baseline/faults/fault-catalog.md)에 있다.
