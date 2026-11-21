@@ -9,8 +9,9 @@
     },
     "count": {
       "match": "엔진 판정 == 정답",
-      "misjudged": "엔진이 정답과 다른 확정 판정(SAME, IMPROVEMENT, CONTRACT_VIOLATION)을 냄. MISALIGNED pair는 어떤 판정이든 오판정",
-      "review": "정답이 확정인데 엔진이 UNCERTAIN(사람 검토로 넘김). 오판정이 아니라 검토 대상으로 따로 센다(팀원 phase3-metrics와 같음)"
+      "misjudged": "엔진이 정답과 다른 확정 판정(SAME, IMPROVEMENT, CONTRACT_VIOLATION)을 냄",
+      "review": "정답이 확정인데 엔진이 UNCERTAIN(사람 검토로 넘김). 오판정이 아니라 검토로 따로 센다(팀원 phase3-metrics와 같음). 결과 보고에는 검토를 오판정에 넣은 숫자도 각주로 적는다",
+      "notComparable": "정답이 MISALIGNED인 pair(비교 불성립). 엔진의 판정 오류가 아니라 짝 맞추기(hopPath 순번)가 깨진 것이라 오판정과 따로 센다. 참고로 오판정 + 비교 불성립 합계도 적는다"
     },
     "unpairedHops": "legacyOnlyHops, newOnlyHops = 한쪽 스택에만 있는 홉(pair가 아님). 팀원 엔진은 부모 pair의 hop_set_equal로 본다. logicalTruth는 그 호출 자체의 정답(참고용, 지표에 넣지 않음)"
   },
@@ -219,6 +220,9 @@
     },
     "note": "R000011(PGFAIL)은 첫 createOrder가 400으로 거절돼 두 번째 호출에 닿지 않아 SAME. 응답, DB 상태는 같다(PG가 같은 id를 돌려줌)",
     "runCheck": {
+      "dbstate_equal": true
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": true,
         "expectedEngine": true
@@ -431,13 +435,16 @@
         ]
       }
     },
+    "note": "S012 목록(R000031, R000032)은 verify가 없어 SAME. dbstate: orders 상태, order_status_history 행 수",
     "runCheck": {
+      "dbstate_equal": false
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": false,
         "expectedEngine": false
       }
-    },
-    "note": "S012 목록(R000031, R000032)은 verify가 없어 SAME. dbstate: orders 상태, order_status_history 행 수"
+    }
   },
   "PF3": {
     "kind": "real-defect",
@@ -660,6 +667,9 @@
       }
     },
     "runCheck": {
+      "dbstate_equal": true
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": true,
         "expectedEngine": true
@@ -732,6 +742,9 @@
     },
     "note": "결제 실패 보상(R000011 handlePaymentFailure)은 cancelOrder가 아니라 SAME. 404 재취소(R000016)는 addStock 전에 실패해 SAME. 재고는 WireMock이라 dbstate 같음",
     "runCheck": {
+      "dbstate_equal": true
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": true,
         "expectedEngine": true
@@ -823,6 +836,9 @@
     },
     "note": "learn 세션은 corpus split learn(S001, S002, S010, S011). 라벨 R000024(S010), R000027(S011)은 branch-park과 같다. 응답은 items가 @JsonIgnore라 같다. 취소는 cancelOrder 트랜잭션 안이라 트랜잭션 수는 같다",
     "runCheck": {
+      "dbstate_equal": true
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": true,
         "expectedEngine": true
@@ -1047,13 +1063,16 @@
       }
     },
     "note": "R000011(PGFAIL)의 감사 로그 dataAfter는 오류 문자열이라 SAME. 이벤트 최상위 키는 LinkedHashMap이고 엔진은 payload를 파싱해 비교하므로 순서가 바뀌어도 같다. 응답(PaymentResponse)은 Spring MVC 변환기가 직렬화해 PF6과 무관. 시각(ISO), BigDecimal 표기는 두 버전이 같다고 본다(Boot 설정). 예상과 다르면 그 원인도 발견으로 기록한다",
+    "branchPark": "branch-park PF6(Payment Boot 4 업그레이드)은 pending이었다. Boot 4가 Legacy에 흡수돼 이 변경으로 대체(팀원 합의)",
     "runCheck": {
+      "dbstate_equal": true
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": true,
         "expectedEngine": true
       }
-    },
-    "branchPark": "branch-park PF6(Payment Boot 4 업그레이드)은 pending이었다. Boot 4가 Legacy에 흡수돼 이 변경으로 대체(팀원 합의)"
+    }
   },
   "PF7": {
     "kind": "approved-improvement",
@@ -1147,6 +1166,9 @@
     "learnLabels": {},
     "note": "branch-park learnLabels(R2, R23 소비 improvement)는 팀원 엔진에서 그 pair가 CV라 라벨 대상이 아니어서 옮기지 않았다",
     "runCheck": {
+      "dbstate_equal": false
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": false,
         "expectedEngine": false
@@ -1198,6 +1220,9 @@
     },
     "note": "기본 계약에서는 UNCERTAIN(검토), max_selects 선언(contract-maxselects.yaml, 판정 run 전 커밋) 시 CV. /orders/history(R000005, R000031)는 다른 메서드라 SAME. items가 @JsonIgnore라 응답 같음",
     "runCheck": {
+      "dbstate_equal": true
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": true,
         "expectedEngine": true
@@ -1277,6 +1302,9 @@
     "learnLabels": {},
     "note": "R000036(같은 주문 조회)은 상태가 같아 SAME. R000020(취소 주문, B4)은 CONFIRMED가 아니라 건너뛰지 않음. dbstate: order_status_history -1",
     "runCheck": {
+      "dbstate_equal": false
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": false,
         "expectedEngine": false
@@ -1389,7 +1417,7 @@
           "external_calls_equal",
           "hop_set_equal"
         ],
-        "reason": "결제 실패 주문(S006)도 커밋 뒤 use가 불려 사용이 기록된다. upstream 설계(주문 시점 기록)대로라 개선으로 본다. 결제 실패 주문에 쿠폰이 소진되는 것을 결함으로 볼지는 검토 의견을 받는다",
+        "reason": "결제 실패 주문(S006)도 커밋 뒤 use가 불려 사용이 기록된다. upstream 설계 의도(주문 시점 기록) 기준으로 IMPROVEMENT. 결제 실패 시 쿠폰 환원은 이 변경 범위 밖",
         "branchPark": [
           "R000011/order.http.1",
           "R000011/wiremock.external.1"
@@ -1563,6 +1591,9 @@
     },
     "note": "R000037, R000038과 각 쿠폰 주문의 validate(0.h4, 첫 사용)는 SAME. 첫 사용 주문의 금액은 같다. dbstate: coupon_usage 1 -> 5, orders와 payments 금액(R7, R13). branch-park cvDisposition accept(응답 status 변경은 항상 CV, L16)는 pairNotes에 남겼다. 승인 규칙은 두지 않는다(status와 기능 축 변화는 규칙 대상이 아니고, validate 응답 변화는 조회 수와 callTree 변화를 동반한다)",
     "runCheck": {
+      "dbstate_equal": false
+    },
+    "runCheckDetail": {
       "dbstate_equal": {
         "truth": false,
         "expectedEngine": false
@@ -1575,61 +1606,85 @@
       "targets": 15,
       "match": 15,
       "misjudged": 0,
-      "review": 0
+      "review": 0,
+      "notComparable": 0
     },
     "PF2": {
       "targets": 12,
       "match": 12,
       "misjudged": 0,
-      "review": 0
+      "review": 0,
+      "notComparable": 0
     },
     "PF3": {
       "targets": 16,
       "match": 16,
       "misjudged": 0,
-      "review": 0
+      "review": 0,
+      "notComparable": 0
     },
     "PF4": {
       "targets": 4,
       "match": 4,
       "misjudged": 0,
-      "review": 0
+      "review": 0,
+      "notComparable": 0
     },
     "PF5": {
       "targets": 5,
       "match": 0,
       "misjudged": 0,
-      "review": 5
+      "review": 5,
+      "notComparable": 0
     },
     "PF6": {
       "targets": 25,
       "match": 0,
       "misjudged": 25,
-      "review": 0
+      "review": 0,
+      "notComparable": 0
     },
     "PF7": {
       "targets": 6,
       "match": 0,
       "misjudged": 6,
-      "review": 0
+      "review": 0,
+      "notComparable": 0
     },
     "PF8": {
       "targets": 2,
       "match": 0,
       "misjudged": 0,
-      "review": 2
+      "review": 2,
+      "notComparable": 0
     },
     "PF9": {
       "targets": 5,
       "match": 0,
       "misjudged": 5,
-      "review": 0
+      "review": 0,
+      "notComparable": 0
     },
     "PF10": {
       "targets": 12,
       "match": 0,
-      "misjudged": 12,
-      "review": 0
+      "misjudged": 9,
+      "review": 0,
+      "notComparable": 3
     }
-  }
+  },
+  "_revisions": [
+    {
+      "date": "2026-11-21",
+      "beforeRun": true,
+      "base": "f4750e8",
+      "change": "판정 run 전 수정(사용자 확인 반영). 집계 정의: UNCERTAIN은 검토, MISALIGNED는 비교 불성립으로 오판정과 따로 센다. PF10 R000011/0 근거 문구. targets, expectedEngine 값은 바꾸지 않았다"
+    },
+    {
+      "date": "2026-11-21",
+      "beforeRun": true,
+      "base": "f4750e8",
+      "change": "runCheck를 팀원 engine/fault_check.py 형식({검사: bool})으로 바꾸고 원래 형식({truth, expectedEngine})은 runCheckDetail로 옮겼다. 모든 PF에서 두 값이 같아 값 변경은 없다(판정 전)"
+    }
+  ]
 }

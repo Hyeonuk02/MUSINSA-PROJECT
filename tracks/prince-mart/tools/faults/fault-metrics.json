@@ -1,0 +1,3597 @@
+{
+  "PF1": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf1-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 15,
+            "SAME": 65
+          },
+          "counts": {
+            "match": 15,
+            "misjudged": 0
+          },
+          "agreeExpected": 15,
+          "targets": 15,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 65,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0.h8": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0.h8": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf1-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 15,
+            "SAME": 65
+          },
+          "counts": {
+            "match": 15,
+            "misjudged": 0
+          },
+          "agreeExpected": 15,
+          "targets": 15,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 65,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0.h8": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0.h8": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf1-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 15,
+            "SAME": 65
+          },
+          "counts": {
+            "match": 15,
+            "misjudged": 0
+          },
+          "agreeExpected": 15,
+          "targets": 15,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 65,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0.h8": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0.h8": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0.h9": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0.h7": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF2": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf2-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 12,
+            "SAME": 63
+          },
+          "counts": {
+            "match": 12,
+            "misjudged": 0
+          },
+          "agreeExpected": 12,
+          "targets": 12,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 63,
+          "legacyOnly": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "newOnly": [],
+          "legacyOnlyExpected": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "detail": {
+            "R000002/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000003/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000005/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000021/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000025/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000036/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf2-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 12,
+            "SAME": 63
+          },
+          "counts": {
+            "match": 12,
+            "misjudged": 0
+          },
+          "agreeExpected": 12,
+          "targets": 12,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 63,
+          "legacyOnly": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "newOnly": [],
+          "legacyOnlyExpected": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "detail": {
+            "R000002/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000003/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000005/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000021/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000025/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000036/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf2-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 12,
+            "SAME": 63
+          },
+          "counts": {
+            "match": 12,
+            "misjudged": 0
+          },
+          "agreeExpected": 12,
+          "targets": 12,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 63,
+          "legacyOnly": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "newOnly": [],
+          "legacyOnlyExpected": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [
+            "R000002/0.e1",
+            "R000020/0.e1",
+            "R000023/0.e1",
+            "R000034/0.e1",
+            "R000035/0.e1"
+          ],
+          "detail": {
+            "R000002/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000003/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000005/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000021/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000025/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000036/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF3": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf3-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 16,
+            "SAME": 64
+          },
+          "counts": {
+            "match": 16,
+            "misjudged": 0
+          },
+          "agreeExpected": 16,
+          "targets": 16,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 64,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000011/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf3-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 16,
+            "SAME": 64
+          },
+          "counts": {
+            "match": 16,
+            "misjudged": 0
+          },
+          "agreeExpected": 16,
+          "targets": 16,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 64,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000011/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf3-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 16,
+            "SAME": 64
+          },
+          "counts": {
+            "match": 16,
+            "misjudged": 0
+          },
+          "agreeExpected": 16,
+          "targets": 16,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 64,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000011/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF4": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf4-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 4,
+            "SAME": 76
+          },
+          "counts": {
+            "match": 4,
+            "misjudged": 0
+          },
+          "agreeExpected": 4,
+          "targets": 4,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 76,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000019/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000027/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf4-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 4,
+            "SAME": 76
+          },
+          "counts": {
+            "match": 4,
+            "misjudged": 0
+          },
+          "agreeExpected": 4,
+          "targets": 4,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 76,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000019/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000027/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf4-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 4,
+            "SAME": 76
+          },
+          "counts": {
+            "match": 4,
+            "misjudged": 0
+          },
+          "agreeExpected": 4,
+          "targets": 4,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 76,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000019/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000027/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF5": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf5-1",
+          "verdicts": {
+            "SAME": 75,
+            "UNCERTAIN": 5
+          },
+          "counts": {
+            "review": 5,
+            "misjudged": 0
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000019/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000024/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000027/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000016/0": {
+              "truth": "SAME",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        },
+        {
+          "run": "pf5-2",
+          "verdicts": {
+            "SAME": 75,
+            "UNCERTAIN": 5
+          },
+          "counts": {
+            "review": 5,
+            "misjudged": 0
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000019/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000024/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000027/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000016/0": {
+              "truth": "SAME",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        },
+        {
+          "run": "pf5-3",
+          "verdicts": {
+            "SAME": 75,
+            "UNCERTAIN": 5
+          },
+          "counts": {
+            "review": 5,
+            "misjudged": 0
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000019/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000024/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000027/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000016/0": {
+              "truth": "SAME",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    },
+    "learn": {
+      "runs": [
+        {
+          "run": "pf5-1",
+          "verdicts": {
+            "IMPROVEMENT": 4,
+            "SAME": 75,
+            "UNCERTAIN": 1
+          },
+          "counts": {
+            "match": 4,
+            "review": 1,
+            "misjudged": 0
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000019/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000027/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000016/0": {
+              "truth": "SAME",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        },
+        {
+          "run": "pf5-2",
+          "verdicts": {
+            "IMPROVEMENT": 4,
+            "SAME": 75,
+            "UNCERTAIN": 1
+          },
+          "counts": {
+            "match": 4,
+            "review": 1,
+            "misjudged": 0
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000019/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000027/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000016/0": {
+              "truth": "SAME",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        },
+        {
+          "run": "pf5-3",
+          "verdicts": {
+            "IMPROVEMENT": 4,
+            "SAME": 75,
+            "UNCERTAIN": 1
+          },
+          "counts": {
+            "match": 4,
+            "review": 1,
+            "misjudged": 0
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000015/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000019/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000024/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000027/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000016/0": {
+              "truth": "SAME",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF6": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf6-1",
+          "verdicts": {
+            "SAME": 80
+          },
+          "counts": {
+            "match": 25,
+            "misjudged": 0
+          },
+          "agreeExpected": 0,
+          "targets": 25,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 55,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0.h8": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0.h8": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000002/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf6-2",
+          "verdicts": {
+            "SAME": 80
+          },
+          "counts": {
+            "match": 25,
+            "misjudged": 0
+          },
+          "agreeExpected": 0,
+          "targets": 25,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 55,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0.h8": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0.h8": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000002/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf6-3",
+          "verdicts": {
+            "SAME": 80
+          },
+          "counts": {
+            "match": 25,
+            "misjudged": 0
+          },
+          "agreeExpected": 0,
+          "targets": 25,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 55,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000001/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000006/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000007/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000008/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000009/0.h8": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000010/0.h8": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000012/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000013/0.h9": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000014/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000018/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000022/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000026/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000029/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000030/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000033/0.h7": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000002/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000020/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "SAME",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF7": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf7-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 6,
+            "SAME": 74
+          },
+          "counts": {
+            "misjudged": 6
+          },
+          "agreeExpected": 6,
+          "targets": 6,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 74,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000020/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000021/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf7-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 6,
+            "SAME": 74
+          },
+          "counts": {
+            "misjudged": 6
+          },
+          "agreeExpected": 6,
+          "targets": 6,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 74,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000020/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000021/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf7-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 6,
+            "SAME": 74
+          },
+          "counts": {
+            "misjudged": 6
+          },
+          "agreeExpected": 6,
+          "targets": 6,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 74,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000020/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000021/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    },
+    "approved": {
+      "runs": [
+        {
+          "run": "pf7-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 5,
+            "IMPROVEMENT": 1,
+            "SAME": 74
+          },
+          "counts": {
+            "misjudged": 5,
+            "match": 1
+          },
+          "agreeExpected": 6,
+          "targets": 6,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 74,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000020/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000021/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf7-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 5,
+            "IMPROVEMENT": 1,
+            "SAME": 74
+          },
+          "counts": {
+            "misjudged": 5,
+            "match": 1
+          },
+          "agreeExpected": 6,
+          "targets": 6,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 74,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000020/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000021/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf7-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 5,
+            "IMPROVEMENT": 1,
+            "SAME": 74
+          },
+          "counts": {
+            "misjudged": 5,
+            "match": 1
+          },
+          "agreeExpected": 6,
+          "targets": 6,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 74,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000020/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000021/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "IMPROVEMENT",
+              "expected": "IMPROVEMENT",
+              "class": "match"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000035/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF8": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf8-1",
+          "verdicts": {
+            "SAME": 78,
+            "UNCERTAIN": 2
+          },
+          "counts": {
+            "review": 2,
+            "misjudged": 0
+          },
+          "agreeExpected": 2,
+          "targets": 2,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 78,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000032/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        },
+        {
+          "run": "pf8-2",
+          "verdicts": {
+            "SAME": 78,
+            "UNCERTAIN": 2
+          },
+          "counts": {
+            "review": 2,
+            "misjudged": 0
+          },
+          "agreeExpected": 2,
+          "targets": 2,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 78,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000032/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        },
+        {
+          "run": "pf8-3",
+          "verdicts": {
+            "SAME": 78,
+            "UNCERTAIN": 2
+          },
+          "counts": {
+            "review": 2,
+            "misjudged": 0
+          },
+          "agreeExpected": 2,
+          "targets": 2,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 78,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            },
+            "R000032/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "UNCERTAIN",
+              "expected": "UNCERTAIN",
+              "class": "review"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    },
+    "maxSelects": {
+      "runs": [
+        {
+          "run": "pf8-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 2,
+            "SAME": 78
+          },
+          "counts": {
+            "match": 2,
+            "misjudged": 0
+          },
+          "agreeExpected": 2,
+          "targets": 2,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 78,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000032/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf8-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 2,
+            "SAME": 78
+          },
+          "counts": {
+            "match": 2,
+            "misjudged": 0
+          },
+          "agreeExpected": 2,
+          "targets": 2,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 78,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000032/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        },
+        {
+          "run": "pf8-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 2,
+            "SAME": 78
+          },
+          "counts": {
+            "match": 2,
+            "misjudged": 0
+          },
+          "agreeExpected": 2,
+          "targets": 2,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 78,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": true
+          },
+          "runCheckExpected": {
+            "dbstate_equal": true
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000004/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            },
+            "R000032/0": {
+              "truth": "CONTRACT_VIOLATION",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "match"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF9": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf9-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 5,
+            "SAME": 75
+          },
+          "counts": {
+            "misjudged": 5
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000035/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000020/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf9-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 5,
+            "SAME": 75
+          },
+          "counts": {
+            "misjudged": 5
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000035/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000020/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf9-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 5,
+            "SAME": 75
+          },
+          "counts": {
+            "misjudged": 5
+          },
+          "agreeExpected": 5,
+          "targets": 5,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 75,
+          "legacyOnly": [],
+          "newOnly": [],
+          "legacyOnlyExpected": [],
+          "newOnlyExpected": [],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [],
+          "detail": {
+            "R000035/0.e1": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000002/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000020/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000023/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000034/0.e1": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  },
+  "PF10": {
+    "default": {
+      "runs": [
+        {
+          "run": "pf10-1",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 12,
+            "SAME": 53
+          },
+          "counts": {
+            "misjudged": 9,
+            "notComparable": 3
+          },
+          "agreeExpected": 12,
+          "targets": 12,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 53,
+          "legacyOnly": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "newOnly": [
+            "R000006/0.h8",
+            "R000006/0.h9.h1",
+            "R000007/0.h8",
+            "R000008/0.h8",
+            "R000008/0.h9.h1",
+            "R000011/0.h11",
+            "R000011/0.h11.h1",
+            "R000011/0.h8",
+            "R000012/0.h8",
+            "R000012/0.h9.h1",
+            "R000013/0.h8"
+          ],
+          "legacyOnlyExpected": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "newOnlyExpected": [
+            "R000006/0.h8",
+            "R000006/0.h9.h1",
+            "R000007/0.h8",
+            "R000008/0.h8",
+            "R000008/0.h9.h1",
+            "R000011/0.h11",
+            "R000011/0.h11.h1",
+            "R000011/0.h8",
+            "R000012/0.h8",
+            "R000012/0.h9.h1",
+            "R000013/0.h8"
+          ],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "detail": {
+            "R000006/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000006/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000008/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000008/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000012/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000012/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000011/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000007/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000007/0.h4": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000013/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000013/0.h4": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000028/0": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf10-2",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 12,
+            "SAME": 53
+          },
+          "counts": {
+            "misjudged": 9,
+            "notComparable": 3
+          },
+          "agreeExpected": 12,
+          "targets": 12,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 53,
+          "legacyOnly": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "newOnly": [
+            "R000006/0.h8",
+            "R000006/0.h9.h1",
+            "R000007/0.h8",
+            "R000008/0.h8",
+            "R000008/0.h9.h1",
+            "R000011/0.h11",
+            "R000011/0.h11.h1",
+            "R000011/0.h8",
+            "R000012/0.h8",
+            "R000012/0.h9.h1",
+            "R000013/0.h8"
+          ],
+          "legacyOnlyExpected": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "newOnlyExpected": [
+            "R000006/0.h8",
+            "R000006/0.h9.h1",
+            "R000007/0.h8",
+            "R000008/0.h8",
+            "R000008/0.h9.h1",
+            "R000011/0.h11",
+            "R000011/0.h11.h1",
+            "R000011/0.h8",
+            "R000012/0.h8",
+            "R000012/0.h9.h1",
+            "R000013/0.h8"
+          ],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "detail": {
+            "R000006/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000006/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000008/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000008/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000012/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000012/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000011/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000007/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000007/0.h4": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000013/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000013/0.h4": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000028/0": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        },
+        {
+          "run": "pf10-3",
+          "verdicts": {
+            "CONTRACT_VIOLATION": 12,
+            "SAME": 53
+          },
+          "counts": {
+            "misjudged": 9,
+            "notComparable": 3
+          },
+          "agreeExpected": 12,
+          "targets": 12,
+          "outsideTargetsNonSame": {},
+          "outsideTargetsSame": 53,
+          "legacyOnly": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "newOnly": [
+            "R000006/0.h8",
+            "R000006/0.h9.h1",
+            "R000007/0.h8",
+            "R000008/0.h8",
+            "R000008/0.h9.h1",
+            "R000011/0.h11",
+            "R000011/0.h11.h1",
+            "R000011/0.h8",
+            "R000012/0.h8",
+            "R000012/0.h9.h1",
+            "R000013/0.h8"
+          ],
+          "legacyOnlyExpected": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "newOnlyExpected": [
+            "R000006/0.h8",
+            "R000006/0.h9.h1",
+            "R000007/0.h8",
+            "R000008/0.h8",
+            "R000008/0.h9.h1",
+            "R000011/0.h11",
+            "R000011/0.h11.h1",
+            "R000011/0.h8",
+            "R000012/0.h8",
+            "R000012/0.h9.h1",
+            "R000013/0.h8"
+          ],
+          "runCheck": {
+            "dbstate_equal": false
+          },
+          "runCheckExpected": {
+            "dbstate_equal": false
+          },
+          "undelivered": 0,
+          "degraded": 0,
+          "baselineMissing": [
+            "R000006/0.h5",
+            "R000006/0.h5.h1",
+            "R000007/0.h5",
+            "R000007/0.h5.h1",
+            "R000007/0.h9",
+            "R000008/0.h5",
+            "R000008/0.h5.h1",
+            "R000011/0.h5",
+            "R000011/0.h5.h1",
+            "R000011/0.h9",
+            "R000012/0.h5",
+            "R000012/0.h5.h1",
+            "R000013/0.h5",
+            "R000013/0.h5.h1",
+            "R000013/0.h9"
+          ],
+          "detail": {
+            "R000006/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000006/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000008/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000008/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000012/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000012/0.h9": {
+              "truth": "MISALIGNED",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "notComparable"
+            },
+            "R000011/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000007/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000007/0.h4": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000013/0": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000013/0.h4": {
+              "truth": "IMPROVEMENT",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            },
+            "R000028/0": {
+              "truth": "SAME",
+              "engine": "CONTRACT_VIOLATION",
+              "expected": "CONTRACT_VIOLATION",
+              "class": "misjudged"
+            }
+          }
+        }
+      ],
+      "sameAcrossRuns": true
+    }
+  }
+}

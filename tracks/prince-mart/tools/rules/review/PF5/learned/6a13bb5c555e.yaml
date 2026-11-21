@@ -1,0 +1,19 @@
+id: learned-6a13bb5c555e
+scope: request
+verdict: improvement
+reason: 'PF5 정상 리팩터링: 성공 취소의 주문과 품목 조회를 fetch join 한 번으로(SELECT 2 -> 1). 사전 등록 learnLabels(R000024,
+  R000027)'
+provenance:
+  author: ByeongeonPark
+  date: '2026-11-21'
+  runId: pf5-1
+  split: learn
+  sessions:
+  - S010
+  - S011
+  uid: 6a13bb5c555e
+match:
+  endpoint: order.cancel
+  diffKind: dbRead.countDelta
+  from: 2
+  to: 1
