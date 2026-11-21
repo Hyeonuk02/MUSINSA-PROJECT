@@ -7,7 +7,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 |---|---|---|
 | 1 | collector Feign 지원 | 완료 (2026-11-21) |
 | 2 | k8s 매니페스트(pm-legacy, pm-new), 미러링 스모크 | 완료 (2026-11-21) |
-| 3 | corpus v2 변환과 재생 | 예정 |
+| 3 | corpus v2 변환과 재생, 팀원 도구 env화 | 완료 (2026-11-21) |
 | 4 | A/A 게이트 | 예정 |
 | 5 | 결함 New 버전(PF1~PF10)과 기대 판정 사전 등록 | 예정 |
 | 6 | 판정과 대조 | 예정 |
@@ -22,9 +22,12 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | Feign 경로의 host는 논리 서비스 이름, RestClient 경로는 실제 host | 1 | Spring Cloud OpenFeign이 Capability를 로드밸런서 클라이언트 바깥에 씌워, 주소가 풀리기 전 URL(`http://COUPON-SERVICE/...`)을 본다 | legacy와 new 비교에는 영향 없음. host로 대상을 고르는 설정(`OBSERVED_HOSTS`, `--observed-hosts`, contract `observed.hosts`, `gateway_calls_per_idem_key_le_1.host`, 규칙 host 매처)에 서비스 간 호출은 `ORDER-SERVICE` 같은 이름, 가짜 PG는 `wiremock`을 넣어야 한다 | 기록하고 설정값으로 맞춘다(3단계 이후). 여러 Feign 대상이 같은 WireMock을 가리켜도 host가 구분되는 장점이 있다 |
 | collector가 Boot 4 전용이라 버전 업그레이드를 New 변경 사례로 쓸 수 없음 | 1 이전 | collector가 Boot 4.1.1 모듈(`spring-boot-restclient`, Jackson 3 `tools.jackson`)에 맞춰 빌드됨. 계측을 붙이려면 Legacy도 Boot 4여야 한다 | 원래 New 정상 변경 사례인 "payment Boot 3 -> 4"가 Legacy로 흡수됐다. 프레임워크 메이저 업그레이드형 교체는 같은 collector로 검증할 수 없다 | PF6를 "payment Jackson 2 -> 3 전환"으로 대체. 한계로 남김 |
 | 앱이 `RestClient.create()`로 직접 만든 클라이언트에는 계측이 안 붙음 | 1 | collector는 Boot가 관리하는 `RestClient.Builder`에만 붙는다. `FakePgPaymentGateway`는 정적 팩토리를 썼다 | 가짜 PG `POST /v1/orders`가 Evidence에 없었다. 이 호출은 PF1의 탐지 근거다 | `FakePgPaymentGateway`가 Builder를 주입받게 변경(팀원 Phase 3.1 `PaymentGatewayClient`와 같은 방식). 적용 전에 앱의 HTTP 클라이언트 생성 방식을 점검해야 한다는 점은 한계로 남김 |
-| 도구(`run.sh`, `spill-recover.sh`, `dbstate-export.sh`)가 팀원 앱에 고정 | 2 | ns `legacy`/`new`, 앱 라벨 `order`/`coupon`, 토픽 `order.paid`, 그룹 `coupon-settlement`, readiness 경로 `/api/orders/by-key/...`, tooling pod 이름, DB 계정 `poc`, 테이블과 컬럼이 코드에 있다 | reset, preflight, spill 회수, DB 상태 export, run-meta를 Prince Mart에 그대로 쓸 수 없다 | 3단계: 고정값을 env로 받게 하고 기본값은 지금 값 그대로(팀원 실행 불변). 앱 전용으로 남는 것은 `tools/` |
-| corpus 스키마가 `/api` 경로와 orderKey 같은 business key를 전제 | 2 | `corpus/schema-v2.json`의 path 패턴이 `^/api/(orders\|coupons)`, `validate.py` v2 규칙이 orderKey, couponKey, Idempotency-Key를 검사한다. `k6/run.js`는 corpus를 `corpus/corpus-v<N>.json`으로만 받는다 | Prince Mart corpus는 구조적으로 팀원 검증기를 통과할 수 없다 | 3단계: Prince Mart 전용 스키마와 검증기를 `corpus/`에 둔다. run.js는 corpus 위치를 env로 |
-| business key가 없으면 VU=1 순차 재생만 결정적 | 2 | Prince Mart의 orderId는 auto increment이고, 후속 요청이 orderId와 transactionId(`order_{id}`)를 참조한다. `run.js`에는 응답 값 치환(capture)이 없다 | id를 corpus에 리터럴로 넣어야 하고, S0 리셋 + VU=1 순차일 때만 맞는다. 팀원 A/A 표준(VU=3 x3)은 성립하지 않는다 | 3단계에 VU=1 순차 재생으로 진행하고 한계로 기록(capture 추가 여부는 결정 대기) |
+| 도구(`run.sh`, `spill-recover.sh`, `dbstate-export.sh`)가 팀원 앱에 고정 | 2 | ns `legacy`/`new`, 앱 라벨 `order`/`coupon`, 토픽 `order.paid`, 그룹 `coupon-settlement`, readiness 경로 `/api/orders/by-key/...`, tooling pod 이름, DB 계정 `poc`, 테이블과 컬럼이 코드에 있다 | reset, preflight, spill 회수, DB 상태 export, run-meta를 Prince Mart에 그대로 쓸 수 없다 | 3단계에 env화(2절 표). 기본값은 지금 값 그대로이고, 수정 전후 run.sh를 기본값으로 돌려 콘솔 출력과 run-meta가 같음을 확인. Prince Mart 값은 `tools/pm.env` |
+| corpus 스키마가 `/api` 경로와 orderKey 같은 business key를 전제 | 2 | `corpus/schema-v2.json`의 path 패턴이 `^/api/(orders\|coupons)`, `validate.py` v2 규칙이 orderKey, couponKey, Idempotency-Key를 검사한다. `k6/run.js`는 corpus를 `corpus/corpus-v<N>.json`으로만 받는다 | Prince Mart corpus는 구조적으로 팀원 검증기를 통과할 수 없다 | Prince Mart 전용 스키마와 검증기(`corpus/schema-v2.json`, `corpus/validate.py`, 규칙 10종, self-test 17건)를 두고, run.sh의 검증기 경로와 run.js의 corpus 위치를 env로 받게 했다 |
+| business key가 없으면 VU=1 순차 재생만 결정적 | 2 | Prince Mart의 orderId는 auto increment이고, 후속 요청이 orderId와 transactionId(`order_{id}`)를 참조한다. `run.js`에는 응답 값 치환(capture)이 없다 | 세션이 병렬로 돌면 auto increment id가 세션 사이에서 섞이고 legacy와 new 사이에서도 순서가 달라질 수 있다. 팀원 A/A 표준(VU=3 x3)은 성립하지 않는다 | S0 리셋 + VU=1 순차 재생. `tools/run-pm.sh`가 VU 1만 허용한다. 한계로 남김 |
+| business key가 없는 시스템은 corpus에 응답 값 치환이 필요하다 | 3 | 팀원 corpus는 클라이언트가 정한 business key(orderKey)로 후속 요청의 대상을 정해, 요청 바이트가 corpus만으로 정해진다. Prince Mart는 서버가 만든 id를 받아야 다음 요청을 만들 수 있다 | id를 corpus에 리터럴로 미리 계산해 넣으면, 실패한 insert도 auto increment를 소비하는 등 앱 동작에 따라 틀어진다 | `k6/run.js`에 선택 기능 capture를 추가했다(2절). legacy 응답의 최상위 필드를 세션 변수로 저장하고 다음 요청의 path와 body의 `${변수}`를 치환한다. 3단계 재생에서 38건 모두 치환됨 |
+| 팀원 DB 상태 export가 정수 금액과 한 줄 값을 전제 | 3 | `dbstate-export.sh`는 sum을 `int()`로 계산하고 `mysql -B` 출력을 줄 단위로 읽는다. Prince Mart 금액은 decimal, `orders.shipping_address_snapshot`은 줄바꿈을 포함한다. business key가 없어 행 정렬과 테이블 연결도 auto increment id로 해야 한다 | 그대로 넣으면 sum에서 실패하거나 행이 깨진다 | 스크립트는 고치지 않고 Prince Mart 테이블 정의(`tools/dbstate-tables.txt`)에서 금액은 `CAST(x*100 AS SIGNED)`, 스냅샷은 `MD5(...)`로 바꾸고 id를 행에 남겼다(VU=1에서만 유효) |
+| readiness 확인이 "헤더 없는 GET"을 전제 | 3 | 팀원 run.sh는 readiness 경로를 헤더 없이 부른다. Prince Mart의 주문 조회는 `X-User-Id`가 없으면 500이다 | 팀원처럼 "없는 키 조회 404"를 쓸 수 없다 | DB를 읽는 헤더 없는 GET(`/orders/all`, `/coupons/all`)을 쓰고 기대 코드도 env로 받는다. payment는 DB를 읽는 GET이 없어 `/payments/welcome`으로 기동만 확인한다 |
 | 게이트웨이 VS 하나에 Store 경로와 팀원 앱 경로가 함께 있음 | 2 | 팀원 `virtualservice-shadow.yaml`이 `/_evidence/`와 `/api/orders`, `/api/coupons`를 한 리소스에 담았다 | Store 경로 때문에 팀원 VS를 그대로 적용하면, 팀원 앱 스택이 없어 `istioctl analyze`가 IST0101(Error) 4건을 낸다. 동작에는 영향 없음 | 팀원 VS는 수정 없이 적용하고 Prince Mart VS를 따로 붙였다(prefix가 겹치지 않음). 이유는 `k8s/README.md`에 기록 |
 
 ## 2. 일반화를 위해 추가하거나 바꾼 것
@@ -40,7 +43,46 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | `tracks/prince-mart/app/payment-service/pom.xml` | `spring-boot-starter-restclient` 추가 | Boot 4는 Builder 자동 구성이 별도 모듈 | 해당 없음 |
 | `tracks/prince-mart/k8s/` (신규) | 팀원 `deploy/k8s` 구조를 따른 Prince Mart 스택. 팀원과 다른 점은 `k8s/README.md` 표 | Prince Mart 배포 | 없음(별도 네임스페이스) |
 
+### 2.1 팀원 도구 env화 (3단계)
+
+규칙: 고정값을 env(또는 인자)로 받고 기본값은 지금 값 그대로. 확인: 외부 명령을 기록하는 stub으로 수정 전(HEAD) run.sh와 수정 후 run.sh를 기본값으로 끝까지 돌려 비교했다.
+콘솔 출력과 run-meta.json은 같고, 외부 명령 107건도 같다. 다른 점은 k6에 `CORPUS_DIR=../corpus`(run.js 기본값과 같음)를 넘기는 것과 run-meta를 만들 때 읽기 전용 조회 3건의 순서뿐이다. 두 버전 모두 실제 k6로 팀원 corpus 로드를 확인했다.
+
+| 파일 | 변수(기본값) | 바꾼 내용 |
+|---|---|---|
+| `k6/run.sh` | `CORPUS`(`corpus/corpus-v2.1.json`), `CORPUS_VALIDATOR`(`corpus/validate.py`), `KAFKA_TOPICS`(`order.paid order.paid.dlq`) | 상수 -> env |
+| `k6/run.sh` | `NS_LEGACY`/`NS_NEW`(`legacy`/`new`), `TOOL_POD_LEGACY`/`TOOL_POD_NEW`(`mesh-check`/`isolation-injected`) | 스택 이름(legacy/new, Store와 파일 이름)과 네임스페이스를 분리. reset, export_wiremock, run-meta가 네임스페이스를 쓴다 |
+| `k6/run.sh` | `READINESS_CHECKS`(`order:8080:/api/orders/by-key/ok-readiness-check:404 coupon:8080:/api/coupons/by-key/ck-readiness-check:404`) | 서비스별 readiness 함수 4개 -> 목록 순회 함수 2개. 기본값이면 로그 문구도 같다 |
+| `k6/run.sh` | `CERT_APPS`(`order coupon kafka`) | preflight 인증서 확인 대상. 순서도 같다 |
+| `k6/run.sh` | `RESET_DEPLOYMENTS`(`mysql coupon-mysql kafka`) | S0 rollout restart 대상. 기본값이면 로그 문구도 같다 |
+| `k6/run.sh` | `CONSUMER_GROUP`/`CONSUMER_TOPIC`(`coupon-settlement`/`order.paid`) | 리셋 뒤 파티션 할당 대기 |
+| `k6/run.sh` | `META_APPS`(`order coupon`), `CLOCK_DEPLOY`(`order`) | run-meta images와 appFixedClock. 기본값이면 JSON 키와 순서가 같다 |
+| `k6/run.sh` | (k6 호출) | k6에 `CORPUS_DIR=../<CORPUS의 디렉터리>`를 넘긴다. `CORPUS`를 basename으로 바꾸는 할당보다 앞에 둔다(bash는 앞 접두 할당을 뒤 할당의 확장에서 본다) |
+| `k6/run.js` | `CORPUS_DIR`(`../corpus`) | corpus 디렉터리 |
+| `k6/spill-recover.sh` | `NS_LEGACY`/`NS_NEW`(`legacy`/`new`) | 스택과 네임스페이스 분리. order pod 하나로 충분한 이유를 주석으로(spill hostPath가 스택 디렉터리 전체) |
+| `k6/dbstate-export.sh` | `DBSTATE_TABLES_FILE`(없음 = 지금 TABLES 배열), `DB_USER`/`DB_PASSWORD`(`poc`), `NS_LEGACY`/`NS_NEW` | 테이블 정의 파일, DB 계정, 네임스페이스 |
+| `engine/verify_sameness.py` | `--evidence-headers`(지금 `EVIDENCE_HEADERS` 목록) | request 동일성에서 비교할 헤더. Prince Mart는 `idempotency-key` 대신 `x-user-id` |
+
+### 2.2 기능 추가 (3단계)
+
+| 파일 | 내용 | 이유 | 팀원 실행 영향 |
+|---|---|---|---|
+| `k6/run.js` | 응답 값 치환(capture). 요청의 `capture {변수: 응답 필드}`로 legacy 응답 JSON 최상위 필드를 세션 변수에 저장하고, 이후 요청의 path와 body 문자열의 `${변수}`를 치환. 변수가 없으면 그 요청을 보내지 않고 세션을 degraded로 끝낸다. k6 태그는 치환 전 경로 | business key가 없는 시스템(1절) | 없음. 팀원 corpus에는 capture와 `${`가 없어(팀원 `corpus/validate.py`가 v1, v2 모두 `${` 치환자를 실행 시점 값으로 금지) 요청 바이트가 같다 |
+
+### 2.3 Prince Mart 전용 파일 (3단계)
+
+| 파일 | 내용 |
+|---|---|
+| `corpus/corpus-v1.1.json` | branch-park 베이스라인 corpus 원본 그대로(세션 14, 요청 38) |
+| `corpus/convert_v1_to_v2.py` | v1.1 -> `corpus-v2.json` 변환(결정론, `--check`). 세션 id S001 형식, X-User-Id를 요청 헤더로, 결제 확정에 Kafka 소비 홉 settle |
+| `corpus/schema-v2.json`, `corpus/validate.py`, `corpus/tests/invalid/` | Prince Mart 스키마와 검증기(팀원 검증기와 같은 방식, 규칙 10종, `--self-test` 17건) |
+| `tools/pm.env` | 2.1의 env에 넣을 Prince Mart 값 |
+| `tools/run-pm.sh` | pm.env를 읽고 팀원 `k6/run.sh`를 부른다. VU 1만 허용 |
+| `tools/dbstate-tables.txt` | Prince Mart 테이블 7개의 DB 상태 정의(1절 dbstate 항목) |
+
 ## 3. 수정 없이 그대로 쓴 팀원 구성요소
+
+2절에서 env화한 파일(`k6/run.sh`, `run.js`, `spill-recover.sh`, `dbstate-export.sh`, `engine/verify_sameness.py`)은 기본 동작이 같지만 수정한 파일이라 여기서 뺀다.
 
 | 구성요소 | 쓰는 곳 |
 |---|---|
@@ -52,4 +94,6 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | `deploy/k8s/verify/evidence-store.yaml`, `evidence-store/` (이미지 `evidence-store:phase3.2`) | Evidence Store |
 | collector 기존 클래스 전부(`EvidenceFilter`, `EvidenceWriter`, `EvidenceSender`, `EvidenceStatementInspector`, `EvidenceTransactionListener`, `CallTreeInterceptor`, `ReplayPropagatingInterceptor`, Kafka 인터셉터 3종, `EvidenceAutoConfiguration`) | 세 Prince Mart 서비스 |
 | `docs/evidence-schema-v1.json` | Evidence 계약 |
+| `k6/barrier.py` | barrier(관측 host와 토픽은 인자) |
+| `evidence-store/` API(`/evidence`, `/exists`, `/count`, `/export`) | k6 완료 폴링, barrier, export |
 | OTel Java agent 이미지(digest 고정), `curlimages/curl:8.11.1`, `busybox:1.37`, WireMock 3.13.1 digest, `apache/kafka:4.2.1`, `mysql:8.4` | 매니페스트 |

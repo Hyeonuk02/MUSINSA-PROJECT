@@ -1,0 +1,16 @@
+# Prince Mart 최종 DB 상태 export 정의 (k6/dbstate-export.sh의 DBSTATE_TABLES_FILE). 형식은 그 스크립트의 TABLES와 같다:
+#   DB pod 레이블(app=<x>, 컨테이너 이름도 <x>) | DB 이름 | 테이블 이름 | 행 SELECT | sum 대상 컬럼(쉼표)
+#
+# 팀원 정의와 다른 점
+# - Prince Mart에는 business key가 없다. 행 순서와 테이블 사이 연결은 auto increment id로 한다.
+#   S0 리셋 + VU=1 순차 재생이면 id가 legacy/new에서 같으므로 id를 행에 남긴다(팀원은 id를 빼고 business key로 정렬).
+# - 시각 컬럼(created_at, changed_at, used_at)은 뺀다(팀원과 같음. 고정 시각이라 같지만 판정 잡음을 줄이려고).
+# - 금액은 decimal이라 sum이 int로 안 된다. 쿼리에서 정수 cents로 바꾼다(CAST(x*100 AS SIGNED) AS <x>_cents).
+# - orders.shipping_address_snapshot은 줄바꿈이 있어 행 파싱을 깬다. MD5로 내용만 비교한다(SELECT 목록에 쉼표가 들어가면 안 된다).
+app=order-mysql|order_db|orders|SELECT order_id, user_id, order_status, payment_status, currency, CAST(total_amount*100 AS SIGNED) AS total_cents, transaction_id, billing_address_id, shipping_address_id, customer_name, user_email, MD5(shipping_address_snapshot) AS shipping_address_snapshot_md5 FROM orders ORDER BY order_id|total_cents
+app=order-mysql|order_db|order_items|SELECT order_item_id, order_id, product_id, variant_id, quantity, CAST(price*100 AS SIGNED) AS price_cents, CAST(subtotal*100 AS SIGNED) AS subtotal_cents FROM order_items ORDER BY order_item_id|quantity,price_cents,subtotal_cents
+app=order-mysql|order_db|order_status_history|SELECT history_id, order_id, status, changed_by FROM order_status_history ORDER BY history_id|
+app=coupon-mysql|coupon_db|coupons|SELECT coupon_id, code, discount_type, CAST(discount_value*100 AS SIGNED) AS discount_value_cents, CAST(max_discount*100 AS SIGNED) AS max_discount_cents, CAST(min_order_value*100 AS SIGNED) AS min_order_value_cents, expiry_date, usage_limit FROM coupons ORDER BY coupon_id|discount_value_cents
+app=coupon-mysql|coupon_db|coupon_usage|SELECT usage_id, coupon_id, order_id, user_id FROM coupon_usage ORDER BY usage_id|
+app=payment-mysql|payment_db|payments|SELECT payment_id, order_id, status, payment_method, currency, CAST(amount*100 AS SIGNED) AS amount_cents, transaction_id FROM payments ORDER BY payment_id|amount_cents
+app=payment-mysql|payment_db|refunds|SELECT refund_id, payment_id, status, reason, CAST(amount*100 AS SIGNED) AS amount_cents FROM refunds ORDER BY refund_id|amount_cents

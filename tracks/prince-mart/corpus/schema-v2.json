@@ -1,0 +1,97 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "pm-corpus-v2.schema.json",
+  "title": "Prince Mart replay corpus v2",
+  "description": "팀원 corpus/schema-v2.json과 같은 구조(세션 flow/split, 요청 settle)에 Prince Mart API 경로와 capture를 넣은 것. 구조 밖 규칙은 validate.py가 검사한다.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["version", "sessions"],
+  "properties": {
+    "version": { "const": "pm-corpus-v2" },
+    "description": { "type": "string" },
+    "source": {
+      "type": "object", "additionalProperties": false, "required": ["file", "version", "sha256"],
+      "properties": {
+        "file": { "type": "string" },
+        "version": { "type": "string" },
+        "sha256": { "type": "string", "pattern": "^[0-9a-f]{64}$" }
+      }
+    },
+    "sessions": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/session" } }
+  },
+  "$defs": {
+    "session": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "user", "userId", "flow", "split", "requests"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^S[0-9]{3}$" },
+        "user": { "type": "string", "minLength": 1 },
+        "userId": { "description": "이 세션 요청의 X-User-Id. 세션마다 다른 사용자(세션 독립)", "type": "integer", "minimum": 1 },
+        "flow": { "enum": ["order", "order-coupon", "coupon"] },
+        "split": { "enum": ["learn", "eval"] },
+        "tags": { "type": "array", "items": { "type": "string" } },
+        "description": { "type": "string" },
+        "requests": { "type": "array", "minItems": 1, "items": { "$ref": "#/$defs/request" } }
+      }
+    },
+    "request": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "method", "path", "headers", "expect"],
+      "properties": {
+        "id": { "type": "string", "pattern": "^R[0-9]{6}$" },
+        "method": { "enum": ["GET", "POST", "PUT"] },
+        "path": { "type": "string", "pattern": "^/(orders|payments|coupons)/" },
+        "headers": {
+          "type": "object", "additionalProperties": false, "required": ["X-User-Id"],
+          "properties": { "X-User-Id": { "type": "string", "pattern": "^[0-9]+$" } }
+        },
+        "asOtherUser": { "description": "X-User-Id가 세션 사용자가 아님을 의도한 요청(남의 주문 조회 등)", "const": true },
+        "body": { "oneOf": [ { "$ref": "#/$defs/placeOrderBody" }, { "$ref": "#/$defs/validateCouponBody" } ] },
+        "capture": {
+          "description": "run.js 선택 기능. {세션 변수: legacy 응답 JSON 최상위 필드}. 이후 요청의 path와 body에서 ${변수}로 쓴다",
+          "type": "object", "minProperties": 1,
+          "propertyNames": { "pattern": "^[A-Za-z_][A-Za-z0-9_]*$" },
+          "additionalProperties": { "type": "string", "minLength": 1 }
+        },
+        "settle": {
+          "type": "array", "minItems": 1,
+          "items": {
+            "type": "object", "additionalProperties": false, "required": ["hop", "service", "origin"],
+            "properties": {
+              "hop": { "type": "string", "pattern": "^0(\\.[he][1-9][0-9]*)+$" },
+              "service": { "enum": ["order", "coupon", "payment"] },
+              "origin": { "enum": ["http", "kafka"] }
+            }
+          }
+        },
+        "expect": {
+          "description": "Legacy에서 기대하는 응답 상태와 스택당 Evidence 건수(진입 + 내부 홉). run.js는 쓰지 않고 결과 대조에 쓴다",
+          "type": "object", "additionalProperties": false, "required": ["status", "evidence"],
+          "properties": {
+            "status": { "type": "integer", "minimum": 100, "maximum": 599 },
+            "evidence": { "type": "integer", "minimum": 1 }
+          }
+        },
+        "note": { "type": "string" }
+      }
+    },
+    "placeOrderBody": {
+      "type": "object", "additionalProperties": false, "required": ["shippingAddressId", "billingAddressId", "currency"],
+      "properties": {
+        "shippingAddressId": { "type": "integer", "minimum": 1 },
+        "billingAddressId": { "type": "integer", "minimum": 1 },
+        "currency": { "type": "string", "pattern": "^[A-Z]{3}$" },
+        "couponCode": { "type": "string", "pattern": "^S[0-9]{2}-[A-Z0-9]+$" }
+      }
+    },
+    "validateCouponBody": {
+      "type": "object", "additionalProperties": false, "required": ["code", "orderAmount"],
+      "properties": {
+        "code": { "type": "string", "pattern": "^S[0-9]{2}-[A-Z0-9]+$" },
+        "orderAmount": { "type": "integer", "minimum": 0 }
+      }
+    }
+  }
+}
