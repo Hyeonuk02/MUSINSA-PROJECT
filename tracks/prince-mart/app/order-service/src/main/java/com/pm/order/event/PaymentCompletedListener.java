@@ -47,6 +47,12 @@ public class PaymentCompletedListener {
         JsonNode event = objectMapper.readTree(value);
         Long orderId = event.get("orderId").asLong();
 
+        // PF7: B4 수정 - 취소된 주문은 결제 완료 이벤트로 확정하지 않는다
+        if ("CANCELLED".equalsIgnoreCase(orderService.getOrderByIdForAdmin(orderId).getOrderStatus())) {
+            System.out.println("Skip PaymentCompleted for cancelled order: " + orderId);
+            return;
+        }
+
         // 1. 기존 핸드셰이크가 하던 상태 변경
         Order orderInfo = orderService.updateStatus(orderId, "PAID", "CONFIRMED");
         System.out.println("Handshake successful for Order: " + orderId);
