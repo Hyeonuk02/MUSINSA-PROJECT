@@ -1,0 +1,14 @@
+# PF4-order: 진짜 결함: 주문 취소에서 재고 복구(add-stock-bulk) 호출 누락
+# 저장소 루트에서 git apply로 적용한다(fault/PF4 브랜치, tracks/prince-mart/tools/faults/README.md)
+--- a/tracks/prince-mart/app/order-service/src/main/java/com/pm/order/service/OrderService.java
++++ b/tracks/prince-mart/app/order-service/src/main/java/com/pm/order/service/OrderService.java
+@@ -304,8 +304,7 @@
+                 .collect(Collectors.toList());
+ 
+         try {
+-            // Using your existing Feign Client method
+-            inventoryClient.addStock(stockToRestore);
++            // PF4: 취소 시 재고 복구 호출 누락(보상 누락 결함) - inventoryClient.addStock(stockToRestore) 제거
+         } catch (Exception e) {
+             System.err.println("CRITICAL: Failed to restore stock during user cancellation - " + e.getMessage());
+             // Depending on your policy, you might want to throw an exception here 

@@ -9,7 +9,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | 2 | k8s 매니페스트(pm-legacy, pm-new), 미러링 스모크 | 완료 (2026-11-21) |
 | 3 | corpus v2 변환과 재생, 팀원 도구 env화 | 완료 (2026-11-21) |
 | 4 | A/A 게이트(팀원 엔진, 3회) | 완료 (2026-11-21) |
-| 5 | 결함 New 버전(PF1~PF10)과 기대 판정 사전 등록 | 예정 |
+| 5 | 결함 New 버전(PF1~PF10)과 기대 판정 사전 등록 | 사전 등록안 작성 (2026-11-21), 커밋 대기 |
 | 6 | 판정과 대조 | 예정 |
 
 ## 1. 일반화 발견
@@ -27,9 +27,22 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | business key가 없으면 VU=1 순차 재생만 결정적 | 2 | Prince Mart의 orderId는 auto increment이고, 후속 요청이 orderId와 transactionId(`order_{id}`)를 참조한다. `run.js`에는 응답 값 치환(capture)이 없다 | 세션이 병렬로 돌면 auto increment id가 세션 사이에서 섞이고 legacy와 new 사이에서도 순서가 달라질 수 있다. 팀원 A/A 표준(VU=3 x3)은 성립하지 않는다 | S0 리셋 + VU=1 순차 재생. `tools/run-pm.sh`가 VU 1만 허용한다. 한계로 남김 |
 | business key가 없는 시스템은 corpus에 응답 값 치환이 필요하다 | 3 | 팀원 corpus는 클라이언트가 정한 business key(orderKey)로 후속 요청의 대상을 정해, 요청 바이트가 corpus만으로 정해진다. Prince Mart는 서버가 만든 id를 받아야 다음 요청을 만들 수 있다 | id를 corpus에 리터럴로 미리 계산해 넣으면, 실패한 insert도 auto increment를 소비하는 등 앱 동작에 따라 틀어진다 | `k6/run.js`에 선택 기능 capture를 추가했다(2절). legacy 응답의 최상위 필드를 세션 변수로 저장하고 다음 요청의 path와 body의 `${변수}`를 치환한다. 3단계 재생에서 38건 모두 치환됨 |
 | 팀원 DB 상태 export가 정수 금액과 한 줄 값을 전제 | 3 | `dbstate-export.sh`는 sum을 `int()`로 계산하고 `mysql -B` 출력을 줄 단위로 읽는다. Prince Mart 금액은 decimal, `orders.shipping_address_snapshot`은 줄바꿈을 포함한다. business key가 없어 행 정렬과 테이블 연결도 auto increment id로 해야 한다 | 그대로 넣으면 sum에서 실패하거나 행이 깨진다 | 스크립트는 고치지 않고 Prince Mart 테이블 정의(`tools/dbstate-tables.txt`)에서 금액은 `CAST(x*100 AS SIGNED)`, 스냅샷은 `MD5(...)`로 바꾸고 id를 행에 남겼다(VU=1에서만 유효) |
-| 팀원 contract의 절대 불변식 하나를 Legacy가 이미 어김 | 4 | `publish_after_commit_begin`은 legacy와 비교하지 않고 New만 보는 절대 검사다(팀원 D16, 커밋 전 발행 금지). Prince Mart payment verify는 Legacy부터 커밋 전에 발행한다(PUBLISH -> COMMIT_BEGIN, LEGACY_CHANGES.md) | 팀원 contract 그대로면 A/A(New = Legacy 코드)에서도 verify 5건이 3회 모두 CV다(80 pair 중 75 SAME, 5 CV). 게이트가 성립하지 않는다 | Prince Mart contract에서 끔(`tools/rules/contract.yaml`). 한계: 엔진에 발행과 커밋의 순서를 legacy와 비교하는 차등 검사가 없어, 순서가 바뀌는 변경은 다른 축에 드러나지 않는다. 결함 카탈로그(PF1~PF10)에는 이 순서를 바꾸는 결함이 없다 |
+| 팀원 contract의 절대 불변식 하나를 Legacy가 이미 어김 | 4 | `publish_after_commit_begin`은 legacy와 비교하지 않고 New만 보는 절대 검사다(팀원 D16, 커밋 전 발행 금지). Prince Mart payment verify는 Legacy부터 커밋 전에 발행한다(PUBLISH -> COMMIT_BEGIN, LEGACY_CHANGES.md) | 팀원 contract 그대로면 A/A(New = Legacy 코드)에서도 verify 5건이 3회 모두 CV다(80 pair 중 75 SAME, 5 CV). 게이트가 성립하지 않는다 | Prince Mart contract에서 끔(`tools/rules/contract.yaml`). 팀원 엔진은 이 검사를 엔드포인트별로 끌 수 없어(엔드포인트별 파라미터는 `max_selects`만) 전체를 껐다. Prince Mart에서 발행하는 홉은 payment.verify뿐이라 지금은 효과가 같다. 한계: 엔진에 발행과 커밋의 순서를 legacy와 비교하는 차등 검사가 없어, 순서가 바뀌는 변경은 다른 축에 드러나지 않는다. 결함 카탈로그(PF1~PF10)에는 이 순서를 바꾸는 결함이 없다 |
 | readiness 확인이 "헤더 없는 GET"을 전제 | 3 | 팀원 run.sh는 readiness 경로를 헤더 없이 부른다. Prince Mart의 주문 조회는 `X-User-Id`가 없으면 500이다 | 팀원처럼 "없는 키 조회 404"를 쓸 수 없다 | DB를 읽는 헤더 없는 GET(`/orders/all`, `/coupons/all`)을 쓰고 기대 코드도 env로 받는다. payment는 DB를 읽는 GET이 없어 `/payments/welcome`으로 기동만 확인한다 |
 | 게이트웨이 VS 하나에 Store 경로와 팀원 앱 경로가 함께 있음 | 2 | 팀원 `virtualservice-shadow.yaml`이 `/_evidence/`와 `/api/orders`, `/api/coupons`를 한 리소스에 담았다 | Store 경로 때문에 팀원 VS를 그대로 적용하면, 팀원 앱 스택이 없어 `istioctl analyze`가 IST0101(Error) 4건을 낸다. 동작에는 영향 없음 | 팀원 VS는 수정 없이 적용하고 Prince Mart VS를 따로 붙였다(prefix가 겹치지 않음). 이유는 `k8s/README.md`에 기록 |
+
+### 1.1 판정 전 예상 (5단계 사전 등록, 6단계 판정 뒤 확정)
+
+사전 등록안(`tools/faults/fault-expectations.json`)에서 정답과 예상 엔진 판정이 갈리는 곳의 원인. 판정 run 뒤 실제로 그런지 확인하고 위 표로 옮긴다.
+
+| 예상 원인 | 해당 | 예상 영향 |
+|---|---|---|
+| 자식 hopPath가 호출 순번이라, 관측 서비스 호출의 순서가 바뀌면 같은 키가 서로 다른 호출을 가리킨다 | PF10(use를 결제 뒤로) | 정렬 오류 pair 3개(legacy payment.process와 new coupon.use 비교), 나머지는 한쪽에만 있는 홉 |
+| collector가 readOnly 트랜잭션도 기록하고, 엔진은 트랜잭션 결과 순서열을 기능 축으로 비교한다 | PF7, PF9(소비마다 findById 1회) | 기능이 같은 소비 홉 8개가 CV |
+| 직렬화된 JSON을 담은 문자열 필드와 외부 호출 본문은 바이트(hash) 비교다 | PF6(Jackson 3 키 순서) | 의미가 같은 25 pair가 CV |
+| id 마스킹이 키 이름 `id`만 대상이고 외부 호출 본문에는 적용되지 않는다 | PF10 R000028(usageId 1 -> 5) | 1 pair CV |
+| 승인된 기능 변화(writeSet, externalCalls, response.status)는 규칙으로 덮을 수 없다 | PF7 R20, PF9 R35, PF10 | 정답 IMPROVEMENT인 pair가 CV |
+| 규칙이 변경(버전) 단위로 범위를 가지지 않는다. 같은 모양의 차이가 개선(PF7 R21)과 결함(PF2 R21)에 모두 생긴다 | PF7 승인 규칙 | 전역 규칙이면 결함을 개선으로 가린다. PF7 판정에만 쓰는 규칙 디렉터리(`tools/rules/approved/PF7/`)로 분리했다 |
 
 ## 2. 일반화를 위해 추가하거나 바꾼 것
 
@@ -90,6 +103,16 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | `tools/rules/contract.yaml` | 엔드포인트 11개(진입과 서비스 간 내부 호출, 소비 토픽 `payment-events`), observed host는 논리 이름 3개, 토픽 `payment-events` | 끈 검사 3개: `gateway_calls_per_idem_key_le_1`(Idempotency-Key와 `/gateway/charge` 전제), `coupon_transition_order`(팀원 쿠폰 흐름 전제), `publish_after_commit_begin`(1절, Legacy가 어김). 나머지 검사와 파라미터는 같다 |
 | `tools/rules/improvement.yaml` | 사전 승인 규칙 없음(5단계에서 run 전에 넣는다) | 팀원 F6 규칙은 가져오지 않음 |
 | `tools/rules/learned/` | 비어 있음 | 팀원 learned 규칙은 가져오지 않음(팀원 앱 엔드포인트 전용) |
+| `tools/rules/contract-maxselects.yaml` (5단계) | contract.yaml과 같고 `max_selects`에 `order.mine: 1`만 선언 | 팀원 `contract-maxselects.yaml`과 같은 용도(PF8). A/A 3회에 적용해도 SAME 80 |
+| `tools/rules/approved/PF7/` (5단계) | PF7 사전 승인 규칙 2개(order.get 응답 orderStatus CONFIRMED -> CANCELLED, paymentStatus PAID -> UNPAID) | 팀원은 사전 승인 규칙을 `improvement.yaml` 하나에 둔다. Prince Mart는 같은 모양의 결함 차이를 가리지 않게 변경별 디렉터리로 분리(1.1절). A/A 3회에 적용해도 SAME 80 |
+
+### 2.5 결함과 정상 변경 New 버전 (5단계)
+
+| 파일 | 내용 |
+|---|---|
+| `tools/faults/make_patches.py`, `PF<n>-<svc>.patch` | branch-park PF 편집을 지금 코드에 맞춰 옮긴 패치 10개(저장소 루트 기준, `git apply --check`와 컴파일 확인). PF6은 Jackson 2 -> 3 전환 |
+| `tools/faults/fault-expectations.json` | 사전 등록: 정답(`targets`)과 예상 엔진 판정(`expectedEngine`)을 나눠 적고, pair 키를 팀원 엔진 키로 다시 매겼다. branch-park 옛 키와 사후 보정 출처를 pair마다 남겼다 |
+| `tools/faults/branch-park/` | branch-park 기대, 사후 보정, 카탈로그 원본 그대로 |
 
 ## 3. 수정 없이 그대로 쓴 팀원 구성요소
 

@@ -1,0 +1,27 @@
+# PF7(B4 수정) 사전 승인 규칙 — 판정 run 전에 커밋한다. PF7 판정에만 쓴다(--rules tracks/prince-mart/tools/rules/approved/PF7
+# --contract tracks/prince-mart/tools/rules/contract.yaml). 기본 규칙 디렉터리에 두지 않는 이유: 같은 모양의 차이가 PF2(이벤트 누락)의
+# R000021에서도 생긴다(취소 주문 조회가 CANCELLED/UNPAID). 전역 규칙이면 결함을 개선으로 가린다(GENERALIZATION.md 1절).
+# 형식은 팀원 engine/rules/improvement.yaml과 같다. 규칙은 변경의 의도에서 썼다(결함 run 결과를 보지 않음).
+rules:
+  - id: pf7-cancelled-order-stays-cancelled
+    scope: request
+    verdict: improvement
+    reason: "PF7 B4 수정: 취소된 주문은 결제 완료 이벤트로 CONFIRMED가 되지 않는다(승인된 개선)"
+    provenance: {author: ByeongeonPark, date: "2026-11-21", runId: null, split: null, sessions: []}
+    match:
+      endpoint: order.get
+      diffKind: response.valueChanged
+      path: orderStatus
+      from: CONFIRMED
+      to: CANCELLED
+  - id: pf7-cancelled-order-stays-unpaid
+    scope: request
+    verdict: improvement
+    reason: "PF7 B4 수정: 취소된 주문은 결제 완료 이벤트로 PAID가 되지 않는다(승인된 개선)"
+    provenance: {author: ByeongeonPark, date: "2026-11-21", runId: null, split: null, sessions: []}
+    match:
+      endpoint: order.get
+      diffKind: response.valueChanged
+      path: paymentStatus
+      from: PAID
+      to: UNPAID

@@ -1,0 +1,48 @@
+# Prince Mart 기능 계약 선언 — max_selects 선언판(PF8 판정용, 판정 run 전 커밋). contract.yaml과 같고 max_selects.endpoints만 다르다.
+# Prince Mart 기능 계약 선언. 팀원 engine/rules/contract.yaml과 같은 형식이고, 검사 로직은 팀원 엔진(engine/verdict.py)의 built-in이다.
+# 사용: .venv/bin/python engine/verdict.py --run runs/<runId> --rules tracks/prince-mart/tools/rules
+version: 1
+
+# 엔드포인트는 method + path 정규식(쿼리 제외) 또는 소비 토픽. 진입 요청과 서비스 간 내부 호출(홉)을 모두 선언한다.
+endpoints:
+  - {id: order.place,     method: POST, path: '^/orders/place$'}
+  - {id: order.get,       method: GET,  path: '^/orders/order/[^/]+$'}
+  - {id: order.mine,      method: GET,  path: '^/orders/my-orders$'}
+  - {id: order.history,   method: GET,  path: '^/orders/history$'}
+  - {id: order.cancel,    method: PUT,  path: '^/orders/[^/]+/cancel$'}
+  - {id: payment.process, method: POST, path: '^/payments/process$'}     # order -> payment 내부 호출
+  - {id: payment.verify,  method: POST, path: '^/payments/verify$'}
+  - {id: coupon.validate, method: POST, path: '^/coupons/validate$'}     # 진입과 order -> coupon 내부 호출
+  - {id: coupon.use,      method: POST, path: '^/coupons/use$'}          # 진입과 order -> coupon 내부 호출
+  - {id: coupon.all,      method: GET,  path: '^/coupons/all$'}
+  - {id: consume.payment.events, topic: payment-events}                  # order의 PaymentCompleted 소비
+
+# 관측 대상. Feign 호출의 host는 로드밸런서가 풀기 전의 논리 서비스 이름이다(GENERALIZATION.md 1절). tools/pm.env와 같은 값.
+observed:
+  hosts: [ORDER-SERVICE, COUPON-SERVICE, PAYMENT-SERVICE]
+  topics: [payment-events]
+
+checks:
+  response_status_equal: {enabled: true}
+  response_body_compatible: {enabled: true}
+  write_set_equal: {enabled: true}
+  tx_outcome_sequence_equal: {enabled: true}
+  external_calls_equal: {enabled: true}
+  events_equal: {enabled: true}
+  error_equal: {enabled: true}
+  consume_outcome_equal: {enabled: true}
+  hop_set_equal: {enabled: true}
+  # 끈다(GENERALIZATION.md 1절, 2절). 이 검사는 New만 보는 절대 불변식(커밋 전 발행 금지, 팀원 D16)인데 Prince Mart Legacy의
+  # payment verify가 원래 커밋 전에 발행한다(PUBLISH -> COMMIT_BEGIN, LEGACY_CHANGES.md). 켜 두면 A/A에서도 verify 5건이 CV가 된다.
+  # 끄면 발행과 커밋의 순서가 바뀌는 변경은 다른 축에 드러나지 않는다(한계).
+  publish_after_commit_begin: {enabled: false}
+  # 팀원 앱 전용 세션 검사 2개는 끈다(GENERALIZATION.md 2절).
+  #   gateway_calls_per_idem_key_le_1: Idempotency-Key 헤더와 WireMock /gateway/charge 전제. Prince Mart에는 멱등 키가 없다
+  #   coupon_transition_order: coupon.use 응답의 couponKey와 consume.order.paid의 coupons 갱신 전제. Prince Mart의 쿠폰 흐름과 다르다
+  gateway_calls_per_idem_key_le_1: {enabled: false}
+  coupon_transition_order: {enabled: false}
+  dbstate_equal: {enabled: true}
+  max_selects:
+    enabled: true
+    # 내 주문 조회는 주문 목록 SELECT 1개(findByUserId). legacy A/A에서 R000004, R000032 모두 1
+    endpoints: {order.mine: 1}
