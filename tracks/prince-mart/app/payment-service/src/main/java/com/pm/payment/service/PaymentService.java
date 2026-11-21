@@ -1,6 +1,6 @@
 package com.pm.payment.service;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.pm.payment.client.AuditClient; // New Client
 import com.pm.payment.dto.*;
 import com.pm.payment.entity.Payment;
@@ -19,7 +19,7 @@ public class PaymentService {
 
     private final PaymentRepository paymentRepository;
     private final AuditClient auditClient; // New
-    private final ObjectMapper objectMapper; // New
+    private final JsonMapper objectMapper; // PF6: Jackson 2 ObjectMapper -> Jackson 3 JsonMapper
     // [LEGACY_CHANGES] Razorpay SDK 직접 호출 대신 PaymentGateway (키 설정은 RazorpayPaymentGateway로 이동)
     private final PaymentGateway paymentGateway;
     // [LEGACY_CHANGES] OrderClient/NotificationClient 대신 이벤트 발행
@@ -27,7 +27,7 @@ public class PaymentService {
 
     public PaymentService(PaymentRepository paymentRepository, 
                           AuditClient auditClient,
-                          ObjectMapper objectMapper,
+                          JsonMapper objectMapper,
                           PaymentGateway paymentGateway,
                           PaymentEventPublisher paymentEventPublisher) {
         this.paymentRepository = paymentRepository;

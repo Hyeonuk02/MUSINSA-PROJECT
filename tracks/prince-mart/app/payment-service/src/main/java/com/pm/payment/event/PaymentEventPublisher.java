@@ -1,6 +1,6 @@
 package com.pm.payment.event;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
+import tools.jackson.databind.json.JsonMapper;
 import com.pm.payment.entity.Payment;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.kafka.core.KafkaTemplate;
@@ -29,11 +29,11 @@ import java.util.concurrent.TimeUnit;
 public class PaymentEventPublisher {
 
     private final KafkaTemplate<String, String> kafkaTemplate;
-    private final ObjectMapper objectMapper;
+    private final JsonMapper objectMapper;   // PF6: Jackson 2 ObjectMapper -> Jackson 3 JsonMapper
     private final String topic;
 
     public PaymentEventPublisher(KafkaTemplate<String, String> kafkaTemplate,
-                                 ObjectMapper objectMapper,
+                                 JsonMapper objectMapper,
                                  @Value("${app.kafka.payment-events-topic}") String topic) {
         this.kafkaTemplate = kafkaTemplate;
         this.objectMapper = objectMapper;
