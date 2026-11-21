@@ -93,7 +93,7 @@ public class PaymentService {
         // [LEGACY_CHANGES] 동기 Feign 핸드셰이크(PUT /orders/{id}/status) + 감사 로그 + 알림 발송을
         // PaymentCompleted 이벤트 발행으로 대체했다. 세 가지 후속 처리는 Order consumer가 같은 순서로 한다.
         // 감사 로그 본문(dataBefore/dataAfter)은 여기서 직렬화해 이벤트에 싣는다(원본과 같은 ObjectMapper).
-        paymentEventPublisher.publishPaymentCompleted(updatedPayment, dataBefore);
+        // PF2: PaymentCompleted 발행 누락(이벤트 누락 결함)
     }
 
     // Centralized Helper for External Auditing
