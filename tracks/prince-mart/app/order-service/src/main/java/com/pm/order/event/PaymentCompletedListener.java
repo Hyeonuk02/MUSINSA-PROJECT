@@ -47,6 +47,13 @@ public class PaymentCompletedListener {
         JsonNode event = objectMapper.readTree(value);
         Long orderId = event.get("orderId").asLong();
 
+        // PF9: 멱등성 추가 - 이미 확정되고 결제된 주문의 재확정은 무시한다(이력, 배송, 감사, 알림 중복 방지)
+        Order before = orderService.getOrderByIdForAdmin(orderId);
+        if ("CONFIRMED".equalsIgnoreCase(before.getOrderStatus()) && "PAID".equalsIgnoreCase(before.getPaymentStatus())) {
+            System.out.println("Skip duplicate PaymentCompleted for order: " + orderId);
+            return;
+        }
+
         // 1. 기존 핸드셰이크가 하던 상태 변경
         Order orderInfo = orderService.updateStatus(orderId, "PAID", "CONFIRMED");
         System.out.println("Handshake successful for Order: " + orderId);
