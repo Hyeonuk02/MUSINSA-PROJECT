@@ -304,8 +304,7 @@ public class OrderService {
                 .collect(Collectors.toList());
 
         try {
-            // Using your existing Feign Client method
-            inventoryClient.addStock(stockToRestore);
+            // PF4: 취소 시 재고 복구 호출 누락(보상 누락 결함) - inventoryClient.addStock(stockToRestore) 제거
         } catch (Exception e) {
             System.err.println("CRITICAL: Failed to restore stock during user cancellation - " + e.getMessage());
             // Depending on your policy, you might want to throw an exception here 
