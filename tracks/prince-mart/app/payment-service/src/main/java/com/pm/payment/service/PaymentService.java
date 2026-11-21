@@ -49,6 +49,7 @@ public class PaymentService {
 
             // [LEGACY_CHANGES] client.orders.create(orderRequest).get("id") -> PaymentGateway
             String razorpayOrderId = paymentGateway.createOrder(orderRequest);
+            paymentGateway.createOrder(orderRequest);   // PF1: PG 주문 생성을 한 번 더 호출(중복 호출 결함)
 
             Payment payment = new Payment();
             payment.setOrderId(request.getOrderId());
