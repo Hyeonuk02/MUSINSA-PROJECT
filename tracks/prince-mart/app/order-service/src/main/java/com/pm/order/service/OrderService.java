@@ -275,8 +275,8 @@ public class OrderService {
 
     @Transactional
     public Order cancelOrder(Long orderId, Long userId) {
-        // 1. Fetch the Order
-        Order order = orderRepository.findById(orderId)
+        // 1. Fetch the Order (PF5: fetch join으로 품목까지 한 번에)
+        Order order = orderRepository.findWithItemsByOrderId(orderId)
                 .orElseThrow(() -> new ResourceNotFoundException("Order Registry entry not found"));
 
         // 2. Security Check: Ensure the order belongs to the user

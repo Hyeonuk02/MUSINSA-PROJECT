@@ -19,4 +19,8 @@ public interface OrderRepository extends JpaRepository<Order, Long> {
     boolean existsByUserIdAndProductId(@Param("userId") Long userId, @Param("productId") Long productId);
     
     List<Order> findByUserId(Long userId);
+
+    // PF5: 취소에서 주문과 품목을 한 번에 읽는다(fetch join)
+    @Query("SELECT o FROM Order o LEFT JOIN FETCH o.items WHERE o.orderId = :orderId")
+    java.util.Optional<Order> findWithItemsByOrderId(@Param("orderId") Long orderId);
 }
