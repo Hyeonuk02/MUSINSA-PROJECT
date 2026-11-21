@@ -270,7 +270,9 @@ public class OrderService {
     }
     
     public List<Order> getMyOrders(Long userId) {
-		return orderRepository.findByUserId(userId);
+		List<Order> orders = orderRepository.findByUserId(userId);
+		orders.forEach(o -> o.getItems().size());   // PF8: 주문마다 품목을 지연 로딩(N+1)
+		return orders;
 	}
 
     @Transactional
