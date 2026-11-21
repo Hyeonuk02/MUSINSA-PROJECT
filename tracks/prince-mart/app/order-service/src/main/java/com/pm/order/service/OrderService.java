@@ -143,16 +143,17 @@ public class OrderService {
                 .map(item -> new StockUpdateDTO(item.getVariantId(), item.getQuantity()))
                 .collect(Collectors.toList());
 
-        try {
-            inventoryClient.reduceStock(stockUpdates);
-        } catch (Exception e) {
-            throw new ResourceNotFoundException("Inventory update failed: " + e.getMessage());
-        }
-
+        // PF3: 장바구니 비우기를 재고 차감보다 먼저 호출(동기 호출 순서 뒤바뀜)
         try {
             cartClient.clearCart(userId);
         } catch (Exception e) {
             System.err.println("Non-critical error: Failed to clear cart - " + e.getMessage());
+        }
+
+        try {
+            inventoryClient.reduceStock(stockUpdates);
+        } catch (Exception e) {
+            throw new ResourceNotFoundException("Inventory update failed: " + e.getMessage());
         }
 
         // Audit the order creation
