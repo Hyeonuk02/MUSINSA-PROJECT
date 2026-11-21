@@ -8,7 +8,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | 1 | collector Feign 지원 | 완료 (2026-11-21) |
 | 2 | k8s 매니페스트(pm-legacy, pm-new), 미러링 스모크 | 완료 (2026-11-21) |
 | 3 | corpus v2 변환과 재생, 팀원 도구 env화 | 완료 (2026-11-21) |
-| 4 | A/A 게이트 | 예정 |
+| 4 | A/A 게이트(팀원 엔진, 3회) | 완료 (2026-11-21) |
 | 5 | 결함 New 버전(PF1~PF10)과 기대 판정 사전 등록 | 예정 |
 | 6 | 판정과 대조 | 예정 |
 
@@ -27,6 +27,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | business key가 없으면 VU=1 순차 재생만 결정적 | 2 | Prince Mart의 orderId는 auto increment이고, 후속 요청이 orderId와 transactionId(`order_{id}`)를 참조한다. `run.js`에는 응답 값 치환(capture)이 없다 | 세션이 병렬로 돌면 auto increment id가 세션 사이에서 섞이고 legacy와 new 사이에서도 순서가 달라질 수 있다. 팀원 A/A 표준(VU=3 x3)은 성립하지 않는다 | S0 리셋 + VU=1 순차 재생. `tools/run-pm.sh`가 VU 1만 허용한다. 한계로 남김 |
 | business key가 없는 시스템은 corpus에 응답 값 치환이 필요하다 | 3 | 팀원 corpus는 클라이언트가 정한 business key(orderKey)로 후속 요청의 대상을 정해, 요청 바이트가 corpus만으로 정해진다. Prince Mart는 서버가 만든 id를 받아야 다음 요청을 만들 수 있다 | id를 corpus에 리터럴로 미리 계산해 넣으면, 실패한 insert도 auto increment를 소비하는 등 앱 동작에 따라 틀어진다 | `k6/run.js`에 선택 기능 capture를 추가했다(2절). legacy 응답의 최상위 필드를 세션 변수로 저장하고 다음 요청의 path와 body의 `${변수}`를 치환한다. 3단계 재생에서 38건 모두 치환됨 |
 | 팀원 DB 상태 export가 정수 금액과 한 줄 값을 전제 | 3 | `dbstate-export.sh`는 sum을 `int()`로 계산하고 `mysql -B` 출력을 줄 단위로 읽는다. Prince Mart 금액은 decimal, `orders.shipping_address_snapshot`은 줄바꿈을 포함한다. business key가 없어 행 정렬과 테이블 연결도 auto increment id로 해야 한다 | 그대로 넣으면 sum에서 실패하거나 행이 깨진다 | 스크립트는 고치지 않고 Prince Mart 테이블 정의(`tools/dbstate-tables.txt`)에서 금액은 `CAST(x*100 AS SIGNED)`, 스냅샷은 `MD5(...)`로 바꾸고 id를 행에 남겼다(VU=1에서만 유효) |
+| 팀원 contract의 절대 불변식 하나를 Legacy가 이미 어김 | 4 | `publish_after_commit_begin`은 legacy와 비교하지 않고 New만 보는 절대 검사다(팀원 D16, 커밋 전 발행 금지). Prince Mart payment verify는 Legacy부터 커밋 전에 발행한다(PUBLISH -> COMMIT_BEGIN, LEGACY_CHANGES.md) | 팀원 contract 그대로면 A/A(New = Legacy 코드)에서도 verify 5건이 3회 모두 CV다(80 pair 중 75 SAME, 5 CV). 게이트가 성립하지 않는다 | Prince Mart contract에서 끔(`tools/rules/contract.yaml`). 한계: 엔진에 발행과 커밋의 순서를 legacy와 비교하는 차등 검사가 없어, 순서가 바뀌는 변경은 다른 축에 드러나지 않는다. 결함 카탈로그(PF1~PF10)에는 이 순서를 바꾸는 결함이 없다 |
 | readiness 확인이 "헤더 없는 GET"을 전제 | 3 | 팀원 run.sh는 readiness 경로를 헤더 없이 부른다. Prince Mart의 주문 조회는 `X-User-Id`가 없으면 500이다 | 팀원처럼 "없는 키 조회 404"를 쓸 수 없다 | DB를 읽는 헤더 없는 GET(`/orders/all`, `/coupons/all`)을 쓰고 기대 코드도 env로 받는다. payment는 DB를 읽는 GET이 없어 `/payments/welcome`으로 기동만 확인한다 |
 | 게이트웨이 VS 하나에 Store 경로와 팀원 앱 경로가 함께 있음 | 2 | 팀원 `virtualservice-shadow.yaml`이 `/_evidence/`와 `/api/orders`, `/api/coupons`를 한 리소스에 담았다 | Store 경로 때문에 팀원 VS를 그대로 적용하면, 팀원 앱 스택이 없어 `istioctl analyze`가 IST0101(Error) 4건을 낸다. 동작에는 영향 없음 | 팀원 VS는 수정 없이 적용하고 Prince Mart VS를 따로 붙였다(prefix가 겹치지 않음). 이유는 `k8s/README.md`에 기록 |
 
@@ -80,6 +81,16 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | `tools/run-pm.sh` | pm.env를 읽고 팀원 `k6/run.sh`를 부른다. VU 1만 허용 |
 | `tools/dbstate-tables.txt` | Prince Mart 테이블 7개의 DB 상태 정의(1절 dbstate 항목) |
 
+### 2.4 Prince Mart 판정 규칙 (4단계)
+
+팀원 엔진은 고치지 않고 `--rules tracks/prince-mart/tools/rules`로 규칙 디렉터리만 바꾼다.
+
+| 파일 | 내용 | 팀원 `engine/rules`와 다른 점 |
+|---|---|---|
+| `tools/rules/contract.yaml` | 엔드포인트 11개(진입과 서비스 간 내부 호출, 소비 토픽 `payment-events`), observed host는 논리 이름 3개, 토픽 `payment-events` | 끈 검사 3개: `gateway_calls_per_idem_key_le_1`(Idempotency-Key와 `/gateway/charge` 전제), `coupon_transition_order`(팀원 쿠폰 흐름 전제), `publish_after_commit_begin`(1절, Legacy가 어김). 나머지 검사와 파라미터는 같다 |
+| `tools/rules/improvement.yaml` | 사전 승인 규칙 없음(5단계에서 run 전에 넣는다) | 팀원 F6 규칙은 가져오지 않음 |
+| `tools/rules/learned/` | 비어 있음 | 팀원 learned 규칙은 가져오지 않음(팀원 앱 엔드포인트 전용) |
+
 ## 3. 수정 없이 그대로 쓴 팀원 구성요소
 
 2절에서 env화한 파일(`k6/run.sh`, `run.js`, `spill-recover.sh`, `dbstate-export.sh`, `engine/verify_sameness.py`)은 기본 동작이 같지만 수정한 파일이라 여기서 뺀다.
@@ -97,3 +108,13 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | `k6/barrier.py` | barrier(관측 host와 토픽은 인자) |
 | `evidence-store/` API(`/evidence`, `/exists`, `/count`, `/export`) | k6 완료 폴링, barrier, export |
 | OTel Java agent 이미지(digest 고정), `curlimages/curl:8.11.1`, `busybox:1.37`, WireMock 3.13.1 digest, `apache/kafka:4.2.1`, `mysql:8.4` | 매니페스트 |
+
+## 4. 확인된 성립 사항
+
+| 확인 | 단계 | 근거 |
+|---|---|---|
+| 환경을 Compose에서 k8s로 옮겨도 Legacy 최종 상태가 같다 | 4 | branch-park Compose A/A `aa-004-1`(corpus v1.1, VU 1)과 k8s `p3-replay-1`의 legacy DB 7테이블이 행 수와 모든 컬럼 값까지 같다(orders 16, order_items 32, order_status_history 26, coupons 14, coupon_usage 1, payments 15, refunds 0). coupon_usage 1건은 R000028(S011, 취소된 주문에 `/coupons/use` 직접 호출, B2)에서 생긴다. 주문 경로의 쿠폰 사용은 커밋 전 역조회 404(B1)라 기록이 없다 |
+| payment 감사 로그의 `dataAfter` 키 순서가 Jackson 2 선언 순서 그대로다 | 4 | `PAYMENT_COMPLETED_SUCCESS`의 키가 Payment 엔티티 필드 선언 순서(paymentId, orderId, paymentMethod, transactionId, amount, currency, status, createdAt, refunds)와 같다. payment 감사 로그 21건이 Compose와 k8s에서 action, dataBefore, dataAfter 문자열까지 같다 |
+| A/A 게이트: 팀원 엔진 판정이 3회 모두 전부 SAME | 4 | `p4-aa-1..3`, 각 80 pair SAME 80, dbstate_equal OK, Undelivered 0, degraded 0, barrier 80/80. verify_sameness 3회 PASS |
+| run 사이 결정성 | 4 | `p4-aa-1` legacy의 판정 축(기능, 실행 특성)이 `p4-aa-2`, `p4-aa-3`, `p3-replay-1`의 legacy와 new 모든 pair에서 같다. dbstate도 3회 같다. branch-park에서 겪은 Kafka rebalance, 컨슈머 그룹 잔류 문제는 나타나지 않았다(리셋마다 브로커가 새로 뜨고 run.sh가 그룹 할당을 기다린다) |
+| 엔진의 id 마스킹 범위(`id` 키만)로 충분하다(VU 1 기준) | 4 | 응답과 payload의 `orderId`, `paymentId` 등은 마스킹되지 않지만 S0 리셋 + VU 1 순차 재생에서 legacy와 new 값이 같아 차이가 없었다. Prince Mart 규칙 파일에 정규화를 둘 필요가 없었다 |
