@@ -24,16 +24,34 @@ cd "$ROOT"
 PY="${PYTHON:-$ROOT/.venv/bin/python}"
 BASE_URL="${BASE_URL:-http://localhost}"
 EVIDENCE_URL="${EVIDENCE_URL:-http://localhost/_evidence}"
-CORPUS=corpus/corpus-v2.1.json
+CORPUS="${CORPUS:-corpus/corpus-v2.1.json}"
 # 관측 서비스 호스트 — externalCalls.childHopPath를 barrier 폐포에 넣는 대상(WireMock 등 외부는 Evidence를 남기지 않음)
 OBSERVED_HOSTS="${OBSERVED_HOSTS:-order,coupon}"
 # 관측 토픽 — events.published.childHopPath를 폐포에 넣는 대상(소비자가 있는 토픽만. order.paid.dlq는 소비자 없음)
 OBSERVED_TOPICS="${OBSERVED_TOPICS:-order.paid}"
-KAFKA_TOPICS="order.paid order.paid.dlq"
+KAFKA_TOPICS="${KAFKA_TOPICS:-order.paid order.paid.dlq}"
 KAFKA_BIN=/opt/kafka/bin
 READINESS_PATH=/api/orders/by-key/ok-readiness-check   # corpus에 없는 키 — 404면 order가 DB를 조회할 수 있는 상태
 COUPON_READINESS_PATH=/api/coupons/by-key/ck-readiness-check
 READY_TIMEOUT_S=180
+
+# ---------------------------------------------------------------- 일반화(Prince Mart): 앱 고정값을 env로. 기본값은 팀원 앱 그대로
+# 스택 이름(legacy/new, Store의 stack과 파일 이름)과 네임스페이스를 분리한다. 기본은 같다.
+NS_LEGACY="${NS_LEGACY:-legacy}"
+NS_NEW="${NS_NEW:-new}"
+export NS_LEGACY NS_NEW   # spill-recover.sh, dbstate-export.sh가 같은 값을 쓴다
+TOOL_POD_LEGACY="${TOOL_POD_LEGACY:-mesh-check}"
+TOOL_POD_NEW="${TOOL_POD_NEW:-isolation-injected}"
+# readiness: "서비스:포트:경로:기대코드"를 공백으로. legacy는 게이트웨이(BASE_URL)로, new는 TOOL_POD_NEW에서 서비스 주소로 확인한다
+READINESS_CHECKS="${READINESS_CHECKS:-order:8080:$READINESS_PATH:404 coupon:8080:$COUPON_READINESS_PATH:404}"
+CERT_APPS="${CERT_APPS:-order coupon kafka}"            # preflight 인증서 확인 대상(app 라벨)
+RESET_DEPLOYMENTS="${RESET_DEPLOYMENTS:-mysql coupon-mysql kafka}"   # S0 리셋(rollout restart) 대상
+CONSUMER_GROUP="${CONSUMER_GROUP:-coupon-settlement}"   # 리셋 뒤 파티션 할당을 기다릴 컨슈머 그룹
+CONSUMER_TOPIC="${CONSUMER_TOPIC:-order.paid}"
+CORPUS_VALIDATOR="${CORPUS_VALIDATOR:-corpus/validate.py}"
+META_APPS="${META_APPS:-order coupon}"                  # run-meta images에 남길 앱(Deployment와 컨테이너 이름)
+CLOCK_DEPLOY="${CLOCK_DEPLOY:-order}"                   # run-meta appFixedClock을 읽을 Deployment
+ns_of() { if [[ "$1" == legacy ]]; then echo "$NS_LEGACY"; else echo "$NS_NEW"; fi; }
 
 BASE=""; ITERATIONS=""; VUS=""; IMPACT=""; SCOPE_MODE=""; SESSIONS=""; MIRROR_SESSIONS=""
 while [[ $# -gt 0 ]]; do
@@ -84,7 +102,9 @@ preflight() {
 
   command -v istioctl >/dev/null || fail "preflight: istioctl 없음 — 인증서를 확인할 수 없다(fail-closed)"
   local target ns sel pod table verdict
-  for target in "istio-system istio=ingressgateway" "legacy app=order" "new app=order" "legacy app=coupon" "new app=coupon" "legacy app=kafka" "new app=kafka"; do
+  local cert_targets=("istio-system istio=ingressgateway") app
+  for app in $CERT_APPS; do cert_targets+=("$NS_LEGACY app=$app" "$NS_NEW app=$app"); done
+  for target in "${cert_targets[@]}"; do
     ns="${target%% *}"; sel="${target#* }"
     pod=$(pick_pod "$ns" "$sel")
     [[ -n "$pod" ]] || fail "preflight: $ns/$sel Running pod 없음"
@@ -113,8 +133,8 @@ print(f"VALID CERT={valid} NOT AFTER={not_after} (남은 {int((exp - now).total_
   [[ "$code" == 200 ]] || fail "preflight: Store 준비 안 됨 — $EVIDENCE_URL/count → HTTP $code"
   log "  store: /_evidence/count 200"
 
-  "$PY" corpus/validate.py "$CORPUS" >/dev/null || fail "preflight: corpus/validate.py 실패"
-  log "  corpus: validate.py PASS"
+  "$PY" "$CORPUS_VALIDATOR" "$CORPUS" >/dev/null || fail "preflight: $CORPUS_VALIDATOR 실패"
+  log "  corpus: $(basename "$CORPUS_VALIDATOR") PASS"
 
   # Phase 3.5: Store에 같은 runId의 Evidence가 남아 있으면 시작하지 않는다(자동 삭제 없음).
   # 남아 있으면 k6 완료 폴링(exists)이 이전 Evidence를 보고 New 완료 전에 다음 요청을 보낸다 — p35-v1.1-stale-1에서 실측
@@ -137,15 +157,13 @@ wait_until() {  # timeout_s description command...
     sleep 1
   done
 }
-legacy_order_ready() { [[ "$(http_code "$BASE_URL$READINESS_PATH")" == 404 ]]; }
-new_order_ready() {
-  [[ "$(kubectl exec -n new isolation-injected -c curl -- curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
-        "http://order.new.svc.cluster.local:8080$READINESS_PATH" 2>/dev/null)" == 404 ]]
+# READINESS_CHECKS 항목 하나("서비스:포트:경로:기대코드")
+legacy_ready() {  # svc port path code
+  [[ "$(http_code "$BASE_URL$3")" == "$4" ]]
 }
-legacy_coupon_ready() { [[ "$(http_code "$BASE_URL$COUPON_READINESS_PATH")" == 404 ]]; }
-new_coupon_ready() {
-  [[ "$(kubectl exec -n new isolation-injected -c curl -- curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
-        "http://coupon.new.svc.cluster.local:8080$COUPON_READINESS_PATH" 2>/dev/null)" == 404 ]]
+new_ready() {  # svc port path code
+  [[ "$(kubectl exec -n "$NS_NEW" "$TOOL_POD_NEW" -c curl -- curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
+        "http://$1.$NS_NEW.svc.cluster.local:$2$3" 2>/dev/null)" == "$4" ]]
 }
 kafka_exec() {  # ns command...
   local ns="$1" pod; shift
@@ -155,15 +173,16 @@ kafka_exec() {  # ns command...
 }
 kafka_ready() { kafka_exec "$1" "$KAFKA_BIN/kafka-topics.sh" --bootstrap-server localhost:9092 --list >/dev/null 2>&1; }
 # Coupon 컨슈머 그룹이 order.paid partition을 할당받았는지(CONSUMER-ID가 "-"가 아님)
+# 일반화: 그룹과 토픽은 CONSUMER_GROUP, CONSUMER_TOPIC(기본 coupon-settlement, order.paid)
 coupon_assigned() {
   kafka_exec "$1" "$KAFKA_BIN/kafka-consumer-groups.sh" --bootstrap-server localhost:9092 \
-      --describe --group coupon-settlement 2>/dev/null \
-    | awk '$1=="coupon-settlement" && $2=="order.paid" && $7!="-" && $7!="" {found=1} END {exit !found}'
+      --describe --group "$CONSUMER_GROUP" 2>/dev/null \
+    | awk -v g="$CONSUMER_GROUP" -v t="$CONSUMER_TOPIC" '$1==g && $2==t && $7!="-" && $7!="" {found=1} END {exit !found}'
 }
-legacy_kafka_ready() { kafka_ready legacy; }
-new_kafka_ready() { kafka_ready new; }
-legacy_coupon_assigned() { coupon_assigned legacy; }
-new_coupon_assigned() { coupon_assigned new; }
+legacy_kafka_ready() { kafka_ready "$NS_LEGACY"; }
+new_kafka_ready() { kafka_ready "$NS_NEW"; }
+legacy_coupon_assigned() { coupon_assigned "$NS_LEGACY"; }
+new_coupon_assigned() { coupon_assigned "$NS_NEW"; }
 wiremock_reset() {  # ns tooling-pod
   local code
   code=$(kubectl exec -n "$1" "$2" -c curl -- curl -s -o /dev/null -w '%{http_code}' --max-time 5 \
@@ -172,34 +191,43 @@ wiremock_reset() {  # ns tooling-pod
 }
 
 reset_s0() {
-  log "reset: MySQL·Coupon MySQL·Kafka rollout restart (S0)"
-  local db ns topic
-  for db in mysql coupon-mysql kafka; do
-    for ns in legacy new; do kubectl rollout restart "deployment/$db" -n "$ns" >/dev/null; done
+  if [[ "$RESET_DEPLOYMENTS" == "mysql coupon-mysql kafka" ]]; then
+    log "reset: MySQL·Coupon MySQL·Kafka rollout restart (S0)"
+  else
+    log "reset: $RESET_DEPLOYMENTS rollout restart (S0)"
+  fi
+  local db ns topic check svc port path code
+  for db in $RESET_DEPLOYMENTS; do
+    for ns in "$NS_LEGACY" "$NS_NEW"; do kubectl rollout restart "deployment/$db" -n "$ns" >/dev/null; done
   done
-  for db in mysql coupon-mysql kafka; do
-    for ns in legacy new; do kubectl rollout status "deployment/$db" -n "$ns" --timeout="${READY_TIMEOUT_S}s" >/dev/null; done
+  for db in $RESET_DEPLOYMENTS; do
+    for ns in "$NS_LEGACY" "$NS_NEW"; do kubectl rollout status "deployment/$db" -n "$ns" --timeout="${READY_TIMEOUT_S}s" >/dev/null; done
   done
   # Kafka: 브로커 준비 → 토픽 생성(auto.create 꺼짐, 앱의 KafkaAdmin에 기대지 않는다) → Coupon 컨슈머 할당 확인
   wait_until "$READY_TIMEOUT_S" "reset: legacy kafka 브로커" legacy_kafka_ready
   wait_until "$READY_TIMEOUT_S" "reset: new kafka 브로커" new_kafka_ready
-  for ns in legacy new; do
+  for ns in "$NS_LEGACY" "$NS_NEW"; do
     for topic in $KAFKA_TOPICS; do
       kafka_exec "$ns" "$KAFKA_BIN/kafka-topics.sh" --bootstrap-server localhost:9092 --create --if-not-exists \
         --topic "$topic" --partitions 1 --replication-factor 1 >/dev/null || fail "reset: $ns 토픽 $topic 생성 실패"
     done
   done
   log "  kafka legacy/new: 토픽 $KAFKA_TOPICS (partition 1)"
-  wait_until "$READY_TIMEOUT_S" "reset: legacy order readiness" legacy_order_ready
-  wait_until "$READY_TIMEOUT_S" "reset: new order readiness" new_order_ready
-  wait_until "$READY_TIMEOUT_S" "reset: legacy coupon readiness" legacy_coupon_ready
-  wait_until "$READY_TIMEOUT_S" "reset: new coupon readiness" new_coupon_ready
-  log "  order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)"
-  wait_until "$READY_TIMEOUT_S" "reset: legacy coupon 컨슈머 할당" legacy_coupon_assigned
-  wait_until "$READY_TIMEOUT_S" "reset: new coupon 컨슈머 할당" new_coupon_assigned
-  log "  kafka legacy/new: coupon-settlement 그룹이 order.paid partition 할당받음"
-  wiremock_reset legacy mesh-check
-  wiremock_reset new isolation-injected
+  for check in $READINESS_CHECKS; do
+    IFS=: read -r svc port path code <<<"$check"
+    wait_until "$READY_TIMEOUT_S" "reset: legacy $svc readiness" legacy_ready "$svc" "$port" "$path" "$code"
+    wait_until "$READY_TIMEOUT_S" "reset: new $svc readiness" new_ready "$svc" "$port" "$path" "$code"
+  done
+  if [[ "$READINESS_CHECKS" == "order:8080:$READINESS_PATH:404 coupon:8080:$COUPON_READINESS_PATH:404" ]]; then
+    log "  order·coupon legacy/new: 없는 키 조회 404 (새 DB 질의 가능)"
+  else
+    log "  legacy/new readiness: $READINESS_CHECKS"
+  fi
+  wait_until "$READY_TIMEOUT_S" "reset: legacy $CONSUMER_GROUP 컨슈머 할당" legacy_coupon_assigned
+  wait_until "$READY_TIMEOUT_S" "reset: new $CONSUMER_GROUP 컨슈머 할당" new_coupon_assigned
+  log "  kafka legacy/new: $CONSUMER_GROUP 그룹이 $CONSUMER_TOPIC partition 할당받음"
+  wiremock_reset "$NS_LEGACY" "$TOOL_POD_LEGACY"
+  wiremock_reset "$NS_NEW" "$TOOL_POD_NEW"
   log "  wiremock legacy/new: DELETE /__admin/requests 200"
 }
 
@@ -241,33 +269,34 @@ for c in json.load(sys.stdin)["containers"]:
 export_wiremock() {  # dir
   local stack pod
   for stack in legacy new; do
-    pod=$([[ "$stack" == legacy ]] && echo mesh-check || echo isolation-injected)
-    kubectl exec -n "$stack" "$pod" -c curl -- curl -sf --max-time 10 \
-      "http://wiremock.$stack.svc.cluster.local:8080/__admin/requests" > "$1/wiremock-$stack.json" \
+    pod=$([[ "$stack" == legacy ]] && echo "$TOOL_POD_LEGACY" || echo "$TOOL_POD_NEW")
+    kubectl exec -n "$(ns_of "$stack")" "$pod" -c curl -- curl -sf --max-time 10 \
+      "http://wiremock.$(ns_of "$stack").svc.cluster.local:8080/__admin/requests" > "$1/wiremock-$stack.json" \
       || fail "export: WireMock $stack journal 실패"
   done
   log "export: wiremock journal legacy $("$PY" -c "import json;print(len(json.load(open('$1/wiremock-legacy.json'))['requests']))")건, new $("$PY" -c "import json;print(len(json.load(open('$1/wiremock-new.json'))['requests']))")건"
 }
 
 write_meta() {  # runId dir started finished resetSeconds
-  local fixed_legacy fixed_new
-  fixed_legacy=$(kubectl get deploy order -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].env[?(@.name=="APP_FIXED_CLOCK")].value}')
-  fixed_new=$(kubectl get deploy order -n new -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].env[?(@.name=="APP_FIXED_CLOCK")].value}')
+  local fixed_legacy fixed_new app_images="" app
+  fixed_legacy=$(kubectl get deploy "$CLOCK_DEPLOY" -n "$NS_LEGACY" -o jsonpath="{.spec.template.spec.containers[?(@.name==\"$CLOCK_DEPLOY\")].env[?(@.name==\"APP_FIXED_CLOCK\")].value}")
+  fixed_new=$(kubectl get deploy "$CLOCK_DEPLOY" -n "$NS_NEW" -o jsonpath="{.spec.template.spec.containers[?(@.name==\"$CLOCK_DEPLOY\")].env[?(@.name==\"APP_FIXED_CLOCK\")].value}")
+  # 일반화: META_APPS(기본 order coupon)의 이미지. 줄마다 "앱|legacy tag|new tag|legacy ref|new ref"
+  for app in $META_APPS; do
+    app_images+="$app|$(kubectl get deploy "$app" -n "$NS_LEGACY" -o jsonpath="{.spec.template.spec.containers[?(@.name==\"$app\")].image}")"
+    app_images+="|$(kubectl get deploy "$app" -n "$NS_NEW" -o jsonpath="{.spec.template.spec.containers[?(@.name==\"$app\")].image}")"
+    app_images+="|$(container_image "$NS_LEGACY" "$app")|$(container_image "$NS_NEW" "$app")"$'\n'
+  done
   RUN_ID="$1" DIR="$2" STARTED="$3" FINISHED="$4" VUS="$VUS" CORPUS="$CORPUS" SCOPE_MODE="$SCOPE_MODE" IMPACT="$IMPACT" \
   FIXED_LEGACY="$fixed_legacy" FIXED_NEW="$fixed_new" \
-  ORDER_LEGACY_TAG="$(kubectl get deploy order -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].image}')" \
-  ORDER_NEW_TAG="$(kubectl get deploy order -n new -o jsonpath='{.spec.template.spec.containers[?(@.name=="order")].image}')" \
-  ORDER_LEGACY_REF="$(container_image legacy order)" ORDER_NEW_REF="$(container_image new order)" \
+  APP_IMAGES="$app_images" \
   STORE_TAG="$(kubectl get deploy evidence-store -n verify -o jsonpath='{.spec.template.spec.containers[0].image}')" \
   STORE_REF="$(container_image verify evidence-store)" \
-  COUPON_LEGACY_TAG="$(kubectl get deploy coupon -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="coupon")].image}')" \
-  COUPON_NEW_TAG="$(kubectl get deploy coupon -n new -o jsonpath='{.spec.template.spec.containers[?(@.name=="coupon")].image}')" \
-  COUPON_LEGACY_REF="$(container_image legacy coupon)" COUPON_NEW_REF="$(container_image new coupon)" \
-  KAFKA_TAG="$(kubectl get deploy kafka -n legacy -o jsonpath='{.spec.template.spec.containers[?(@.name=="kafka")].image}')" \
-  KAFKA_LEGACY_REF="$(container_image legacy kafka)" KAFKA_NEW_REF="$(container_image new kafka)" \
+  KAFKA_TAG="$(kubectl get deploy kafka -n "$NS_LEGACY" -o jsonpath='{.spec.template.spec.containers[?(@.name=="kafka")].image}')" \
+  KAFKA_LEGACY_REF="$(container_image "$NS_LEGACY" kafka)" KAFKA_NEW_REF="$(container_image "$NS_NEW" kafka)" \
   RESET_SECONDS="$5" \
-  WM_TAG="$(kubectl get deploy wiremock -n legacy -o jsonpath='{.spec.template.spec.containers[0].image}')" \
-  WM_LEGACY_REF="$(container_image legacy wiremock)" WM_NEW_REF="$(container_image new wiremock)" \
+  WM_TAG="$(kubectl get deploy wiremock -n "$NS_LEGACY" -o jsonpath='{.spec.template.spec.containers[0].image}')" \
+  WM_LEGACY_REF="$(container_image "$NS_LEGACY" wiremock)" WM_NEW_REF="$(container_image "$NS_NEW" wiremock)" \
   GIT_REV="$(git rev-parse HEAD)" GIT_DIRTY="$([[ -n "$(git status --porcelain)" ]] && echo true || echo false)" \
   K6_VERSION="$(k6 version 2>/dev/null | head -1)" \
   ISTIO_VERSION="$(istioctl version --short 2>/dev/null | tr '\n' ' ' | sed 's/ *$//')" \
@@ -280,10 +309,8 @@ meta = {
     "corpus": {"version": corpus["version"], "path": e["CORPUS"],
                "sha256": hashlib.sha256(open(e["CORPUS"], "rb").read()).hexdigest()},
     "images": {
-        "order": {"legacy": {"image": e["ORDER_LEGACY_TAG"], "imageRef": e["ORDER_LEGACY_REF"]},
-                  "new": {"image": e["ORDER_NEW_TAG"], "imageRef": e["ORDER_NEW_REF"]}},
-        "coupon": {"legacy": {"image": e["COUPON_LEGACY_TAG"], "imageRef": e["COUPON_LEGACY_REF"]},
-                   "new": {"image": e["COUPON_NEW_TAG"], "imageRef": e["COUPON_NEW_REF"]}},
+        **{app: {"legacy": {"image": lt, "imageRef": lr}, "new": {"image": nt, "imageRef": nr}}
+           for app, lt, nt, lr, nr in (line.split("|") for line in e["APP_IMAGES"].splitlines() if line)},
         "kafka": {"image": e["KAFKA_TAG"], "imageRef": {"legacy": e["KAFKA_LEGACY_REF"], "new": e["KAFKA_NEW_REF"]}},
         "evidenceStore": {"image": e["STORE_TAG"], "imageRef": e["STORE_REF"]},
         "wiremock": {"image": e["WM_TAG"], "imageRef": {"legacy": e["WM_LEGACY_REF"], "new": e["WM_NEW_REF"]}},
@@ -320,7 +347,8 @@ for ((i = 1; i <= ITERATIONS; i++)); do
   reset_seconds=$((SECONDS - reset_start))
   log "  reset 소요 ${reset_seconds}s"
   log "k6: RUN_ID=$run_id VUS=$VUS SESSIONS=${SESSIONS:-전체} k6 run k6/run.js"
-  RUN_ID="$run_id" VUS="$VUS" SESSIONS="$SESSIONS" MIRROR_SESSIONS="$MIRROR_SESSIONS" CORPUS="$(basename "$CORPUS")" BASE_URL="$BASE_URL" EVIDENCE_URL="$EVIDENCE_URL" \
+  # CORPUS_DIR을 CORPUS보다 먼저 둔다 — bash는 앞의 접두 할당을 뒤 할당의 확장에서 본다(CORPUS가 basename으로 바뀐 뒤면 dirname이 ".")
+  RUN_ID="$run_id" VUS="$VUS" SESSIONS="$SESSIONS" MIRROR_SESSIONS="$MIRROR_SESSIONS" CORPUS_DIR="../$(dirname "$CORPUS")" CORPUS="$(basename "$CORPUS")" BASE_URL="$BASE_URL" EVIDENCE_URL="$EVIDENCE_URL" \
     k6 run --quiet k6/run.js | sed 's/^/  /'
   [[ -f "$dir/k6-summary.json" ]] || fail "k6-summary.json 없음: $dir"
   if [[ "$SCOPE_MODE" == filter ]]; then
