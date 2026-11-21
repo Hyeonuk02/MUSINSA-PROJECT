@@ -1,0 +1,45 @@
+# 검증용 curl pod(팀원 deploy/k8s/tools/curl-mesh-check.yaml, curl-isolation-new.yaml과 같은 구성, 네임스페이스만 pm-*).
+# 애플리케이션 스택이 아니므로 overlay에 넣지 않고 직접 적용한다: kubectl apply -f tracks/prince-mart/k8s/tools/curl-pm.yaml
+#   mesh-check            pm-legacy, sidecar 있음. WireMock journal 조회와 리셋, 내부 호출 확인
+#   isolation-injected    pm-new, sidecar 있음 -> 외부 호출은 REGISTRY_ONLY가 거부(BlackHoleCluster)
+#   isolation-uninjected  pm-new, sidecar 없음 -> 외부 호출은 NetworkPolicy가 거부(TCP 타임아웃)
+apiVersion: v1
+kind: Pod
+metadata:
+  name: mesh-check
+  namespace: pm-legacy
+  labels:
+    app: mesh-check
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: isolation-injected
+  namespace: pm-new
+  labels:
+    app: isolation-injected
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      command: ["sleep", "infinity"]
+---
+apiVersion: v1
+kind: Pod
+metadata:
+  name: isolation-uninjected
+  namespace: pm-new
+  labels:
+    app: isolation-uninjected
+  annotations:
+    sidecar.istio.io/inject: "false"
+spec:
+  containers:
+    - name: curl
+      image: curlimages/curl:8.11.1
+      command: ["sleep", "infinity"]

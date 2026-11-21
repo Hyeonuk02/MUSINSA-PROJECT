@@ -1,0 +1,65 @@
+# Prince Mart 게이트웨이 표면 + Shadow 미러링. 팀원 deploy/k8s/istio/virtualservice-shadow.yaml과 같은 형태.
+#
+# 팀원 VS(order-shadow: /_evidence/, /api/orders, /api/coupons)는 수정 없이 그대로 적용하고, 이 VS를 같은 Gateway에 따로 붙인다.
+# 두 VS는 hosts "*"가 같아 Istio가 라우트를 합친다. VS 사이의 평가 순서는 보장되지 않지만 prefix가 서로 겹치지 않으므로
+# (/_evidence/, /api/... 와 /orders, /coupons, /payments) 순서가 의미를 바꾸지 않는다.
+#
+# 표면은 세 개뿐이다. 서비스 간 내부 호출(order -> coupon, payment, coupon -> order)은 같은 ns 직접 호출이라 미러되지 않는다.
+# 클라이언트가 직접 부르는 /payments/verify는 게이트웨이를 거치므로 미러된다.
+# 미러는 fire-and-forget이다. new 응답은 버려지고 클라이언트는 legacy 응답만 받는다. Host 접미사 없음(팀원 decision-log D8).
+apiVersion: networking.istio.io/v1
+kind: VirtualService
+metadata:
+  name: prince-mart-shadow
+  namespace: istio-system
+spec:
+  hosts:
+    - "*"
+  gateways:
+    - order-gateway
+  http:
+    - name: pm-orders-shadow
+      match:
+        - uri:
+            prefix: /orders
+      route:
+        - destination:
+            host: order.pm-legacy.svc.cluster.local
+            port:
+              number: 8085
+      mirror:
+        host: order.pm-new.svc.cluster.local
+        port:
+          number: 8085
+      mirrorPercentage:
+        value: 100.0
+    - name: pm-coupons-shadow
+      match:
+        - uri:
+            prefix: /coupons
+      route:
+        - destination:
+            host: coupon.pm-legacy.svc.cluster.local
+            port:
+              number: 8091
+      mirror:
+        host: coupon.pm-new.svc.cluster.local
+        port:
+          number: 8091
+      mirrorPercentage:
+        value: 100.0
+    - name: pm-payments-shadow
+      match:
+        - uri:
+            prefix: /payments
+      route:
+        - destination:
+            host: payment.pm-legacy.svc.cluster.local
+            port:
+              number: 8086
+      mirror:
+        host: payment.pm-new.svc.cluster.local
+        port:
+          number: 8086
+      mirrorPercentage:
+        value: 100.0

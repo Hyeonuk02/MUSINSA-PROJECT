@@ -1,0 +1,18 @@
+# Prince Mart 스택 네임스페이스. 팀원 legacy/new와 같은 클러스터에 따로 둔다(팀원 앱 스택은 올리지 않는다).
+#   pm-legacy  Prince Mart Legacy (order, coupon, payment + MySQL 3, Kafka, WireMock)
+#   pm-new     교체 대상. new/networkpolicy.yaml로 egress 격리
+# verify, observability, istio-system은 팀원 것(deploy/k8s/00-namespaces.yaml, istioctl install)을 그대로 쓴다.
+# 팀원은 sidecar 주입 라벨을 kubectl label로 붙였다. 여기서는 매니페스트에 둔다(검증 대상 pod sidecar 필수, 팀원 CLAUDE.md).
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pm-legacy
+  labels:
+    istio-injection: enabled
+---
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: pm-new
+  labels:
+    istio-injection: enabled

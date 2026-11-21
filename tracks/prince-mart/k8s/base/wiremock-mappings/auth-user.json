@@ -1,0 +1,16 @@
+{
+  "request": {
+    "method": "GET",
+    "urlPathPattern": "/auth/id/[0-9]+"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "body": "{\"userId\":{{request.pathSegments.[2]}},\"fullName\":\"User {{request.pathSegments.[2]}}\",\"email\":\"user{{request.pathSegments.[2]}}@example.com\"}"
+  }
+}

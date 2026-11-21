@@ -1,0 +1,21 @@
+# Prince Mart new 스택(pm-new). 팀원 deploy/k8s/new와 같은 형태: base + 스택 식별자 patch.
+# 팀원은 new 격리(networkpolicy, Sidecar)를 별도 kubectl apply로 적용했다. 여기서는 빠뜨리지 않게 overlay에 넣는다.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pm-new
+
+resources:
+  - ../base
+  - networkpolicy.yaml
+  - sidecar.yaml
+
+patches:
+  - path: order-stack.yaml
+  - path: coupon-stack.yaml
+  - path: payment-stack.yaml
+
+# 결함 변형(5단계)은 여기서 바꿀 서비스의 이미지 태그만 바꾼다. A/A는 base 그대로.
+# images:
+#   - name: prince-mart/order-service
+#     newTag: PF3

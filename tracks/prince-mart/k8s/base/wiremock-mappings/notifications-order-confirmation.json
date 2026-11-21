@@ -1,0 +1,9 @@
+{
+  "request": {
+    "method": "POST",
+    "url": "/notifications/order-confirmation"
+  },
+  "response": {
+    "status": 200
+  }
+}

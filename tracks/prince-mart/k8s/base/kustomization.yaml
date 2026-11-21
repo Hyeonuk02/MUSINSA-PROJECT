@@ -1,0 +1,46 @@
+# Prince Mart 스택 공통 base. 팀원 deploy/k8s/base와 같은 원칙:
+# base에는 네임스페이스를 두지 않는다. legacy / new overlay가 namespace만 다르게 지정해 같은 매니페스트를 두 번 배포한다.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+resources:
+  # 서비스와 전용 DB(서비스마다 MySQL 하나, 소유 서비스만 접근)
+  - order.yaml
+  - order-mysql.yaml
+  - order-networkpolicy.yaml
+  - coupon.yaml
+  - coupon-mysql.yaml
+  - coupon-networkpolicy.yaml
+  - payment.yaml
+  - payment-mysql.yaml
+  - payment-networkpolicy.yaml
+  # 스택별 1브로커(토픽 payment-events)
+  - kafka.yaml
+  # 스택 밖 의존성 + 가짜 PG
+  - wiremock.yaml
+
+configMapGenerator:
+  # 스키마와 시드는 branch-park deploy/compose/mysql-initdb 그대로(S0의 DB 부분)
+  - name: order-mysql-initdb
+    files:
+      - order-mysql-initdb/01-schema.sql
+  - name: coupon-mysql-initdb
+    files:
+      - coupon-mysql-initdb/01-schema.sql
+      - coupon-mysql-initdb/02-seed.sql
+  - name: payment-mysql-initdb
+    files:
+      - payment-mysql-initdb/01-schema.sql
+  - name: wiremock-mappings
+    files:
+      - wiremock-mappings/audit-log.json
+      - wiremock-mappings/auth-address.json
+      - wiremock-mappings/auth-user.json
+      - wiremock-mappings/cart-clear.json
+      - wiremock-mappings/cart-my-cart.json
+      - wiremock-mappings/inventory-add-stock-bulk.json
+      - wiremock-mappings/inventory-reduce-stock.json
+      - wiremock-mappings/notifications-order-confirmation.json
+      - wiremock-mappings/pg-orders-create-decline.json
+      - wiremock-mappings/pg-orders-create.json
+      - wiremock-mappings/shipments-initiate.json
