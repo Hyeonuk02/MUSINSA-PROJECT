@@ -13,6 +13,8 @@ import com.pm.order.repository.OrderStatusHistoryRepository;
 
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.math.BigDecimal;
 import java.util.List;
@@ -129,13 +131,19 @@ public class OrderService {
 
         saveHistory(savedOrder, "PENDING", "SYSTEM");
 
-        // Record Coupon Usage
+        // Record Coupon Usage (PF10: B1 수정 - 주문이 커밋된 뒤에 기록해서 Coupon의 역조회가 주문을 찾게 한다)
         if (discountAmount.compareTo(BigDecimal.ZERO) > 0) {
-            try {
-                couponClient.useCoupon(userId, savedOrder.getOrderId(), appliedCoupon);
-            } catch (Exception e) {
-                System.err.println("Failed to record coupon usage: " + e.getMessage());
-            }
+            final Long couponOrderId = savedOrder.getOrderId();
+            TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+                @Override
+                public void afterCommit() {
+                    try {
+                        couponClient.useCoupon(userId, couponOrderId, appliedCoupon);
+                    } catch (Exception e) {
+                        System.err.println("Failed to record coupon usage: " + e.getMessage());
+                    }
+                }
+            });
         }
 
         // Inventory Management
