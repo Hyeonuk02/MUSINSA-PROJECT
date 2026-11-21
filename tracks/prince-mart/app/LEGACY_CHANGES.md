@@ -112,10 +112,35 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
   `EVIDENCE_HEADERS`, `EVIDENCE_APP_PACKAGES=com.pm`. `EVIDENCE_STORE_URL`이 없으면 계측이 꺼진다.
 - Kafka: producer 인터셉터와 consumer `RecordInterceptor`는 collector가 Boot 자동 구성으로 붙인다.
   order의 consumer는 Boot 기본 리스너 컨테이너 팩토리를 쓰므로 따로 설정할 것이 없다.
-- **알려진 공백**: collector의 하위 호출 전파·`externalCalls` 기록은 `RestClient` 인터셉터뿐이다. Prince Mart의 서비스 간·외부 호출은 전부
-  OpenFeign이라 지금은 이 홉이 Evidence에 남지 않는다. Prince Mart 코드를 RestClient로 바꾸지 않고 collector에 Feign 지원을 더한다(팀원 합의).
+- **Feign 호출 (해소)**: 처음에는 collector의 하위 호출 전파와 `externalCalls` 기록이 `RestClient` 인터셉터뿐이었다. Prince Mart의 서비스 간 호출과
+  외부 호출은 전부 OpenFeign이라 이 홉이 Evidence에 남지 않았다. Prince Mart 코드를 RestClient로 바꾸지 않고, 팀원 합의대로 collector에
+  Feign 지원을 더했다(`poc.evidence.FeignEvidenceCapability`, `FeignEvidenceAutoConfiguration`). OpenFeign이 클래스패스에 있을 때만 켜지고,
+  RestClient 경로와 같은 필드와 같은 규칙으로 기록한다. 서비스 코드 변경은 없다.
+- **가짜 PG 호출**: 아래 "가짜 PG 호출: `RestClient.Builder` 주입" 참조. 이 변경 전에는 `RestClient.create()`로 만든 클라이언트라 collector가 붙지 못했다.
+- **관측(일반화 검증 발견)**: `externalCalls[].host`의 값은 클라이언트 종류에 따라 출처가 다르다.
+  - RestClient 경로(가짜 PG): 실제 URI의 host(예: `PAYMENT_GATEWAY_URL`의 host)
+  - Feign 경로(서비스 간 호출, WireMock 대상 호출): 로드밸런서가 주소를 풀기 전의 논리 서비스 이름(예: `COUPON-SERVICE`, `AUDIT-SERVICE`).
+    Spring Cloud OpenFeign이 Capability로 감싸는 대상이 로드밸런서 클라이언트이기 때문이다(collector 통합 테스트로 확인)
+  - legacy와 new는 같은 경로를 쓰므로 비교 결과에는 영향이 없다. 다만 팀원 도구에서 host로 대상을 고르는 설정(`OBSERVED_HOSTS`,
+    `verify_sameness --observed-hosts`, contract의 `observed.hosts`, `gateway_calls_per_idem_key_le_1.host`, 규칙의 host 매처)은
+    Prince Mart에 맞는 값을 넣어야 한다. 서비스 간 호출은 논리 이름, 가짜 PG는 실제 host다.
+    여러 Feign 대상이 같은 WireMock 주소를 가리켜도 host가 서로 구분되는 장점도 있다.
 - 실측으로 드러난 Legacy 성질(고치지 않음, `branch-park`의 자체 계측에서 확인): payment verify는 **커밋 전에 이벤트를 발행**한다
   (PUBLISH → COMMIT_BEGIN → UPDATE). order 주문 생성은 `coupons/use`를 커밋 전에 호출한다(B1의 원인).
+
+### 가짜 PG 호출: `RestClient.Builder` 주입
+
+- 파일: `payment-service/.../gateway/FakePgPaymentGateway.java`, `payment-service/pom.xml`
+- 변경
+  - 생성자: `RestClient.create(baseUrl)` -> Boot가 관리하는 `RestClient.Builder`를 주입받아 `builder.baseUrl(baseUrl).build()`
+  - `pom.xml`: `spring-boot-starter-restclient` 추가(Boot 4는 `RestClient.Builder` 자동 구성이 별도 모듈이다)
+- 이유: 정적 팩토리로 만든 RestClient에는 collector가 `RestClientCustomizer`로 인터셉터를 붙일 수 없다. 그러면 결제 생성의
+  `POST /v1/orders`가 `externalCalls`에 남지 않고 재생 헤더도 전파되지 않는다. 이 호출은 결함 탐지 근거로 쓰이는 유일한 실제 외부 호출이다.
+- 전례: 팀원도 루트 `services/order`의 `PaymentGatewayClient`를 Phase 3.1에서 같은 이유로 바꿨다(정적 `RestClient.builder()` ->
+  Boot `RestClient.Builder` 주입, `spring-boot-starter-restclient` 추가. `docs/reports/phase3.1.md` 6절).
+- 동작: 요청 경로, 본문, 오류 처리는 그대로다. 요청 팩토리도 같다. payment 클래스패스에 Apache HttpClient 5가 있어서
+  `RestClient.create()`와 Boot Builder 모두 `HttpComponentsClientHttpRequestFactory`를 고른다.
+  달라지는 것은 collector가 붙인 재생 헤더 4개(`X-Replay-*`)가 가짜 PG 요청에 더해진다는 점뿐이다.
 
 ---
 

@@ -17,6 +17,10 @@ import java.nio.charset.StandardCharsets;
  * WireMock journal에 남는다. 가짜 PG는 결정적 id(order_{orderId})를 돌려주고, fixture 규칙에 걸리면
  * Razorpay와 같은 모양의 오류 본문({"error":{"description":...}})으로 4xx를 돌려준다.
  * SDK처럼 오류 설명을 메시지로 가진 예외를 던진다.
+ *
+ * <p>[LEGACY_CHANGES] 정적 {@code RestClient.create()} 대신 Boot가 관리하는 {@link RestClient.Builder}를 주입받는다.
+ * 그래야 검증 레이어(poc.evidence)가 RestClientCustomizer로 재생 헤더 전파와 externalCalls 기록을 붙일 수 있다.
+ * 루트 services/order PaymentGatewayClient의 Phase 3.1 변경과 같은 방식이다.
  */
 @Component
 @ConditionalOnProperty(name = "payment-gateway.type", havingValue = "fake")
@@ -24,8 +28,8 @@ public class FakePgPaymentGateway implements PaymentGateway {
 
     private final RestClient restClient;
 
-    public FakePgPaymentGateway(@Value("${payment-gateway.fake-url}") String baseUrl) {
-        this.restClient = RestClient.create(baseUrl);
+    public FakePgPaymentGateway(RestClient.Builder builder, @Value("${payment-gateway.fake-url}") String baseUrl) {
+        this.restClient = builder.baseUrl(baseUrl).build();
     }
 
     @Override
