@@ -11,6 +11,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | 4 | A/A 게이트(팀원 엔진, 3회) | 완료 (2026-11-21) |
 | 5 | 결함 New 버전(PF1~PF10)과 기대 판정 사전 등록 | 완료 (2026-11-21, `f4750e8`) |
 | 6 | 판정과 대조 | 완료 (2026-11-21), 결과 [RESULT.md](RESULT.md) |
+| 리뷰 반영 | collector 0.1.0, 팀원 스택 A/A 회귀 | 완료 (2026-11-22), 5절 |
 
 ## 1. 일반화 발견
 
@@ -178,4 +179,4 @@ collector에 Feign 지원을 더하고 버전을 0.1.0으로 올린 뒤, 팀원 
 - 3단계에서 env화한 `k6/run.sh`, `run.js`, `spill-recover.sh`, `dbstate-export.sh`를 팀원 기본값으로 실제 클러스터에서 돌린 첫 run이기도 하다(3단계에서는 stub 비교만 했다). barrier, export, dbstate, wiremock journal, run-meta 모두 기본 경로로 동작했다.
 - Feign이 없는 팀원 서비스에는 `FeignEvidenceAutoConfiguration`이 붙지 않으므로, Feign 지원 추가가 기존 RestClient 경로의 Evidence를 바꾸지 않았다는 실측 근거다.
 - 복구 확인: pm-legacy 9 pod, pm-new 10 pod Running(앱과 DB 2/2, sidecar 없는 진단 pod만 1/1), 토픽 `payment-events` 재생성과 `order-service` 그룹 할당, readiness 6/6(200), 미러링 스모크 4건 Evidence legacy 10, new 10(2단계와 같음). 이미지는 `:base` 그대로.
-
+- Prince Mart 결과(4~6단계)는 collector 0.0.1 빌드(`:base`)로 실행했다. 그 결과를 낸 커밋 `cf771e6`과 `08f349d` 사이에 collector는 `pom.xml`의 버전 한 줄만 다르다(`git diff cf771e6 08f349d -- services/evidence-collector`). 0.1.0으로도 세 서비스 빌드가 통과한다(`prince-mart/*-service:c010`).
