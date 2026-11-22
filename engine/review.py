@@ -13,6 +13,7 @@
 
 사용: .venv/bin/python engine/review.py list  --run runs/<runId> --split learn [--rules engine/rules]
       .venv/bin/python engine/review.py label --run runs/<runId> --uid <uid> --as improvement --reason "..." [--match-file m.yaml]
+      [--contract <file>]   (일반화: 계약 파일. 기본 <rules>/contract.yaml)
 """
 import argparse
 import datetime
@@ -84,7 +85,7 @@ def cmd_list(args) -> int:
     if args.split != "learn":
         print("list는 --split learn만 허용한다(eval 세션 diff는 사람에게 보이지 않는다)", file=sys.stderr)
         return 2
-    entries = collect(judge_run(args.run, args.rules, "C"))
+    entries = collect(judge_run(args.run, args.rules, "C", args.contract))
     shown = {uid: e for uid, e in sorted(entries.items()) if e["occurrences"].get("learn")}
     print(f"== {args.run.name}  learn Uncertain 유형 {len(shown)}")
     for uid, e in shown.items():
@@ -99,7 +100,7 @@ def cmd_list(args) -> int:
 
 
 def cmd_label(args) -> int:
-    entries = collect(judge_run(args.run, args.rules, "C"))
+    entries = collect(judge_run(args.run, args.rules, "C", args.contract))
     e = entries.get(args.uid)
     if e is None:
         print(f"uid {args.uid}: 이 run의 Uncertain 항목에 없음", file=sys.stderr)
@@ -143,6 +144,8 @@ def main(argv: list[str]) -> int:
         p = sub.add_parser(name)
         p.add_argument("--run", required=True, type=Path)
         p.add_argument("--rules", default=ROOT / "engine" / "rules", type=Path)
+        # 일반화(Prince Mart): 계약 파일을 따로 줄 수 있게(verdict.py --contract와 같음). 기본은 <rules>/contract.yaml
+        p.add_argument("--contract", type=Path, default=None)
     sub.choices["list"].add_argument("--split", required=True)
     lab = sub.choices["label"]
     lab.add_argument("--uid", required=True)

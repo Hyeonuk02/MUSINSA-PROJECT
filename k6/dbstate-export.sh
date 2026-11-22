@@ -28,6 +28,22 @@ TABLES=(
   "app=mysql|orders|order_items|SELECT o.order_key, i.line_no, i.sku, i.qty, i.price FROM order_items i JOIN orders o ON o.id = i.order_id ORDER BY o.order_key, i.line_no|qty,price"
   "app=coupon-mysql|coupons|coupons|SELECT coupon_key, discount_amount, status, used_by_order_key FROM coupons ORDER BY coupon_key|discount_amount"
 )
+# 일반화(Prince Mart): 앱 고정값을 env로. 기본값은 위 배열과 팀원 값 그대로
+#   DBSTATE_TABLES_FILE  위 TABLES와 같은 형식의 줄을 담은 파일(# 주석, 빈 줄 무시). 있으면 TABLES를 대신한다
+#   DB_USER / DB_PASSWORD  기본 poc
+#   NS_LEGACY / NS_NEW     스택(legacy/new)의 네임스페이스. 기본은 스택 이름과 같다(run.sh가 export)
+if [[ -n "${DBSTATE_TABLES_FILE:-}" ]]; then
+  [[ -f "$DBSTATE_TABLES_FILE" ]] || { echo "DBSTATE_TABLES_FILE 없음: $DBSTATE_TABLES_FILE" >&2; exit 2; }
+  TABLES=()
+  while IFS= read -r line; do
+    [[ -z "$line" || "$line" == \#* ]] && continue
+    TABLES+=("$line")
+  done < "$DBSTATE_TABLES_FILE"
+fi
+DB_USER="${DB_USER:-poc}"
+DB_PASSWORD="${DB_PASSWORD:-poc}"
+NS_LEGACY="${NS_LEGACY:-legacy}"
+NS_NEW="${NS_NEW:-new}"
 
 pick_db_pod() {  # ns selector
   kubectl get pods -n "$1" -l "$2" --no-headers \
@@ -39,10 +55,11 @@ for stack in legacy new; do
   tmp=$(mktemp -d)
   for spec in "${TABLES[@]}"; do
     IFS='|' read -r selector db name query _sums <<< "$spec"
-    pod=$(pick_db_pod "$stack" "$selector")
+    if [[ "$stack" == legacy ]]; then ns="$NS_LEGACY"; else ns="$NS_NEW"; fi
+    pod=$(pick_db_pod "$ns" "$selector")
     [[ -n "$pod" ]] || { echo "[$stack] Running pod 없음: $selector" >&2; exit 1; }
-    kubectl exec -n "$stack" "$pod" -c "${selector#app=}" -- \
-      mysql -upoc -ppoc "$db" -N -B --raw -e "$query" 2>/dev/null > "$tmp/$name.tsv"
+    kubectl exec -n "$ns" "$pod" -c "${selector#app=}" -- \
+      mysql -u"$DB_USER" -p"$DB_PASSWORD" "$db" -N -B --raw -e "$query" 2>/dev/null > "$tmp/$name.tsv"
   done
   TABLES_SPEC="$(printf '%s\n' "${TABLES[@]}")" TMP="$tmp" OUT="$DIR/dbstate-$stack.json" "$PY" - <<'EOF'
 import hashlib, json, os

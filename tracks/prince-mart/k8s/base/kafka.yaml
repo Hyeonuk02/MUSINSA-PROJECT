@@ -1,0 +1,119 @@
+# Kafka 브로커 (스택별 1노드, KRaft combined broker+controller). 팀원 deploy/k8s/base/kafka.yaml과 같은 구성.
+#
+# 데이터(로그, 오프셋, 컨슈머 그룹)는 emptyDir에만 있다. `kubectl rollout restart deployment/kafka`가 곧 S0 리셋이다.
+# auto.create.topics.enable=false. 토픽 payment-events(partition 1)는 리셋 절차가 브로커 준비 뒤 kubectl exec로 만든다(팀원 방식).
+#   kubectl exec -n <ns> deploy/kafka -c kafka -- /opt/kafka/bin/kafka-topics.sh --bootstrap-server localhost:9092 \
+#     --create --if-not-exists --topic payment-events --partitions 1 --replication-factor 1
+# 다른 점: CLUSTER_ID 값만 다르다(Prince Mart 전용 22자 id. 스택마다 같은 값이지만 서로 다른 브로커).
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: kafka
+  labels:
+    app: kafka
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: kafka
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: kafka
+    spec:
+      containers:
+        - name: kafka
+          image: apache/kafka:4.2.1
+          imagePullPolicy: IfNotPresent
+          ports:
+            - name: tcp-kafka
+              containerPort: 9092
+          env:
+            - name: CLUSTER_ID
+              value: pmart-kafka-cluster-01
+            - name: KAFKA_NODE_ID
+              value: "1"
+            - name: KAFKA_PROCESS_ROLES
+              value: broker,controller
+            - name: KAFKA_LISTENERS
+              value: PLAINTEXT://:9092,CONTROLLER://localhost:9093
+            - name: KAFKA_ADVERTISED_LISTENERS
+              value: PLAINTEXT://kafka:9092
+            - name: KAFKA_CONTROLLER_LISTENER_NAMES
+              value: CONTROLLER
+            - name: KAFKA_LISTENER_SECURITY_PROTOCOL_MAP
+              value: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+            - name: KAFKA_CONTROLLER_QUORUM_VOTERS
+              value: 1@localhost:9093
+            - name: KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_OFFSETS_TOPIC_NUM_PARTITIONS
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR
+              value: "1"
+            - name: KAFKA_TRANSACTION_STATE_LOG_MIN_ISR
+              value: "1"
+            - name: KAFKA_GROUP_INITIAL_REBALANCE_DELAY_MS
+              value: "0"
+            - name: KAFKA_AUTO_CREATE_TOPICS_ENABLE
+              value: "false"
+            - name: KAFKA_LOG_DIRS
+              value: /var/lib/kafka/data
+            - name: KAFKA_HEAP_OPTS
+              value: -Xmx256m -Xms128m
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/kafka/data
+          readinessProbe:
+            tcpSocket:
+              port: 9092
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 40
+      volumes:
+        - name: data
+          emptyDir: {}
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: kafka
+spec:
+  selector:
+    app: kafka
+  ports:
+    - name: tcp-kafka
+      port: 9092
+      targetPort: 9092
+---
+# Kafka 격리(팀원 kafka-networkpolicy.yaml과 같은 형태). 9092에는 같은 네임스페이스의 payment(발행)와 order(소비)만 들어온다.
+# 토픽 생성과 그룹 확인은 브로커 pod 안에서(kubectl exec) 한다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: kafka-ingress-order-payment
+spec:
+  podSelector:
+    matchLabels:
+      app: kafka
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchExpressions:
+              - key: app
+                operator: In
+                values: [order, payment]
+      ports:
+        - port: 9092
+          protocol: TCP

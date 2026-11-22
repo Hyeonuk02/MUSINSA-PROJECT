@@ -1,0 +1,52 @@
+# pm-new 네임스페이스의 실제 격리 경계. 팀원 deploy/k8s/new/networkpolicy.yaml과 같은 내용이고 네임스페이스만 pm-new다.
+#
+# Istio REGISTRY_ONLY는 sidecar를 통과하는 트래픽만 본다. 경계는 NetworkPolicy다.
+# podSelector: {} 이므로 pm-new의 모든 pod에 적용된다. Egress만 지정하므로 Ingress(probe, 미러 수신)는 막지 않는다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: default-deny-egress
+spec:
+  podSelector: {}
+  policyTypes:
+    - Egress
+  egress:
+    # DNS. 이름은 풀리되 연결이 안 되는 상태로 둔다(막혔다는 증거가 분명하도록).
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: kube-system
+          podSelector:
+            matchLabels:
+              k8s-app: kube-dns
+      ports:
+        - protocol: UDP
+          port: 53
+        - protocol: TCP
+          port: 53
+    # 같은 네임스페이스(앱 3개, MySQL 3개, Kafka, WireMock)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: pm-new
+    # istiod xDS(제어면)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - protocol: TCP
+          port: 15012
+    # OTel Collector(관측면)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: observability
+      ports:
+        - protocol: TCP
+          port: 4317
+    # 검증 컴포넌트(Evidence Store)
+    - to:
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: verify

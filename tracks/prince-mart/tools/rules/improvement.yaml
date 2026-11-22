@@ -1,0 +1,3 @@
+# Prince Mart 사전 승인 Improvement 규칙. 형식은 팀원 engine/rules/improvement.yaml과 같다.
+# 결함과 정상 변경(PF6 등)의 사전 승인 규칙은 5단계에서 판정 run 전에 넣는다 — 그래야 "사전 승인"이다.
+rules: []

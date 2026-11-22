@@ -1,0 +1,54 @@
+# PF6-payment: 정상 변경: payment의 Jackson 2 ObjectMapper(com.fasterxml)를 Boot가 관리하는 Jackson 3 JsonMapper로 전환
+# 저장소 루트에서 git apply로 적용한다(fault/PF6 브랜치, tracks/prince-mart/tools/faults/README.md)
+--- a/tracks/prince-mart/app/payment-service/src/main/java/com/pm/payment/service/PaymentService.java
++++ b/tracks/prince-mart/app/payment-service/src/main/java/com/pm/payment/service/PaymentService.java
+@@ -1,6 +1,6 @@
+ package com.pm.payment.service;
+ 
+-import com.fasterxml.jackson.databind.ObjectMapper;
++import tools.jackson.databind.json.JsonMapper;
+ import com.pm.payment.client.AuditClient; // New Client
+ import com.pm.payment.dto.*;
+ import com.pm.payment.entity.Payment;
+@@ -19,7 +19,7 @@
+ 
+     private final PaymentRepository paymentRepository;
+     private final AuditClient auditClient; // New
+-    private final ObjectMapper objectMapper; // New
++    private final JsonMapper objectMapper; // PF6: Jackson 2 ObjectMapper -> Jackson 3 JsonMapper
+     // [LEGACY_CHANGES] Razorpay SDK 직접 호출 대신 PaymentGateway (키 설정은 RazorpayPaymentGateway로 이동)
+     private final PaymentGateway paymentGateway;
+     // [LEGACY_CHANGES] OrderClient/NotificationClient 대신 이벤트 발행
+@@ -27,7 +27,7 @@
+ 
+     public PaymentService(PaymentRepository paymentRepository, 
+                           AuditClient auditClient,
+-                          ObjectMapper objectMapper,
++                          JsonMapper objectMapper,
+                           PaymentGateway paymentGateway,
+                           PaymentEventPublisher paymentEventPublisher) {
+         this.paymentRepository = paymentRepository;
+--- a/tracks/prince-mart/app/payment-service/src/main/java/com/pm/payment/event/PaymentEventPublisher.java
++++ b/tracks/prince-mart/app/payment-service/src/main/java/com/pm/payment/event/PaymentEventPublisher.java
+@@ -1,6 +1,6 @@
+ package com.pm.payment.event;
+ 
+-import com.fasterxml.jackson.databind.ObjectMapper;
++import tools.jackson.databind.json.JsonMapper;
+ import com.pm.payment.entity.Payment;
+ import org.springframework.beans.factory.annotation.Value;
+ import org.springframework.kafka.core.KafkaTemplate;
+@@ -29,11 +29,11 @@
+ public class PaymentEventPublisher {
+ 
+     private final KafkaTemplate<String, String> kafkaTemplate;
+-    private final ObjectMapper objectMapper;
++    private final JsonMapper objectMapper;   // PF6: Jackson 2 ObjectMapper -> Jackson 3 JsonMapper
+     private final String topic;
+ 
+     public PaymentEventPublisher(KafkaTemplate<String, String> kafkaTemplate,
+-                                 ObjectMapper objectMapper,
++                                 JsonMapper objectMapper,
+                                  @Value("${app.kafka.payment-events-topic}") String topic) {
+         this.kafkaTemplate = kafkaTemplate;
+         this.objectMapper = objectMapper;

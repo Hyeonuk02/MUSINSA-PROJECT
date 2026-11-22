@@ -18,6 +18,7 @@
 // env
 //   RUN_ID        필수. 없으면 즉시 종료
 //   CORPUS        기본 corpus-v2.json (corpus/ 아래 파일명)
+//   CORPUS_DIR    일반화(Prince Mart): corpus 디렉터리(이 스크립트 기준 상대 경로). 기본 ../corpus
 //   VUS           기본 1. VU i(0부터)는 재생 세션 목록의 [j] (j % VUS == i)를 순서대로 맡는다
 //   SESSIONS      Phase 4.4 Filter: 재생할 세션 id(쉼표). 없으면 corpus 전체. 세션 단위로만 고른다(요청 단위 선택 금지, D23)
 //   MIRROR_SESSIONS Phase 4.8 선택 미러: New로 미러할 세션 id(쉼표). 이 세션 요청에 X-Impact-Scope: 1을 붙이고(VS match), 나머지 세션은
@@ -49,7 +50,9 @@ const CORPUS = __ENV.CORPUS || 'corpus-v2.1.json';
 if (!/^corpus-v[0-9]+(\.[0-9]+)?\.json$/.test(CORPUS)) {
   throw new Error('CORPUS는 corpus/ 아래 corpus-v<N>[.<M>].json');
 }
-const corpus = JSON.parse(open(`../corpus/${CORPUS}`));
+// 일반화(Prince Mart): corpus 디렉터리를 env로. 기본값은 지금 위치(../corpus)
+const CORPUS_DIR = (__ENV.CORPUS_DIR || '../corpus').replace(/\/+$/, '');
+const corpus = JSON.parse(open(`${CORPUS_DIR}/${CORPUS}`));
 
 const SESSIONS = (__ENV.SESSIONS || '').split(',').filter((s) => s.length > 0);
 const replaySessions = SESSIONS.length > 0 ? corpus.sessions.filter((s) => SESSIONS.includes(s.id)) : corpus.sessions;
@@ -111,10 +114,78 @@ function waitFor(requestId, stack, hopPath, started) {
   }
 }
 
+// 기능 추가(일반화, Prince Mart): 응답 값 치환(capture). business key가 없는 시스템은 서버가 만든 id(auto increment)를
+// 다음 요청이 참조해야 한다. 요청에 capture {변수: 응답 JSON 최상위 필드}가 있으면 클라이언트가 받은(legacy) 응답에서 값을 세션 변수로
+// 저장하고, 이후 요청의 path와 body 문자열의 ${변수}를 치환한다. 변수는 세션 안에서만 산다(세션 독립).
+// corpus에 capture와 ${...}가 없으면(팀원 corpus) 아무것도 하지 않는다 — 요청 바이트가 지금과 같다.
+// 치환할 변수가 없으면(앞 요청의 응답에 그 필드가 없음) 그 세션은 degraded로 끝낸다(상태가 어긋났으므로 남은 요청은 건너뜀).
+const PLACEHOLDER = /\$\{([A-Za-z_][A-Za-z0-9_]*)\}/g;
+
+class MissingVariable extends Error {}
+
+function substitute(value, vars) {
+  if (typeof value === 'string') {
+    return value.replace(PLACEHOLDER, (_, name) => {
+      if (!(name in vars)) {
+        throw new MissingVariable(name);
+      }
+      return String(vars[name]);
+    });
+  }
+  if (Array.isArray(value)) {
+    return value.map((v) => substitute(v, vars));
+  }
+  if (value !== null && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      out[k] = substitute(v, vars);
+    }
+    return out;
+  }
+  return value;
+}
+
+function capture(req, res, vars) {
+  let parsed = null;
+  try {
+    parsed = JSON.parse(res.body);
+  } catch (e) {
+    parsed = null;
+  }
+  for (const [name, field] of Object.entries(req.capture)) {
+    if (parsed !== null && typeof parsed === 'object' && parsed[field] !== undefined && parsed[field] !== null) {
+      vars[name] = parsed[field];
+    }
+  }
+}
+
+function skipRest(session, i, reason) {
+  console.warn(`DEGRADED session=${session.id} request=${session.requests[i].id}: ${reason}`);
+  m[`degraded_${session.id}`].add(1);
+  for (const skipped of session.requests.slice(i + 1)) {
+    m[`skipped_${skipped.id}`].add(1);
+  }
+}
+
 function runSession(session) {
   const legacyOnly = MIRROR_SESSIONS.length > 0 && !MIRROR_SESSIONS.includes(session.id);
+  const vars = {};
   for (let i = 0; i < session.requests.length; i++) {
     const req = session.requests[i];
+    let path = req.path;
+    let reqBody = req.body;
+    try {
+      path = substitute(req.path, vars);
+      reqBody = substitute(req.body, vars);
+    } catch (e) {
+      if (!(e instanceof MissingVariable)) {
+        throw e;
+      }
+      // 이 요청은 보내지 않는다 — 앞 요청의 capture가 비었다
+      m[`skipped_${req.id}`].add(1);
+      skipRest(session, i, `capture 변수 \${${e.message}}가 없음 — 보내지 않고 세션을 끝낸다`);
+      return;
+    }
     const headers = Object.assign({
       'X-Replay-Request-Id': req.id,
       'X-Run-Id': RUN_ID,
@@ -125,16 +196,20 @@ function runSession(session) {
       headers['X-Impact-Scope'] = '1';
     }
     let body = null;
-    if (req.body !== undefined) {
+    if (reqBody !== undefined) {
       headers['Content-Type'] = 'application/json';
-      body = JSON.stringify(req.body);
+      body = JSON.stringify(reqBody);
     }
-    const res = http.request(req.method, `${BASE_URL}${req.path}`, body, {
+    // 태그는 corpus의 경로(치환 전) — 치환 값으로 metric 이름이 늘지 않게
+    const res = http.request(req.method, `${BASE_URL}${path}`, body, {
       headers,
       tags: { name: `${req.method} ${req.path}` },
     });
     m[`sent_${req.id}`].add(1);
     m[`status_${req.id}`].add(res.status);
+    if (req.capture) {
+      capture(req, res, vars);
+    }
 
     const waited = legacyOnly ? waitFor(req.id, 'legacy', '0', Date.now()) : waitForNew(req.id);
     if (waited === null) {

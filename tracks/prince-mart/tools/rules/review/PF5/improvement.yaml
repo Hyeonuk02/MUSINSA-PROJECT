@@ -1,0 +1,4 @@
+# PF5 판정용 규칙 디렉터리. 사전 승인 규칙은 없고(정상 리팩터링), learn 세션 라벨(engine/review.py label)만 learned/에 쌓인다.
+# PF5 판정에만 쓴다(--rules tracks/prince-mart/tools/rules/review/PF5 --contract tracks/prince-mart/tools/rules/contract.yaml).
+# learn 규칙을 기본 규칙 디렉터리에 두지 않는 이유는 approved/PF7과 같다(변경 단위 범위, GENERALIZATION.md 1절).
+rules: []

@@ -1,0 +1,13 @@
+# Prince Mart legacy 스택(pm-legacy). 팀원 deploy/k8s/legacy와 같은 형태: base + 스택 식별자 patch.
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+
+namespace: pm-legacy
+
+resources:
+  - ../base
+
+patches:
+  - path: order-stack.yaml
+  - path: coupon-stack.yaml
+  - path: payment-stack.yaml

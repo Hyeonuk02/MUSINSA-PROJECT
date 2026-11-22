@@ -1,0 +1,33 @@
+id: learned-f812ed30065e
+scope: request
+verdict: improvement
+reason: 'PF5 정상 리팩터링: 성공 취소의 주문과 품목 조회를 fetch join 한 번으로(SELECT 2 -> 1). 사전 등록 learnLabels(R000024,
+  R000027)'
+provenance:
+  author: ByeongeonPark
+  date: '2026-11-21'
+  runId: pf5-1
+  split: learn
+  sessions:
+  - S010
+  - S011
+  uid: f812ed30065e
+match:
+  endpoint: order.cancel
+  diffKind: callTree.sequenceReplaced
+  from:
+  - - com.pm.order.controller.OrderController.cancelOrder
+    - com.pm.order.service.OrderService.cancelOrder
+    - com.pm.order.repository.OrderRepository.findById
+    - com.pm.order.client.InventoryClient.addStock
+    - com.pm.order.repository.OrderRepository.save
+    - com.pm.order.repository.OrderStatusHistoryRepository.save
+    - com.pm.order.client.AuditClient.createLog
+  to:
+  - - com.pm.order.controller.OrderController.cancelOrder
+    - com.pm.order.service.OrderService.cancelOrder
+    - com.pm.order.repository.OrderRepository.findWithItemsByOrderId
+    - com.pm.order.client.InventoryClient.addStock
+    - com.pm.order.repository.OrderRepository.save
+    - com.pm.order.repository.OrderStatusHistoryRepository.save
+    - com.pm.order.client.AuditClient.createLog

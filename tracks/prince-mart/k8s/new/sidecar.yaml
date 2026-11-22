@@ -1,0 +1,13 @@
+# pm-new의 egress 허용 목록(guardrail). 팀원 deploy/k8s/istio/sidecar-new.yaml과 같은 내용이고 네임스페이스만 pm-new다.
+# 경계가 아니다(sidecar를 우회하면 그만). 경계는 networkpolicy.yaml이고, 이것은 미등록 의존성을 드러내는 용도다.
+apiVersion: networking.istio.io/v1
+kind: Sidecar
+metadata:
+  name: default
+spec:
+  egress:
+    - hosts:
+        - "./*"              # 같은 네임스페이스
+        - "istio-system/*"   # istiod xDS
+        - "observability/*"  # OTel Collector
+        - "verify/*"         # Evidence Store

@@ -1,0 +1,17 @@
+{
+  "priority": 5,
+  "request": {
+    "method": "POST",
+    "url": "/v1/orders"
+  },
+  "response": {
+    "status": 200,
+    "headers": {
+      "Content-Type": "application/json"
+    },
+    "transformers": [
+      "response-template"
+    ],
+    "body": "{\"id\":\"order_{{regexExtract (jsonPath request.body '$.receipt') '[0-9]+$'}}\",\"entity\":\"order\",\"amount\":{{jsonPath request.body '$.amount'}},\"currency\":\"{{jsonPath request.body '$.currency'}}\",\"receipt\":\"{{jsonPath request.body '$.receipt'}}\",\"status\":\"created\"}"
+  }
+}

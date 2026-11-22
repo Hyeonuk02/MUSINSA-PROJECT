@@ -1,0 +1,21 @@
+# 앱 API 스택 간 격리(팀원 coupon-networkpolicy.yaml과 같은 형태). legacy에는 egress 제한이 없으므로 이것이 경계다.
+# order(8085)에는 같은 네임스페이스의 pod(다른 서비스, tooling)와 istio-system(게이트웨이 route, mirror)만 들어온다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: order-ingress-same-stack
+spec:
+  podSelector:
+    matchLabels:
+      app: order
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector: {}
+        - namespaceSelector:
+            matchLabels:
+              kubernetes.io/metadata.name: istio-system
+      ports:
+        - port: 8085
+          protocol: TCP

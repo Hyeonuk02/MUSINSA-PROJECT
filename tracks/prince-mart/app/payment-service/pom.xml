@@ -34,6 +34,11 @@
 			<groupId>org.springframework.cloud</groupId>
 			<artifactId>spring-cloud-starter-openfeign</artifactId>
 		</dependency>
+		<!-- [LEGACY_CHANGES] 가짜 PG 호출이 Boot RestClient.Builder를 주입받는다(검증 레이어가 인터셉터를 붙이는 지점). Boot 4는 Builder 자동 구성이 별도 모듈이다 -->
+		<dependency>
+			<groupId>org.springframework.boot</groupId>
+			<artifactId>spring-boot-starter-restclient</artifactId>
+		</dependency>
 		<!-- [LEGACY_CHANGES] PaymentCompleted 이벤트 발행. Boot 4는 자동 구성이 starter로 분리되어 있다 -->
 		<dependency>
 			<groupId>org.springframework.boot</groupId>
@@ -50,7 +55,7 @@
 		<dependency>
 			<groupId>poc</groupId>
 			<artifactId>evidence-collector</artifactId>
-			<version>0.0.1</version>
+			<version>0.1.0</version>
 		</dependency>
 		<dependency>
 			<groupId>com.mysql</groupId>

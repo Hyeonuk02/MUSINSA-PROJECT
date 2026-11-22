@@ -197,13 +197,19 @@ def verify(run_dir: Path, validator: Validators, observed: set[str]) -> RunRepor
 
 
 def main(argv: list[str]) -> int:
+    global EVIDENCE_HEADERS, REQUEST_FIELDS
     parser = argparse.ArgumentParser(description="Legacy/New 요청 동일성·pairing 검증 (Phase 2.7)")
     parser.add_argument("--run", action="append", required=True, type=Path, help="runs/<runId> (여러 번 가능)")
     parser.add_argument("--observed-hosts", default="order,coupon",
                         help="관측 서비스 호스트(쉼표). 이 호스트로 나간 호출의 childHopPath만 내부 Evidence로 기대한다")
     parser.add_argument("--observed-topics", default="order.paid",
                         help="관측 토픽(쉼표, 소비자가 있는 토픽). 이 토픽 발행의 childHopPath만 내부 Evidence로 기대한다")
+    # 일반화(Prince Mart): 비교할 요청 헤더 목록을 인자로. 기본값은 위 EVIDENCE_HEADERS 그대로
+    parser.add_argument("--evidence-headers", default=",".join(EVIDENCE_HEADERS),
+                        help="request 동일성에서 비교할 헤더(쉼표, 소문자). 앱 매니페스트의 EVIDENCE_HEADERS와 같은 목록")
     args = parser.parse_args(argv)
+    EVIDENCE_HEADERS = tuple(h.strip().lower() for h in args.evidence_headers.split(",") if h.strip())
+    REQUEST_FIELDS = ("method", "path", "query") + tuple(f"headers.{h}" for h in EVIDENCE_HEADERS) + ("bodyHash",)
 
     try:
         validator = load_validator()

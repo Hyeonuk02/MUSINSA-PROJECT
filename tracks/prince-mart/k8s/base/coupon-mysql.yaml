@@ -1,0 +1,99 @@
+# coupon-service 전용 MySQL 8.4. 팀원 deploy/k8s/base/mysql.yaml과 같은 구성(emptyDir + Recreate, rollout restart = S0).
+# 다른 점: limits.memory 768Mi(팀원 512Mi). 실측 working set이 order DB 520MiB로 512Mi를 넘었다. performance_schema는 기본값(켜짐) 그대로.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: coupon-mysql
+  labels:
+    app: coupon-mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: coupon-mysql
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        app: coupon-mysql
+    spec:
+      containers:
+        - name: coupon-mysql
+          image: mysql:8.4
+          args: ["--innodb-buffer-pool-size=64M"]
+          resources:
+            requests:
+              cpu: 100m
+              memory: 256Mi
+            limits:
+              cpu: "1"
+              memory: 768Mi
+          ports:
+            - name: mysql
+              containerPort: 3306
+          env:
+            - name: MYSQL_ROOT_PASSWORD
+              value: root
+            - name: MYSQL_DATABASE
+              value: coupon_db
+            - name: MYSQL_USER
+              value: pm
+            - name: MYSQL_PASSWORD
+              value: pm
+          volumeMounts:
+            - name: data
+              mountPath: /var/lib/mysql
+            - name: initdb
+              mountPath: /docker-entrypoint-initdb.d
+              readOnly: true
+          readinessProbe:
+            exec:
+              # -h 127.0.0.1로 TCP를 강제한다. init SQL이 끝나기 전에는 실패한다(readiness = 스키마까지 준비됨).
+              command:
+                - sh
+                - -c
+                - mysqladmin ping -h 127.0.0.1 -u root -p"$MYSQL_ROOT_PASSWORD" --silent
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            timeoutSeconds: 3
+            failureThreshold: 40
+      volumes:
+        - name: data
+          emptyDir: {}
+        - name: initdb
+          configMap:
+            name: coupon-mysql-initdb
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: coupon-mysql
+spec:
+  selector:
+    app: coupon-mysql
+  ports:
+    - name: mysql
+      port: 3306
+      targetPort: 3306
+---
+# DB 격리(팀원 mysql-networkpolicy.yaml과 같은 형태): 같은 네임스페이스의 소유 서비스(app=coupon)만 3306으로 들어온다.
+# 서비스 축: 다른 서비스도 이 DB에 직접 붙을 수 없다. 스택 축: namespaceSelector가 없으므로 다른 스택에서 들어올 수 없다.
+apiVersion: networking.k8s.io/v1
+kind: NetworkPolicy
+metadata:
+  name: coupon-mysql-ingress-owner-only
+spec:
+  podSelector:
+    matchLabels:
+      app: coupon-mysql
+  policyTypes:
+    - Ingress
+  ingress:
+    - from:
+        - podSelector:
+            matchLabels:
+              app: coupon
+      ports:
+        - port: 3306
+          protocol: TCP

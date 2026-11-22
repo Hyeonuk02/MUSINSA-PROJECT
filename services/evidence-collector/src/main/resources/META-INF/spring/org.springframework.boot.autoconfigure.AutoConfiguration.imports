@@ -1,1 +1,2 @@
 poc.evidence.EvidenceAutoConfiguration
+poc.evidence.FeignEvidenceAutoConfiguration

@@ -1,0 +1,60 @@
+# WireMock: Prince Mart 스택 밖 의존성 전부(legacy/new 공통). 팀원 deploy/k8s/base/wiremock.yaml과 같은 구성(같은 digest).
+#
+# Feign 대상 6종(CART, IDENTITY, INVENTORY, AUDIT, SHIPPING, NOTIFICATION)과 가짜 PG(POST /v1/orders)를 이 하나가 받는다.
+# 매핑(wiremock-mappings/, branch-park deploy/compose/wiremock/mappings 11개 그대로)
+#   audit-log, auth-address, auth-user, cart-clear, cart-my-cart(X-User-Id 헤더 매칭), inventory-add-stock-bulk,
+#   inventory-reduce-stock, notifications-order-confirmation, shipments-initiate
+#   pg-orders-create          가짜 PG 성공. id = order_{receipt의 주문 번호} (결정적)
+#   pg-orders-create-decline  가짜 PG 거절 fixture: amount == 9999900 -> 400 Razorpay 오류 본문 (priority 1)
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: wiremock
+  labels:
+    app: wiremock
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: wiremock
+  template:
+    metadata:
+      labels:
+        app: wiremock
+    spec:
+      containers:
+        - name: wiremock
+          # wiremock/wiremock:3.13.1
+          image: wiremock/wiremock@sha256:d61e7720f89483fdef5366843b58d1dfd06bcce5828179c9f2f54de5c28354b0
+          imagePullPolicy: IfNotPresent
+          args: ["--disable-banner"]
+          ports:
+            - name: http-wiremock
+              containerPort: 8080
+          volumeMounts:
+            - name: mappings
+              mountPath: /home/wiremock/mappings
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /__admin/health
+              port: 8080
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 40
+      volumes:
+        - name: mappings
+          configMap:
+            name: wiremock-mappings
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: wiremock
+spec:
+  selector:
+    app: wiremock
+  ports:
+    - name: http-wiremock
+      port: 8080
+      targetPort: 8080

@@ -11,6 +11,7 @@ pair 단위로:
 사용: .venv/bin/python engine/fault_check.py --fault F1 --run-base p36-F1 [--base p36-base] [--verdict verdict.json]
       [--expect-key targets]   (F5 라벨 후: afterLearnLabels, F8 maxSelects: targetsMaxSelects)
       [--impact scoping/impacts/<변형>.json]   (Filter run: 재생하지 않은 pair를 "not replayed"로 분리, 대조는 재생 요청 안에서만)
+      [--expectations <file>]   (일반화, Prince Mart: 사전 등록 파일. 기본 docs/fault-expectations.json)
 종료 코드: 0 = 기대와 일치, 1 = 불일치
 """
 import argparse
@@ -42,8 +43,10 @@ def main(argv: list[str]) -> int:
     ap.add_argument("--verdict", default="verdict.json")
     ap.add_argument("--expect-key", default="targets")
     ap.add_argument("--impact", type=Path)
+    # 일반화(Prince Mart): 사전 등록 파일 경로. 기본값은 지금 위치
+    ap.add_argument("--expectations", type=Path, default=ROOT / "docs" / "fault-expectations.json")
     args = ap.parse_args(argv)
-    exp = json.loads((ROOT / "docs" / "fault-expectations.json").read_text(encoding="utf-8"))[args.fault]
+    exp = json.loads(args.expectations.read_text(encoding="utf-8"))[args.fault]
     all_targets = exp[args.expect_key]
     replayed = None
     if args.impact:

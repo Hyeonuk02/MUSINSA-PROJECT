@@ -1,0 +1,135 @@
+# Prince Mart order-service (tracks/prince-mart/app/order-service). 팀원 deploy/k8s/base/order.yaml과 같은 구성
+# (OTel agent initContainer, DB 대기, spill hostPath, graceful 30s, 자원 상한). 다른 점은 아래 주석에 적었다.
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: order
+  labels:
+    app: order
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: order
+  template:
+    metadata:
+      labels:
+        app: order
+    spec:
+      terminationGracePeriodSeconds: 30
+      initContainers:
+        # OTel Java agent를 공유 emptyDir로 복사한다(팀원과 같은 digest, 런타임 다운로드 금지).
+        - name: otel-agent
+          image: ghcr.io/open-telemetry/opentelemetry-operator/autoinstrumentation-java@sha256:342ad4c72909bb92b7cd6fa09d5fdd50f41879b5657329e729baeacb46d9a02e
+          imagePullPolicy: IfNotPresent
+          command: ["cp", "/javaagent.jar", "/otel/javaagent.jar"]
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /otel
+        # MySQL이 TCP를 열기 전(init SQL 실행 중)에는 앱을 띄우지 않는다.
+        - name: wait-for-order-mysql
+          image: busybox:1.37
+          command:
+            - sh
+            - -c
+            - until nc -z order-mysql 3306; do echo "waiting for order-mysql:3306"; sleep 2; done
+      containers:
+        - name: order
+          image: prince-mart/order-service:base
+          imagePullPolicy: IfNotPresent
+          ports:
+            # 포트는 upstream application.yml 기본값 그대로
+            - name: http
+              containerPort: 8085
+          env:
+            - name: SPRING_PROFILES_ACTIVE
+              value: local
+            - name: APP_FIXED_CLOCK
+              # legacy/new 같은 값(팀원과 같은 시각)
+              value: "2026-09-01T00:00:00Z"
+            - name: DB_USER
+              value: pm
+            - name: DB_PASSWORD
+              value: pm
+            # 이 서비스의 application-local.yml이 요구하는 주소만 넣는다. 상대 이름이라 overlay 네임스페이스로 풀린다.
+            - name: ORDER_DB_URL
+              value: jdbc:mysql://order-mysql:3306/order_db?serverTimezone=UTC
+            - name: COUPON_SERVICE_URI
+              value: http://coupon:8091
+            - name: PAYMENT_SERVICE_URI
+              value: http://payment:8086
+            - name: CART_SERVICE_URI
+              value: http://wiremock:8080
+            - name: IDENTITY_SERVICE_URI
+              value: http://wiremock:8080
+            - name: INVENTORY_SERVICE_URI
+              value: http://wiremock:8080
+            - name: AUDIT_SERVICE_URI
+              value: http://wiremock:8080
+            - name: SHIPPING_SERVICE_URI
+              value: http://wiremock:8080
+            - name: NOTIFICATION_SERVICE_URI
+              value: http://wiremock:8080
+            - name: KAFKA_BOOTSTRAP_SERVERS
+              value: kafka:9092
+            - name: EVIDENCE_HEADERS
+              # 팀원 목록에서 Idempotency-Key 대신 X-User-Id(Prince Mart 사용자 식별 헤더)
+              value: X-Replay-Request-Id,X-Run-Id,X-Session-Id,X-Replay-Hop-Path,X-User-Id,Content-Type
+            - name: EVIDENCE_APP_PACKAGES
+              value: com.pm
+            - name: JAVA_TOOL_OPTIONS
+              # heap은 이미지의 JAVA_OPTS(upstream 값 -Xmx384M -Xms256M SerialGC)를 그대로 쓴다. 여기서는 agent와 metaspace 상한만.
+              value: -javaagent:/otel/javaagent.jar -XX:MaxMetaspaceSize=256m
+            - name: OTEL_EXPORTER_OTLP_ENDPOINT
+              value: http://otel-collector.observability.svc.cluster.local:4317
+            - name: OTEL_EXPORTER_OTLP_PROTOCOL
+              value: grpc
+            - name: OTEL_TRACES_SAMPLER
+              value: always_on
+            - name: OTEL_METRICS_EXPORTER
+              value: none
+            - name: OTEL_LOGS_EXPORTER
+              value: none
+            - name: OTEL_PROPAGATORS
+              value: tracecontext,baggage,b3,b3multi
+            # OTEL_SERVICE_NAME, OTEL_RESOURCE_ATTRIBUTES, EVIDENCE_STORE_URL/STACK/SERVICE/VERSION은 overlay가 지정한다.
+          volumeMounts:
+            - name: otel-agent
+              mountPath: /otel
+              readOnly: true
+            - name: evidence-spill
+              mountPath: /var/evidence/spill
+          resources:
+            requests:
+              cpu: 100m
+              memory: 512Mi
+            limits:
+              cpu: "2"
+              memory: 1Gi
+          readinessProbe:
+            # actuator 의존성이 없다(upstream pom). Tomcat이 기동 마지막에 포트를 연다.
+            tcpSocket:
+              port: 8085
+            initialDelaySeconds: 5
+            periodSeconds: 3
+            failureThreshold: 60
+      volumes:
+        - name: otel-agent
+          emptyDir: {}
+        # 노드 경로는 overlay가 스택별로 덮어쓴다(팀원과 같은 경로 /var/evidence/spill/<stack>).
+        - name: evidence-spill
+          hostPath:
+            path: /var/evidence/spill/unset
+            type: DirectoryOrCreate
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: order
+spec:
+  selector:
+    app: order
+  ports:
+    - name: http
+      port: 8085
+      targetPort: 8085

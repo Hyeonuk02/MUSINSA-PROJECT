@@ -15,6 +15,10 @@ set -euo pipefail
 
 EVIDENCE_URL="${EVIDENCE_URL:-http://localhost/_evidence}"
 SPILL_ROOT=/var/evidence/spill
+# 일반화(Prince Mart): 스택 이름(legacy/new)과 네임스페이스를 분리한다. 기본은 같다(run.sh가 export).
+# order pod 하나로 충분하다 — spill hostPath가 스택 디렉터리 전체라 같은 노드의 다른 서비스 spill도 보인다.
+NS_LEGACY="${NS_LEGACY:-legacy}"
+NS_NEW="${NS_NEW:-new}"
 RUN_ID=""
 
 while [[ $# -gt 0 ]]; do
@@ -40,7 +44,7 @@ pick_pod() {
 }
 
 for stack in legacy new; do
-  ns="$stack"
+  if [[ "$stack" == legacy ]]; then ns="$NS_LEGACY"; else ns="$NS_NEW"; fi
   pod=$(pick_pod "$ns")
   if [[ -z "$pod" ]]; then
     echo "[$stack] Running order pod 없음" >&2
