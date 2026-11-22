@@ -56,6 +56,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | `tracks/prince-mart/app/payment-service/.../FakePgPaymentGateway.java` | `RestClient.create()` -> Boot `RestClient.Builder` 주입 | 정적 팩토리 클라이언트에는 계측이 안 붙음 | 해당 없음(Prince Mart 앱) |
 | `tracks/prince-mart/app/payment-service/pom.xml` | `spring-boot-starter-restclient` 추가 | Boot 4는 Builder 자동 구성이 별도 모듈 | 해당 없음 |
 | `tracks/prince-mart/k8s/` (신규) | 팀원 `deploy/k8s` 구조를 따른 Prince Mart 스택. 팀원과 다른 점은 `k8s/README.md` 표 | Prince Mart 배포 | 없음(별도 네임스페이스) |
+| `services/evidence-collector/pom.xml`과 의존하는 5개 pom (`services/order`, `services/coupon`, Prince Mart 3개) | collector 버전 0.0.1 -> 0.1.0(팀원 리뷰 반영, `08f349d`) | Feign 지원이 들어간 collector를 구분 | 없음. 팀원 스택 A/A 회귀로 확인(5절) |
 
 ### 2.1 팀원 도구 env화 (3단계)
 
@@ -149,3 +150,32 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | 엔진의 id 마스킹 범위(`id` 키만)로 충분하다(VU 1 기준) | 4 | 응답과 payload의 `orderId`, `paymentId` 등은 마스킹되지 않지만 S0 리셋 + VU 1 순차 재생에서 legacy와 new 값이 같아 차이가 없었다. Prince Mart 규칙 파일에 정규화를 둘 필요가 없었다 |
 | 진짜 결함과 성능 결함 탐지가 팀원 앱과 같은 양상으로 재현된다 | 6 | PF1~PF4 target 47 pair 전부 CV(3회), PF8 기본 검토 2/2, max_selects 선언 시 CV 2/2. 10 PF 모두 대상 밖 pair SAME(정상 경로 오탐 0), 세 run 판정 동일. 규칙 가림률(팀원 phase3-metrics의 "오판정률" 정의) 0/153, target 밖 오탐 0/2034. 정답 대비 오판정은 20/102로 따로 센다(RESULT.md 0절) |
 | 사전 등록 기대 값을 run 뒤에 고치지 않았다 | 6 | `fault-expectations.json`의 `_revisions`는 run 전 수정(집계 정의, 문구, runCheck 형식)뿐이고 targets와 expectedEngine 값은 `f4750e8` 그대로다 |
+
+## 5. 팀원 스택 A/A 회귀 (collector 0.1.0)
+
+collector에 Feign 지원을 더하고 버전을 0.1.0으로 올린 뒤, 팀원 Order, Coupon 스택이 그대로 SAME인지 확인했다.
+
+| 항목 | 값 |
+|---|---|
+| 실행 날짜 | 2026-11-22 (UTC 14:54 ~ 14:56) |
+| 기준 커밋 | `08f349d19f532ab38ed4f6f3149c373775ec5b89` (evidence-collector: 버전 0.0.1 -> 0.1.0). run-meta `git.dirty: false` x3 |
+| run ID | `c010-aa-1`, `c010-aa-2`, `c010-aa-3` |
+| 명령 | `k6/run.sh --run-id c010-aa --iterations 3 --vus 3` (팀원 기본값: corpus v2.1, ns legacy/new). run마다 `engine/diff_v0.py`, `engine/verify_sameness.py`, `engine/verdict.py --arm C`(engine-v1.3, `engine/rules`) |
+| 앱 | 그 커밋의 `services/` 그대로. Order는 Kotlin v1.4, Coupon은 현재 코드, collector 0.1.0 |
+| 이미지 | Legacy와 New 모두 `order-app:c010`(imageRef `sha256:5f44e035102fac6582cb7c033c3385d431c0dfabda43e93c6b7df81ce56163a2`), `coupon-app:c010`(imageRef `sha256:71e23d758e9a1aff73bffb4b34eac18eb6541df0cfc63c48d2267f254bf767aa`). 저장소 overlay는 그대로 두고 `kubectl set image`로 임시 교체(팀원 Phase 3 방식) |
+| 클러스터 | Prince Mart 스택(pm-legacy, pm-new)을 0으로 줄이고 팀원 legacy, new를 올려 실행. 끝난 뒤 팀원 스택을 지우고 Prince Mart를 다시 올림 |
+
+| 완료 기준 | c010-aa-1 | c010-aa-2 | c010-aa-3 |
+|---|---|---|---|
+| 전 pair SAME(판정 C) | SAME 60 | SAME 60 | SAME 60 |
+| diff 없음(diff_v0, 7축 + dbstate + wiremock) | ∅ | ∅ | ∅ |
+| dbstate 일치(`dbstate_equal`) | ok | ok | ok |
+| Undelivered 0 | 0 | 0 | 0 |
+| degraded 0 | 0 | 0 | 0 |
+| (참고) verify_sameness, barrier legacy/new, sessionViolations | PASS, 60/60, 60/60, 0 | PASS, 60/60, 60/60, 0 | PASS, 60/60, 60/60, 0 |
+
+- 팀원 Phase 4.8 6.1의 A/A(`p48-aa2`)는 Legacy와 New 모두 `phase3.3-base`(Order Java, collector 0.0.1)였다. 이번 A/A는 앱 코드가 다르다(Order Kotlin v1.4, Coupon 현재 코드, collector 0.1.0 양쪽).
+- 3단계에서 env화한 `k6/run.sh`, `run.js`, `spill-recover.sh`, `dbstate-export.sh`를 팀원 기본값으로 실제 클러스터에서 돌린 첫 run이기도 하다(3단계에서는 stub 비교만 했다). barrier, export, dbstate, wiremock journal, run-meta 모두 기본 경로로 동작했다.
+- Feign이 없는 팀원 서비스에는 `FeignEvidenceAutoConfiguration`이 붙지 않으므로, Feign 지원 추가가 기존 RestClient 경로의 Evidence를 바꾸지 않았다는 실측 근거다.
+- 복구 확인: pm-legacy 9 pod, pm-new 10 pod Running(앱과 DB 2/2, sidecar 없는 진단 pod만 1/1), 토픽 `payment-events` 재생성과 `order-service` 그룹 할당, readiness 6/6(200), 미러링 스모크 4건 Evidence legacy 10, new 10(2단계와 같음). 이미지는 `:base` 그대로.
+
