@@ -107,7 +107,7 @@ New의 "승인된 개선" 정답 데이터로 쓰기 위해 **의도적으로 �
 
 ### Evidence 계측: 루트 `evidence-collector`
 
-- 추가: `poc:evidence-collector:0.0.1` 의존성(세 서비스). Spring Boot 자동 구성으로 붙고 서비스 코드는 수정하지 않는다.
+- 추가: `poc:evidence-collector:0.1.0` 의존성(세 서비스). Spring Boot 자동 구성으로 붙고 서비스 코드는 수정하지 않는다.
 - 설정은 모두 env로 k8s 매니페스트가 넣는다: `EVIDENCE_STORE_URL`, `EVIDENCE_STACK`, `EVIDENCE_SERVICE`, `EVIDENCE_VERSION`,
   `EVIDENCE_HEADERS`, `EVIDENCE_APP_PACKAGES=com.pm`. `EVIDENCE_STORE_URL`이 없으면 계측이 꺼진다.
 - Kafka: producer 인터셉터와 consumer `RecordInterceptor`는 collector가 Boot 자동 구성으로 붙인다.

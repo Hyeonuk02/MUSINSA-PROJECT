@@ -43,7 +43,7 @@
         <dependency>
             <groupId>poc</groupId>
             <artifactId>evidence-collector</artifactId>
-            <version>0.0.1</version>
+            <version>0.1.0</version>
         </dependency>
         <!-- Phase 3.5: Kotlin 표준 라이브러리·리플렉션(버전은 Boot BOM) -->
         <dependency>
