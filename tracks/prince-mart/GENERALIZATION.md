@@ -38,10 +38,10 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 
 | 발견 | 단계 | 원인 | 영향(실측) | 대응 |
 |---|---|---|---|---|
-| readOnly 트랜잭션 차이가 기능 축 CV가 된다 | 6 | collector가 `SimpleJpaRepository.findById`의 readOnly 트랜잭션도 COMMIT_BEGIN과 COMPLETED로 기록하고, 엔진의 `tx_outcome_sequence_equal`이 트랜잭션 결과 순서열을 기능 축으로 비교한다 | PF7, PF9에서 조회 1회만 늘어 기능이 같은 소비 홉 8 pair가 CV(정답 SAME, 오판정 8) | 한계로 남김(엔진 변경 범위 밖). 팀원 앱에는 트랜잭션 밖의 리포지토리 조회 추가가 없었다 |
-| 승인된 기능 변화를 규칙으로 표현할 수 없다 | 6 | 팀원 엔진은 writeSet, externalCalls, response.status를 규칙으로 덮지 않는다(기능 축은 무조건 CV). Prince Mart의 승인된 개선은 응답 필드 추가가 아니라 쓰기, 외부 호출, 호출 순서를 바꾼다 | PF7 R20 소비, PF9 R35 소비, PF10 주문 6과 validate 2가 CV(정답 IMPROVEMENT, 오판정 10). 응답 값만 바뀐 PF7 R21은 사전 승인 규칙으로 IMP | 한계로 남김. branch-park 기대는 이를 CV(accept)로 등록했었다 |
+| readOnly 트랜잭션 차이가 기능 축 CV가 된다 | 6 | collector가 `SimpleJpaRepository.findById`의 readOnly 트랜잭션도 COMMIT_BEGIN과 COMPLETED로 기록하고, 엔진의 `tx_outcome_sequence_equal`이 트랜잭션 결과 순서열을 기능 축으로 비교한다 | PF7, PF9에서 조회 1회만 늘어 기능이 같은 소비 홉 8 pair가 CV(정답 SAME, 불일치 8) | 한계로 남김(엔진 변경 범위 밖). 팀원 앱에는 트랜잭션 밖의 리포지토리 조회 추가가 없었다 |
+| 승인된 기능 변화를 규칙으로 표현할 수 없다 | 6 | 팀원 엔진은 writeSet, externalCalls, response.status를 규칙으로 덮지 않는다(기능 축은 무조건 CV). Prince Mart의 승인된 개선은 응답 필드 추가가 아니라 쓰기, 외부 호출, 호출 순서를 바꾼다 | PF7 R20 소비, PF9 R35 소비, PF10 주문 6과 validate 2가 CV(정답 IMPROVEMENT, 불일치 10). 응답 값만 바뀐 PF7 R21은 사전 승인 규칙으로 IMP | 한계로 남김. branch-park 기대는 이를 CV(accept)로 등록했었다 |
 | 관측 서비스 호출 순서가 바뀌면 pair 짝이 깨진다 | 6 | 자식 hopPath는 홉 안 HTTP 호출 순번(`<부모>.h<n>`)이다. 쿼리 수 변화에는 안정적이지만(D15) 관측 서비스 호출의 순서가 바뀌면 같은 키가 다른 호출을 가리킨다 | PF10(쿠폰 use를 결제 뒤로): 비교 불성립 3 pair(legacy payment.process와 new coupon.use를 비교), 한쪽에만 있는 홉 26 | 비교 불성립으로 따로 셌다. 한계로 남김 |
-| id 마스킹이 외부 호출 본문에 닿지 않는다 | 6 | 엔진은 응답과 payload의 `id` 키만 가리고, 외부 호출은 본문 hash로 비교한다 | PF10 R000028 감사 로그 `usageId` 1 -> 5(auto increment 밀림)가 CV(정답 SAME, 오판정 1). branch-park 사후 보정 항목 | 한계로 남김 |
+| id 마스킹이 외부 호출 본문에 닿지 않는다 | 6 | 엔진은 응답과 payload의 `id` 키만 가리고, 외부 호출은 본문 hash로 비교한다 | PF10 R000028 감사 로그 `usageId` 1 -> 5(auto increment 밀림)가 CV(정답 SAME, 불일치 1). branch-park 사후 보정 항목 | 한계로 남김 |
 | 규칙이 변경 단위 범위를 갖지 않는다 | 6 | 규칙은 endpoint와 diff 모양으로만 맞는다. 같은 모양의 차이가 개선(PF7 R21)과 결함(PF2 R21, R25)에 모두 생긴다 | PF7 사전 승인 규칙으로 PF2를 판정하면 진짜 결함 2 pair가 IMPROVEMENT로 가려진다(3회 같음, 대조 실험) | 사전 승인과 learn 규칙을 변경별 디렉터리(`tools/rules/approved/PF7/`, `tools/rules/review/PF5/`)로 나눠 실제 판정에서는 막았다 |
 | 직렬화 라이브러리 전환(Jackson 2 -> 3)이 관측 차이를 만들지 않았다(예측 실패, 원인 확정) | 6 | Jackson 3 기본은 알파벳순 정렬(`SORT_PROPERTIES_ALPHABETICALLY`)이지만 `SORT_CREATOR_PROPERTIES_FIRST`(기본 켜짐)가 creator 속성을 먼저 쓴다. Payment에 직접 쓴 전 필드 생성자가 있고 `-parameters` 컴파일(Boot parent)로 인자 이름이 남아, Jackson 3가 이를 암묵 creator로 잡아 전 필드를 선언 순서로 낸다. jshell에서 `SORT_CREATOR_PROPERTIES_FIRST`만 끄면 알파벳순이 된다 | PF6 25 pair가 예상(CV)과 달리 SAME. 정답(SAME)과는 일치. "직렬화 문자열을 바이트로 비교"하는 약점은 이번 변경으로는 드러나지 않았다(출력 바이트가 같음) | 예측 오류로 기록(RESULT.md 7절). 사전 등록 값은 고치지 않았다. 예측은 일반 클래스 기준의 기본값만 보고 했고, 대상 클래스의 생성자를 확인하지 않았다 |
 
@@ -98,7 +98,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | `tools/run-pm.sh` | pm.env를 읽고 팀원 `k6/run.sh`를 부른다. VU 1만 허용 |
 | `tools/dbstate-tables.txt` | Prince Mart 테이블 7개의 DB 상태 정의(1절 dbstate 항목) |
 | `tools/deploy-new.sh` (6단계) | pm-new의 서비스 하나만 결함 이미지와 `EVIDENCE_VERSION=PF<n>`으로 바꾼다(커밋된 overlay는 그대로, `base`로 되돌림) |
-| `tools/fault_metrics.py` (6단계) | 사전 등록과 판정을 대조해 일치, 오판정, 검토, 비교 불성립, 예상 대비, 대상 밖, 한쪽에만 있는 홉, 세 run 동일을 센다 |
+| `tools/fault_metrics.py` (6단계) | 사전 등록과 판정을 대조해 일치, 불일치, 검토, 비교 불성립, 예상 대비, 대상 밖, 한쪽에만 있는 홉, 세 run 동일을 센다 |
 | `tools/faults/fault-metrics.json` (6단계) | 위 집계 원자료 |
 
 ### 2.4 Prince Mart 판정 규칙 (4단계)
@@ -149,7 +149,7 @@ Prince Mart(order, coupon, payment)에 적용하면서 생긴 일을 단계마�
 | A/A 게이트: 팀원 엔진 판정이 3회 모두 전부 SAME | 4 | `p4-aa-1..3`, 각 80 pair SAME 80, dbstate_equal OK, Undelivered 0, degraded 0, barrier 80/80. verify_sameness 3회 PASS |
 | run 사이 결정성 | 4 | `p4-aa-1` legacy의 판정 축(기능, 실행 특성)이 `p4-aa-2`, `p4-aa-3`, `p3-replay-1`의 legacy와 new 모든 pair에서 같다. dbstate도 3회 같다. branch-park에서 겪은 Kafka rebalance, 컨슈머 그룹 잔류 문제는 나타나지 않았다(리셋마다 브로커가 새로 뜨고 run.sh가 그룹 할당을 기다린다) |
 | 엔진의 id 마스킹 범위(`id` 키만)로 충분하다(VU 1 기준) | 4 | 응답과 payload의 `orderId`, `paymentId` 등은 마스킹되지 않지만 S0 리셋 + VU 1 순차 재생에서 legacy와 new 값이 같아 차이가 없었다. Prince Mart 규칙 파일에 정규화를 둘 필요가 없었다 |
-| 진짜 결함과 성능 결함 탐지가 팀원 앱과 같은 양상으로 재현된다 | 6 | PF1~PF4 target 47 pair 전부 CV(3회), PF8 기본 검토 2/2, max_selects 선언 시 CV 2/2. 10 PF 모두 대상 밖 pair SAME(정상 경로 오탐 0), 세 run 판정 동일. 규칙 가림률(팀원 phase3-metrics의 "오판정률" 정의) 0/153, target 밖 오탐 0/2034. 정답 대비 오판정은 20/102로 따로 센다(RESULT.md 0절) |
+| 진짜 결함과 성능 결함 탐지가 팀원 앱과 같은 양상으로 재현된다 | 6 | PF1~PF4 target 47 pair 전부 CV(3회), PF8 기본 검토 2/2, max_selects 선언 시 CV 2/2. 10 PF 모두 대상 밖 pair SAME(정상 경로 오탐 0), 세 run 판정 동일. 오판정률(팀원 phase3-metrics와 같은 정의) 0/153, target 밖 오탐 0/2034. 정답 대비 불일치는 20/102로 따로 센다(RESULT.md 0절) |
 | 사전 등록 기대 값을 run 뒤에 고치지 않았다 | 6 | `fault-expectations.json`의 `_revisions`는 run 전 수정(집계 정의, 문구, runCheck 형식)뿐이고 targets와 expectedEngine 값은 `f4750e8` 그대로다 |
 
 ## 5. 팀원 스택 A/A 회귀 (collector 0.1.0)
